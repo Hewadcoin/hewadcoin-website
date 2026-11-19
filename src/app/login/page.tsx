@@ -12,6 +12,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#F4F5F7] px-4 py-10">
       <div className="w-full max-w-md rounded-2xl bg-white p-7 shadow-sm md:p-10">
+
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold text-[#C62828]">
             HEWAD COIN
@@ -21,7 +22,10 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <h2 className="mb-2 text-2xl font-bold">Welcome Back</h2>
+        <h2 className="mb-2 text-2xl font-bold text-gray-900">
+          Welcome Back
+        </h2>
+
         <p className="mb-6 text-sm text-gray-500">
           Login to your HEWAD COIN account.
         </p>
@@ -29,7 +33,7 @@ export default function LoginPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            alert("Login will be activated after Supabase connection.");
+            alert("Email and username login will be activated after Supabase setup.");
           }}
           className="space-y-5"
         >
@@ -37,6 +41,7 @@ export default function LoginPage() {
             <label className="mb-2 block text-sm font-semibold">
               Email Address or Username
             </label>
+
             <input
               required
               value={identifier}
@@ -50,6 +55,7 @@ export default function LoginPage() {
             <label className="mb-2 block text-sm font-semibold">
               Password
             </label>
+
             <div className="flex rounded-lg border border-gray-300 focus-within:border-[#C62828]">
               <input
                 required
@@ -59,6 +65,7 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 className="w-full rounded-lg p-3 outline-none"
               />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -80,7 +87,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-[#C62828] py-3 font-bold text-white hover:bg-[#8E1717]"
+            className="w-full rounded-xl bg-[#C62828] py-3 font-bold text-white transition hover:bg-[#8E1717]"
           >
             Login
           </button>
@@ -92,24 +99,28 @@ export default function LoginPage() {
           <div className="h-px flex-1 bg-gray-200" />
         </div>
 
-        <button
-          type="button"
-          onClick={() =>
-            alert("Google login will be activated after Supabase setup.")
-          }
-          className="w-full rounded-xl border border-gray-300 py-3 font-semibold hover:bg-gray-50"
+        <Link
+          href="/auth/google"
+          className="block w-full rounded-xl border border-gray-300 py-3 text-center font-semibold transition hover:bg-gray-50"
         >
           Continue with Google
-        </button>
+        </Link>
 
         <p className="mt-7 text-center text-sm text-gray-600">
           Don't have an account?{" "}
-          <Link href="/register" className="font-bold text-[#C62828]">
+          <Link
+            href="/register"
+            className="font-bold text-[#C62828]"
+          >
             Create Account
           </Link>
         </p>
+
+        <p className="mt-6 text-center text-xs text-gray-400">
+          © {new Date().getFullYear()} HEWAD COIN. All rights reserved.
+        </p>
+
       </div>
     </main>
   );
 }
-
