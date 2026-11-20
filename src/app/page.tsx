@@ -9,11 +9,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function continueWithGoogle() {
-    try {
-      setLoading(true);
-      setError("");
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError("");
 
+    try {
       const supabase = createClient();
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -28,132 +28,106 @@ export default function Home() {
         setLoading(false);
       }
     } catch {
-      setError("Unable to connect with Google. Please try again.");
+      setError("Something went wrong. Please try again.");
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <main className="relative flex min-h-screen min-h-[100svh] items-center justify-center overflow-hidden bg-white px-5 py-8 text-[#171717]">
+    <main className="relative flex min-h-screen min-h-[100svh] items-center justify-center overflow-hidden bg-[#fafafa] px-5 py-8 text-gray-900">
 
       {/* Background watermark */}
-      <div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
-        aria-hidden="true"
-      >
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <img
           src="/hewad-coin-logo.jpg"
           alt=""
-          className="h-[75vw] w-[75vw] max-w-[480px] object-contain opacity-[0.035]"
+          className="h-72 w-72 rounded-full object-cover opacity-[0.035]"
         />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-md flex-col items-center text-center">
+      <section className="relative z-10 w-full max-w-[370px] text-center">
 
-        {/* Main logo */}
-        <div className="mb-5 flex h-36 w-36 items-center justify-center overflow-hidden rounded-full">
+        {/* Logo */}
+        <div className="mb-5 flex justify-center">
           <img
             src="/hewad-coin-logo.jpg"
             alt="HEWAD COIN Logo"
-            className="h-full w-full object-contain"
+            className="h-[94px] w-[94px] rounded-full border border-yellow-300 object-cover shadow-sm"
           />
         </div>
 
-        {/* Brand */}
-        <h1 className="text-4xl font-black tracking-wide text-[#B8860B]">
+        {/* Headings */}
+        <h1 className="text-[23px] font-extrabold tracking-[1.5px] text-[#bd8b13]">
           HEWAD COIN
         </h1>
 
-        <h2 className="mt-4 text-xl font-extrabold text-[#222222]">
+        <h2 className="mt-2 text-[17px] font-bold tracking-wide">
           WELCOME TO HEWAD COIN
         </h2>
 
-        <p className="mt-3 max-w-sm text-sm leading-6 text-gray-600">
+        <p className="mt-3 text-[13px] leading-6 text-gray-600">
           Your Future. Your Opportunity. Your Hewad Coin.
-          Join our growing digital community.
+        </p>
+
+        <p className="mx-auto mt-2 max-w-[310px] text-[12px] leading-5 text-gray-500">
+          Join our community and discover new opportunities with HEWAD COIN.
         </p>
 
         {/* Buttons */}
-        <div className="mt-10 flex w-full flex-col gap-5">
+        <div className="mx-auto mt-8 flex w-full max-w-[330px] flex-col gap-3">
 
-          {/* Create Account */}
           <Link
             href="/register"
-            className="flex min-h-[68px] w-full items-center justify-center gap-4 rounded-2xl bg-[#F5C400] px-5 py-4 text-lg font-extrabold text-[#171717] shadow-md transition hover:bg-[#E5B800] active:scale-[0.98]"
+            className="flex h-[49px] items-center justify-center gap-3 rounded-xl bg-[#ffdc32] px-5 text-[14px] font-bold text-black shadow-sm transition hover:bg-[#f5cf19] active:scale-[0.98]"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-7 w-7"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="10" cy="7" r="4" />
-              <path d="M20 8v6M23 11h-6" />
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="22" y1="11" x2="16" y2="11" />
             </svg>
             CREATE ACCOUNT
           </Link>
 
-          {/* Login */}
           <Link
             href="/login"
-            className="flex min-h-[68px] w-full items-center justify-center gap-4 rounded-2xl bg-[#E53935] px-5 py-4 text-lg font-extrabold text-white shadow-md transition hover:bg-[#C62828] active:scale-[0.98]"
+            className="flex h-[49px] items-center justify-center gap-3 rounded-xl bg-[#df3434] px-5 text-[14px] font-bold text-white shadow-sm transition hover:bg-[#c92727] active:scale-[0.98]"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-7 w-7"
-            >
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-              <path d="M10 17l5-5-5-5M15 12H3" />
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 17l5-5-5-5" />
+              <path d="M15 12H3" />
+              <path d="M12 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6" />
             </svg>
             LOGIN
           </Link>
 
-          {/* Google */}
           <button
             type="button"
-            onClick={continueWithGoogle}
+            onClick={handleGoogleLogin}
             disabled={loading}
-            className="flex min-h-[68px] w-full items-center justify-center gap-4 rounded-2xl bg-[#16A34A] px-5 py-4 text-lg font-extrabold text-white shadow-md transition hover:bg-[#15803D] active:scale-[0.98] disabled:opacity-60"
+            className="flex h-[49px] items-center justify-center gap-3 rounded-xl bg-[#219653] px-5 text-[14px] font-bold text-white shadow-sm transition hover:bg-[#187c43] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <svg
-              viewBox="0 0 48 48"
-              className="h-8 w-8 rounded-full bg-white p-1"
-              aria-label="Google"
-            >
-              <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.9 6-15z"/>
-              <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44z"/>
-              <path fill="#FBBC05" d="M12.8 27.7a12 12 0 0 1 0-7.4V15H5.9a20 20 0 0 0 0 18z"/>
-              <path fill="#EA4335" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6.1 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.3c1.6-4.7 6-8.2 11.2-8.2z"/>
+            <svg width="19" height="19" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.6 24.5c0-1.5-.1-2.9-.4-4.3H24v8.1h11a9.4 9.4 0 0 1-4.1 6.2v5.2h6.7c3.9-3.6 6-8.8 6-15.2z"/>
+              <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.2c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3C9.3 39.5 16.1 44 24 44z"/>
+              <path fill="#4A90E2" d="M12.8 27.6a12 12 0 0 1 0-7.2v-5.3H5.9a20 20 0 0 0 0 17.8z"/>
+              <path fill="#EA4335" d="M24 12.2c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 6.1 29.5 4 24 4 16.1 4 9.3 8.5 5.9 15.1l6.9 5.3c1.6-4.7 6-8.2 11.2-8.2z"/>
             </svg>
             {loading ? "CONNECTING..." : "CONTINUE WITH GOOGLE"}
           </button>
-
         </div>
 
         {error && (
-          <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
             {error}
           </p>
         )}
 
-        <p className="mt-9 text-xs text-gray-500">
-          Secure Access • Account Protection
+        <p className="mt-8 text-[11px] text-gray-400">
+          © 2026 HEWAD COIN. All rights reserved.
         </p>
 
-        <p className="mt-3 text-xs text-gray-400">
-          © {new Date().getFullYear()} HEWAD COIN
-        </p>
-
-      </div>
+      </section>
     </main>
   );
 }
