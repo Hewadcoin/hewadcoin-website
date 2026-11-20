@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -50,6 +49,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      const supabase = createClient();
+
       const { data, error: signupError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
@@ -72,18 +73,18 @@ export default function RegisterPage() {
         }
 
         if (message.includes("profiles_username_unique") || message.includes("username")) {
-          throw new Error("This username is already taken.");
+          throw new Error("This username may already be taken.");
         }
 
         if (message.includes("profiles_mobile_unique") || message.includes("mobile_number")) {
-          throw new Error("This mobile number is already registered.");
+          throw new Error("This mobile number may already be registered.");
         }
 
         throw signupError;
       }
 
       if (!data.session) {
-        setSuccess("Account created. Please check your Supabase email confirmation settings.");
+        setSuccess("Account created. Please check your email confirmation settings.");
         return;
       }
 
@@ -92,7 +93,9 @@ export default function RegisterPage() {
       router.refresh();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Registration failed. Please try again."
+        err instanceof Error
+          ? err.message
+          : "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -117,21 +120,76 @@ export default function RegisterPage() {
 
         <form onSubmit={handleRegister} className="space-y-5">
           <div className="grid gap-4 md:grid-cols-3">
-            <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="w-full rounded-lg border p-3" />
-            <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full rounded-lg border p-3" />
-            <input required value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="w-full rounded-lg border p-3" />
+            <input
+              required
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="First Name"
+              className="w-full rounded-lg border p-3"
+            />
+
+            <input
+              required
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Last Name"
+              className="w-full rounded-lg border p-3"
+            />
+
+            <input
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+              className="w-full rounded-lg border p-3"
+            />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <input required type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} placeholder="Mobile Number (+93...)" className="w-full rounded-lg border p-3" />
-            <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral Code (Optional)" className="w-full rounded-lg border p-3" />
+            <input
+              required
+              type="tel"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              placeholder="Mobile Number (+93...)"
+              className="w-full rounded-lg border p-3"
+            />
+
+            <input
+              value={referralCode}
+              onChange={(e) => setReferralCode(e.target.value)}
+              placeholder="Referral Code (Optional)"
+              className="w-full rounded-lg border p-3"
+            />
           </div>
 
-          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full rounded-lg border p-3" />
+          <input
+            required
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email Address"
+            className="w-full rounded-lg border p-3"
+          />
 
-          <input required type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (at least 8 characters)" className="w-full rounded-lg border p-3" />
+          <input
+            required
+            type="password"
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password (at least 8 characters)"
+            className="w-full rounded-lg border p-3"
+          />
 
-          <input required type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm Password" className="w-full rounded-lg border p-3" />
+          <input
+            required
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm Password"
+            className="w-full rounded-lg border p-3"
+          />
 
           {error && (
             <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
