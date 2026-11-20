@@ -70,7 +70,6 @@ export default function RegisterPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     setError("");
     setSuccess("");
 
@@ -187,44 +186,44 @@ export default function RegisterPage() {
   }
 
   const labelClass =
-    "mb-1.5 block text-xs font-bold tracking-wide text-gray-800";
+    "mb-2 block text-sm font-bold tracking-wide text-gray-800";
 
   const fieldClass =
-    "w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 disabled:bg-gray-100";
+    "w-full min-w-0 rounded-xl border border-gray-300 bg-white px-3 py-3.5 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 disabled:bg-gray-100";
 
   return (
     <main
-      className="relative min-h-screen overflow-hidden bg-white px-4 py-8 text-gray-900"
+      className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-gray-50 px-3 py-6 text-gray-900 sm:px-5 sm:py-10"
       style={{
-        backgroundImage: `linear-gradient(rgba(255,255,255,0.91), rgba(255,255,255,0.94)), url("${LOGO_PATH}")`,
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.93), rgba(255,255,255,0.96)), url("${LOGO_PATH}")`,
         backgroundPosition: "center",
         backgroundSize: "cover",
-        backgroundAttachment: "fixed",
+        backgroundAttachment: "scroll",
       }}
     >
       <div className="pointer-events-none absolute inset-0 bg-white/20" />
 
-      <div className="relative mx-auto w-full max-w-md">
-        <div className="rounded-2xl border border-gray-200 bg-white/95 p-5 shadow-xl backdrop-blur-sm sm:p-7">
+      <div className="relative mx-auto w-full max-w-lg">
+        <div className="rounded-3xl border border-gray-200 bg-white/95 p-5 shadow-xl backdrop-blur-sm sm:p-8">
 
-          <header className="mb-6 text-center">
-            <div className="mx-auto mb-3 flex h-36 w-36 items-center justify-center overflow-hidden rounded-full">
+          <header className="mb-7 text-center">
+            <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-yellow-200 bg-white shadow-md sm:h-32 sm:w-32">
               <img
                 src={LOGO_PATH}
-                alt="HEWAD COIN Golden H Logo"
+                alt="HEWAD COIN Original Logo"
                 className="h-full w-full object-cover"
               />
             </div>
 
-            <h1 className="text-2xl font-extrabold tracking-wide text-gray-950">
+            <h1 className="text-2xl font-extrabold tracking-wide text-gray-950 sm:text-3xl">
               HEWAD COIN
             </h1>
 
-            <h2 className="mt-3 text-lg font-extrabold text-gray-900">
+            <h2 className="mt-3 text-xl font-extrabold text-gray-900 sm:text-2xl">
               CREATE YOUR ACCOUNT
             </h2>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500">
               Join the Future of Global Trading
             </p>
           </header>
@@ -232,7 +231,7 @@ export default function RegisterPage() {
           {error && (
             <div
               role="alert"
-              className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
             >
               {error}
             </div>
@@ -241,31 +240,31 @@ export default function RegisterPage() {
           {success && (
             <div
               role="status"
-              className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
+              className="mb-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
             >
               {success}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {!awaitingVerification ? (
               <>
                 <div>
-                  <label className={labelClass}>NAME *</label>
+                  <label className={labelClass}>1. FULL NAME *</label>
                   <input
                     className={fieldClass}
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
+                    placeholder="Enter your full name"
                     autoComplete="name"
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelClass}>MOBILE NUMBER *</label>
+                  <div className="min-w-0">
+                    <label className={labelClass}>2. MOBILE NUMBER *</label>
                     <input
                       className={fieldClass}
                       type="tel"
@@ -278,7 +277,7 @@ export default function RegisterPage() {
                     />
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className={labelClass}>INVITATION CODE *</label>
                     <input
                       className={fieldClass}
@@ -286,9 +285,7 @@ export default function RegisterPage() {
                       value={isOwner ? "" : invitationCode}
                       onChange={(e) => setInvitationCode(e.target.value)}
                       placeholder={
-                        defaultCodeLoaded
-                          ? "Enter code"
-                          : "Loading..."
+                        defaultCodeLoaded ? "Enter code" : "Loading..."
                       }
                       disabled={!defaultCodeLoaded || isOwner}
                       required={!isOwner}
@@ -297,20 +294,20 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className={labelClass}>EMAIL ADDRESS *</label>
+                  <label className={labelClass}>3. EMAIL ADDRESS *</label>
                   <input
                     className={fieldClass}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email address"
+                    placeholder="Enter your email address"
                     autoComplete="email"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className={labelClass}>PASSWORD *</label>
+                  <label className={labelClass}>4. PASSWORD *</label>
                   <input
                     className={fieldClass}
                     type="password"
@@ -321,10 +318,13 @@ export default function RegisterPage() {
                     minLength={8}
                     required
                   />
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    Password must contain at least 8 characters.
+                  </p>
                 </div>
 
                 <div>
-                  <label className={labelClass}>CONFIRM PASSWORD *</label>
+                  <label className={labelClass}>5. CONFIRM PASSWORD *</label>
                   <input
                     className={fieldClass}
                     type="password"
@@ -338,8 +338,8 @@ export default function RegisterPage() {
                 </div>
               </>
             ) : (
-              <div className="space-y-4 text-center">
-                <h2 className="text-xl font-bold text-gray-900">
+              <div className="space-y-5 text-center">
+                <h2 className="text-xl font-extrabold text-gray-900">
                   VERIFY YOUR EMAIL
                 </h2>
 
@@ -347,7 +347,7 @@ export default function RegisterPage() {
                   We sent a 6-digit verification code to:
                 </p>
 
-                <p className="break-all font-semibold text-yellow-700" dir="ltr">
+                <p className="break-all font-bold text-yellow-700" dir="ltr">
                   {email}
                 </p>
 
@@ -369,7 +369,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={resendCode}
                   disabled={loading}
-                  className="text-sm font-semibold text-red-600 hover:underline disabled:opacity-50"
+                  className="text-sm font-bold text-red-600 hover:underline disabled:opacity-50"
                 >
                   RESEND VERIFICATION CODE
                 </button>
@@ -378,8 +378,11 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={loading || (!awaitingVerification && !defaultCodeLoaded && !isOwner)}
-              className="w-full rounded-xl bg-yellow-400 px-5 py-3.5 font-extrabold tracking-wide text-black shadow-sm transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={
+                loading ||
+                (!awaitingVerification && !defaultCodeLoaded && !isOwner)
+              }
+              className="w-full rounded-xl bg-yellow-400 px-5 py-4 text-base font-extrabold tracking-wide text-black shadow-md transition hover:bg-yellow-500 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading
                 ? "PLEASE WAIT..."
@@ -390,7 +393,7 @@ export default function RegisterPage() {
           </form>
 
           {!awaitingVerification && (
-            <div className="mt-6 border-t border-gray-100 pt-5 text-center text-sm text-gray-600">
+            <div className="mt-7 border-t border-gray-100 pt-5 text-center text-sm text-gray-600">
               Already have an account?{" "}
               <Link
                 href="/login"
