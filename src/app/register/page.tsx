@@ -8,25 +8,22 @@ import { createClient } from "@/lib/supabase/client";
 
 const OWNER_EMAIL = "khattakabid1122@gmail.com";
 const OWNER_CODE = "khattakabid";
+const LOGO_PATH = "/hewad-coin-logo.jpg";
 
 export default function RegisterPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
-  const [referralCode, setReferralCode] = useState("");
-  const [personalCode, setPersonalCode] = useState("");
+  const [invitationCode, setInvitationCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [defaultCodeLoaded, setDefaultCodeLoaded] = useState(false);
   const [otp, setOtp] = useState("");
   const [awaitingVerification, setAwaitingVerification] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -37,28 +34,20 @@ export default function RegisterPage() {
     let active = true;
 
     async function loadDefaultCode() {
-      setDefaultCodeLoaded(false);
-
-      if (isOwner) {
-        setReferralCode("");
-        setPersonalCode(OWNER_CODE);
-        setDefaultCodeLoaded(true);
-        return;
-      }
-
-      setPersonalCode("");
-
-      const { data, error: rpcError } = await supabase.rpc(
+      const { data, error } = await supabase.rpc(
         "get_registration_default_referral_code"
       );
 
       if (!active) return;
 
-      if (rpcError) {
-        console.error("Referral default error:", rpcError);
-        setReferralCode("");
-      } else {
-        setReferralCode(typeof data === "string" ? data : "");
+      if (error) {
+        setError("Unable to load invitation information. Please try again.");
+        setDefaultCodeLoaded(false);
+        return;
+      }
+
+      if (data) {
+        setInvitationCode(String(data));
       }
 
       setDefaultCodeLoaded(true);
@@ -69,7 +58,15 @@ export default function RegisterPage() {
     return () => {
       active = false;
     };
-  }, [supabase, isOwner]);
+  }, [supabase]);
+
+  function createPersonalReferralCode() {
+    const number = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, "0");
+
+    return `H${number}`;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,136 +75,95 @@ export default function RegisterPage() {
     setSuccess("");
 
     if (awaitingVerification) {
-      if (!/^\d{6}$/.test(otp.trim())) {
-        setError("مهرباني وکړئ د ایمیل ۶ عددي تایید کوډ ولیکئ.");
+      if (otp.length !== 6) {
+        setError("Please enter the complete 6-digit verification code.");
         return;
       }
 
       setLoading(true);
 
-      try {
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          email: email.trim().toLowerCase(),
-          token: otp.trim(),
-          type: "signup",
-        });
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: otp,
+        type: "signup",
+      });
 
-        if (verifyError) throw verifyError;
+      setLoading(false);
 
-        setSuccess("ستاسو ایمیل تایید شو. اوس د ننوتلو پاڼې ته ځئ.");
-        setTimeout(() => router.push("/login"), 1200);
-      } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "د تایید کوډ ناسم دی یا وخت یې تېر شوی."
-        );
-      } finally {
-        setLoading(false);
+      if (verifyError) {
+        setError(verifyError.message);
+        return;
       }
 
+      setSuccess("Your email has been verified successfully.");
+      router.push("/login");
+      router.refresh();
       return;
     }
 
-    if (!firstName.trim()) {
-      setError("خپل نوم ولیکئ.");
-      return;
-    }
-
-    if (!username.trim()) {
-      setError("خپل یوزرنیم ولیکئ.");
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username.trim())) {
-      setError("یوزرنیم باید ۳ تر ۲۰ تورو پورې وي؛ یوازې انګلیسي توري، شمېرې او _ وکاروئ.");
-      return;
-    }
-
-    if (!mobile.trim()) {
-      setError("د موبایل شمېره ولیکئ.");
-      return;
-    }
-
-    if (!email.trim()) {
-      setError("ایمیل ادرس ولیکئ.");
+    if (!name.trim() || !mobile.trim() || !email.trim()) {
+      setError("Please complete all required fields.");
       return;
     }
 
     if (!isOwner && !defaultCodeLoaded) {
-      setError("د Referral معلوماتو د چمتو کېدو لپاره لږ انتظار وکړئ.");
+      setError("Invitation information is still loading. Please wait.");
       return;
     }
 
-    if (!isOwner && !referralCode.trim()) {
-      setError("د بلنې Referral Code ولیکئ.");
-      return;
-    }
-
-    const finalPersonalCode = isOwner
-      ? OWNER_CODE
-      : personalCode.trim().toLowerCase();
-
-    if (!isOwner && !/^[a-z0-9_]{4,20}$/.test(finalPersonalCode)) {
-      setError("شخصي Referral Code باید ۴ تر ۲۰ تورو پورې وي؛ انګلیسي کوچني توري، شمېرې او _ وکاروئ.");
-      return;
-    }
-
-    if (!isOwner && finalPersonalCode === OWNER_CODE) {
-      setError("دا Referral Code د مالک لپاره ځانګړی دی. بل کوډ انتخاب کړئ.");
+    if (!isOwner && !invitationCode.trim()) {
+      setError("Invitation Code is required.");
       return;
     }
 
     if (password.length < 8) {
-      setError("پاسورډ باید لږ تر لږه ۸ توري ولري.");
+      setError("Password must contain at least 8 characters.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("پاسورډونه یو له بل سره برابر نه دي.");
+      setError("Passwords do not match.");
       return;
     }
 
     setLoading(true);
 
-    try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
-        options: {
-          data: {
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            username: username.trim().toLowerCase(),
-            mobile_number: mobile.trim(),
-            referral_code: finalPersonalCode,
-            referred_by_code: isOwner ? "" : referralCode.trim().toLowerCase(),
-          },
+    const personalReferralCode = isOwner
+      ? OWNER_CODE
+      : createPersonalReferralCode();
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      phone: mobile.trim(),
+      options: {
+        data: {
+          first_name: name.trim(),
+          last_name: "",
+          username: "",
+          mobile_number: mobile.trim(),
+          referral_code: personalReferralCode,
+          referred_by_code: isOwner ? "" : invitationCode.trim(),
         },
-      });
+      },
+    });
 
-      if (signUpError) throw signUpError;
+    setLoading(false);
 
-      if (!data.user) {
-        throw new Error("حساب جوړ نه شو. بیا هڅه وکړئ.");
-      }
-
-      if (data.session) {
-        setSuccess("حساب جوړ شو. ایمیل مو تایید شوی دی.");
-        setTimeout(() => router.push("/login"), 1200);
-      } else {
-        setAwaitingVerification(true);
-        setSuccess("د تایید ۶ عددي کوډ ستاسو ایمیل ته ولېږل شو.");
-      }
-    } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "د ثبت پر مهال ستونزه رامنځته شوه."
-      );
-    } finally {
-      setLoading(false);
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
     }
+
+    if (!data.user) {
+      setError("Account registration could not be completed. Please try again.");
+      return;
+    }
+
+    setAwaitingVerification(true);
+    setSuccess(
+      "Your account was created. Please check your email for the 6-digit verification code."
+    );
   }
 
   async function resendCode() {
@@ -215,210 +171,189 @@ export default function RegisterPage() {
     setSuccess("");
     setLoading(true);
 
-    try {
-      const { error: resendError } = await supabase.auth.resend({
-        type: "signup",
-        email: email.trim().toLowerCase(),
-      });
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim().toLowerCase(),
+    });
 
-      if (resendError) throw resendError;
+    setLoading(false);
 
-      setSuccess("نوی تایید کوډ ستاسو ایمیل ته ولېږل شو.");
-    } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "د کوډ په لېږلو کې ستونزه رامنځته شوه."
-      );
-    } finally {
-      setLoading(false);
+    if (resendError) {
+      setError(resendError.message);
+      return;
     }
+
+    setSuccess("A new verification code has been sent to your email.");
   }
 
-  const fieldClass =
-    "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100";
+  const labelClass =
+    "mb-1.5 block text-xs font-bold tracking-wide text-gray-800";
 
-  const labelClass = "mb-2 block text-sm font-semibold text-gray-700";
+  const fieldClass =
+    "w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 disabled:bg-gray-100";
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-7 text-center">
-          <h1 className="text-3xl font-extrabold tracking-wide text-emerald-700">
-            HEWAD COIN
-          </h1>
-          <p className="mt-2 text-gray-600">
-            {awaitingVerification
-              ? "د ایمیل تایید"
-              : "نوی حساب جوړ کړئ"}
-          </p>
-        </div>
+    <main
+      className="relative min-h-screen overflow-hidden bg-white px-4 py-8 text-gray-900"
+      style={{
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.91), rgba(255,255,255,0.94)), url("${LOGO_PATH}")`,
+        backgroundPosition: "center",
+        backgroundSize: "cover",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-white/20" />
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+      <div className="relative mx-auto w-full max-w-md">
+        <div className="rounded-2xl border border-gray-200 bg-white/95 p-5 shadow-xl backdrop-blur-sm sm:p-7">
+
+          <header className="mb-6 text-center">
+            <div className="mx-auto mb-3 flex h-36 w-36 items-center justify-center overflow-hidden rounded-full">
+              <img
+                src={LOGO_PATH}
+                alt="HEWAD COIN Golden H Logo"
+                className="h-full w-full object-cover"
+              />
+            </div>
+
+            <h1 className="text-2xl font-extrabold tracking-wide text-gray-950">
+              HEWAD COIN
+            </h1>
+
+            <h2 className="mt-3 text-lg font-extrabold text-gray-900">
+              CREATE YOUR ACCOUNT
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Join the Future of Global Trading
+            </p>
+          </header>
+
           {error && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div
+              role="alert"
+              className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+            >
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+            <div
+              role="status"
+              className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
+            >
               {success}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!awaitingVerification ? (
               <>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div>
-                    <label className={labelClass}>نوم *</label>
-                    <input
-                      className={fieldClass}
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="خپل نوم"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className={labelClass}>تخلص</label>
-                    <input
-                      className={fieldClass}
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="تخلص (اختیاري)"
-                    />
-                  </div>
-
-                  <div>
-                    <label className={labelClass}>یوزرنیم *</label>
-                    <input
-                      className={fieldClass}
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="username"
-                      autoComplete="username"
-                      required
-                    />
-                  </div>
+                <div>
+                  <label className={labelClass}>NAME *</label>
+                  <input
+                    className={fieldClass}
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                    autoComplete="name"
+                    required
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={labelClass}>موبایل شمېره *</label>
+                    <label className={labelClass}>MOBILE NUMBER *</label>
                     <input
                       className={fieldClass}
                       type="tel"
+                      inputMode="tel"
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value)}
-                      placeholder="+93..."
+                      placeholder="+93 Mobile"
                       autoComplete="tel"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className={labelClass}>ایمیل ادرس *</label>
+                    <label className={labelClass}>INVITATION CODE *</label>
                     <input
                       className={fieldClass}
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="example@gmail.com"
-                      autoComplete="email"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {!isOwner && (
-                  <div>
-                    <label className={labelClass}>
-                      د بلنې Referral Code *
-                    </label>
-                    <input
-                      className={fieldClass}
-                      value={referralCode}
-                      onChange={(e) => setReferralCode(e.target.value)}
+                      type="text"
+                      value={isOwner ? "" : invitationCode}
+                      onChange={(e) => setInvitationCode(e.target.value)}
                       placeholder={
                         defaultCodeLoaded
-                          ? "د بلونکي Referral Code"
-                          : "د Referral معلومات لوډ کېږي..."
+                          ? "Enter code"
+                          : "Loading..."
                       }
-                      disabled={!defaultCodeLoaded}
-                      required
+                      disabled={!defaultCodeLoaded || isOwner}
+                      required={!isOwner}
                     />
-                    <p className="mt-2 text-xs text-gray-500">
-                      د لومړنیو لسو غیرمالک حسابونو لپاره د مالک کوډ
-                      په اتومات ډول ښکاري. وروسته باید د بل موجود
-                      کارونکي معتبر کوډ ولیکئ.
-                    </p>
                   </div>
-                )}
-
-                <div>
-                  <label className={labelClass}>
-                    ستاسو شخصي Referral Code *
-                  </label>
-                  <input
-                    className={fieldClass}
-                    value={isOwner ? OWNER_CODE : personalCode}
-                    onChange={(e) => setPersonalCode(e.target.value)}
-                    placeholder="خپل ځانګړی کوډ انتخاب کړئ"
-                    disabled={isOwner}
-                    required
-                  />
-                  <p className="mt-2 text-xs text-gray-500">
-                    دا ستاسو خپل ځانګړی کوډ دی. نور کسان به یې د
-                    بلنې لپاره کاروي. باید له نورو کوډونو سره توپیر ولري.
-                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className={labelClass}>پاسورډ *</label>
-                    <input
-                      className={fieldClass}
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="لږ تر لږه ۸ توري"
-                      autoComplete="new-password"
-                      minLength={8}
-                      required
-                    />
-                  </div>
+                <div>
+                  <label className={labelClass}>EMAIL ADDRESS *</label>
+                  <input
+                    className={fieldClass}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter email address"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
 
-                  <div>
-                    <label className={labelClass}>پاسورډ بیا ولیکئ *</label>
-                    <input
-                      className={fieldClass}
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="پاسورډ تایید کړئ"
-                      autoComplete="new-password"
-                      minLength={8}
-                      required
-                    />
-                  </div>
+                <div>
+                  <label className={labelClass}>PASSWORD *</label>
+                  <input
+                    className={fieldClass}
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>CONFIRM PASSWORD *</label>
+                  <input
+                    className={fieldClass}
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                  />
                 </div>
               </>
             ) : (
               <div className="space-y-4 text-center">
-                <h2 className="text-xl font-bold text-gray-800">
-                  ایمیل تایید کړئ
+                <h2 className="text-xl font-bold text-gray-900">
+                  VERIFY YOUR EMAIL
                 </h2>
+
                 <p className="text-sm text-gray-600">
-                  موږ دې ایمیل ته ۶ عددي کوډ لېږلی:
+                  We sent a 6-digit verification code to:
                 </p>
-                <p className="font-semibold text-emerald-700" dir="ltr">
+
+                <p className="break-all font-semibold text-yellow-700" dir="ltr">
                   {email}
                 </p>
+
                 <input
                   className={`${fieldClass} text-center text-2xl tracking-[0.5em]`}
+                  type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   maxLength={6}
@@ -429,13 +364,14 @@ export default function RegisterPage() {
                   placeholder="000000"
                   required
                 />
+
                 <button
                   type="button"
                   onClick={resendCode}
                   disabled={loading}
-                  className="text-sm font-semibold text-emerald-700 hover:underline disabled:opacity-50"
+                  className="text-sm font-semibold text-red-600 hover:underline disabled:opacity-50"
                 >
-                  نوی تایید کوډ ولېږئ
+                  RESEND VERIFICATION CODE
                 </button>
               </div>
             )}
@@ -443,29 +379,31 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading || (!awaitingVerification && !defaultCodeLoaded && !isOwner)}
-              className="w-full rounded-xl bg-emerald-700 px-5 py-3.5 font-bold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-yellow-400 px-5 py-3.5 font-extrabold tracking-wide text-black shadow-sm transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading
-                ? "مهرباني وکړئ انتظار وکړئ..."
+                ? "PLEASE WAIT..."
                 : awaitingVerification
-                  ? "ایمیل تایید کړئ"
-                  : "حساب جوړ کړئ"}
+                  ? "VERIFY EMAIL"
+                  : "CONTINUE"}
             </button>
           </form>
 
-          <div className="mt-6 border-t border-gray-100 pt-5 text-center text-sm text-gray-600">
-            مخکې حساب لرئ؟{" "}
-            <Link
-              href="/login"
-              className="font-bold text-emerald-700 hover:underline"
-            >
-              ننوتل
-            </Link>
-          </div>
+          {!awaitingVerification && (
+            <div className="mt-6 border-t border-gray-100 pt-5 text-center text-sm text-gray-600">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-extrabold text-red-600 hover:underline"
+              >
+                LOGIN
+              </Link>
+            </div>
+          )}
         </div>
 
-        <p className="mt-5 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} HEWAD COIN. All rights reserved.
+        <p className="mt-5 text-center text-xs text-gray-500">
+          © 2026 HEWAD COIN. All rights reserved.
         </p>
       </div>
     </main>
