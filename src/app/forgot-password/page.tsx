@@ -1,44 +1,60 @@
 
 "use client";
 
-import Link from "next/link";
 import { useState, FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+
+type Step = 1 | 2 | 3;
 
 export default function ForgotPasswordPage() {
   const supabase = createClient();
   const router = useRouter();
 
+  const [step, setStep] = useState<Step>(1);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [step, setStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const inputClass =
+    "w-full rounded-xl border border-gray-300 bg-white px-4 py-4 text-base text-gray-900 outline-none transition focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100";
+
+  const buttonClass =
+    "w-full rounded-xl bg-[#E0B02E] px-5 py-4 text-center text-lg font-bold text-[#251B08] shadow-md transition hover:bg-[#D2A01F] disabled:cursor-not-allowed disabled:opacity-60";
 
   async function sendCode(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(
-        email.trim()
+        cleanEmail
       );
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setStep(2);
-        setSuccess("A 6-digit verification code has been sent to your email.");
-      }
-    } catch {
-      setError("Unable to send the code. Please try again.");
+      if (error) throw error;
+
+      setEmail(cleanEmail);
+      setStep(2);
+      setSuccess("Verification code sent. Please check your email.");
+    } catch (err: any) {
+      setError(err.message || "Unable to send verification code.");
     } finally {
       setLoading(false);
     }
@@ -48,40 +64,63 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    if (!/^\d{6}$/.test(code)) {
+      setError("Please enter the complete 6-digit verification code.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
+        email,
         token: code,
         type: "recovery",
       });
 
-      if (error) {
-        setError("Invalid or expired verification code.");
-      } else {
-        setStep(3);
-        setSuccess("Email verified. You can create a new password.");
-      }
-    } catch {
-      setError("Code verification failed. Please try again.");
+      if (error) throw error;
+
+      setStep(3);
+      setSuccess("Email verified successfully. Create your new password.");
+    } catch (err: any) {
+      setError(err.message || "Invalid or expired verification code.");
     } finally {
       setLoading(false);
     }
   }
 
-  async function resetPassword(e: FormEvent<HTMLFormElement>) {
+  async function resendCode() {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+      if (error) throw error;
+
+      setSuccess("A new verification code has been sent to your email.");
+      setCode("");
+    } catch (err: any) {
+      setError(err.message || "Unable to resend verification code.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updatePassword(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (newPassword.length < 8) {
+    if (password.length < 8) {
       setError("Password must contain at least 8 characters.");
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match. Please try again.");
       return;
     }
 
@@ -89,220 +128,305 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword,
+        password,
       });
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setSuccess("Your password has been successfully changed.");
+      if (error) throw error;
 
-        await supabase.auth.signOut();
+      setSuccess("Your password has been changed successfully!");
 
-        router.push("/login");
-        router.refresh();
-      }
-    } catch {
-      setError("Unable to reset password. Please try again.");
+      await supabase.auth.signOut();
+
+      setTimeout(() => {
+        router.replace("/login");
+      }, 1200);
+    } catch (err: any) {
+      setError(err.message || "Unable to update password.");
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <main className="flex min-h-screen min-h-[100dvh] items-center justify-center bg-[#F4F5F7] px-4 py-8">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg sm:p-9">
+  function goBack() {
+    setError("");
+    setSuccess("");
+    if (step === 3) {
+      setStep(2);
+    } else if (step === 2) {
+      setStep(1);
+      setCode("");
+    }
+  }
 
-        <div className="mb-8 text-center">
+  return (
+    <main className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-x-hidden bg-[#F7F7F5] px-4 py-7 sm:px-6">
+
+      {/* Background watermark */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="text-[130px] font-black text-yellow-500/[0.035] sm:text-[190px]">
+          HEWAD
+        </div>
+      </div>
+
+      <div className="relative z-10 mx-auto flex w-full max-w-[460px] flex-col">
+
+        {/* Main Logo */}
+        <div className="mb-5 flex flex-col items-center text-center">
           <img
             src="/hewad-coin-logo.jpg"
             alt="HEWAD COIN Logo"
-            className="mx-auto mb-3 h-28 w-28 object-contain"
+            className="h-24 w-24 rounded-full object-contain sm:h-28 sm:w-28"
           />
 
-          <h1 className="text-3xl font-extrabold text-[#C62828]">
+          <h1 className="mt-3 text-2xl font-extrabold tracking-wide text-[#A77A12] sm:text-3xl">
             HEWAD COIN
           </h1>
 
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-1 text-sm font-medium text-gray-500">
             The Future of Global Trading
           </p>
         </div>
 
-        <h2 className="mb-2 text-2xl font-bold text-gray-900">
-          Forgot Password?
-        </h2>
+        {/* Page Content */}
+        <section className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-7 shadow-[0_8px_35px_rgba(0,0,0,0.07)] sm:px-8 sm:py-9">
 
-        <p className="mb-7 text-sm leading-6 text-gray-500">
-          Recover your account securely using your registered email.
-        </p>
+          <div className="mb-7 text-center">
+            <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              {step === 1 && "Forgot Password?"}
+              {step === 2 && "Verify Your Email"}
+              {step === 3 && "Create New Password"}
+            </h2>
 
-        <div className="mb-7 flex items-center justify-between">
-          {[1, 2, 3].map((number) => (
-            <div key={number} className="flex flex-1 items-center">
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-full font-bold ${
-                  step >= number
-                    ? "bg-[#C62828] text-white"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                {number}
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-gray-500 sm:text-base">
+              {step === 1 &&
+                "Please enter your registered email address."}
+              {step === 2 &&
+                "We have sent a 6-digit verification code to your registered email address."}
+              {step === 3 &&
+                "Please create a strong new password for your account."}
+            </p>
+          </div>
+
+          {/* Progress Steps */}
+          <div className="mb-8 flex items-center justify-center">
+            {[1, 2, 3].map((number, index) => (
+              <div key={number} className="flex items-center">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition ${
+                    step >= number
+                      ? "bg-[#DDB02F] text-white shadow-md"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {step > number ? "✓" : number}
+                </div>
+
+                {index < 2 && (
+                  <div
+                    className={`h-[3px] w-12 sm:w-16 ${
+                      step > number ? "bg-[#DDB02F]" : "bg-gray-200"
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
+              {error}
+            </div>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <div className="mb-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm leading-6 text-green-700">
+              {success}
+            </div>
+          )}
+
+          {/* STEP 1: EMAIL */}
+          {step === 1 && (
+            <form onSubmit={sendCode} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-bold tracking-wide text-gray-800">
+                  EMAIL ADDRESS
+                </label>
+
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  autoComplete="email"
+                  required
+                  className={inputClass}
+                />
               </div>
 
-              {number !== 3 && (
-                <div className="mx-2 h-1 flex-1 rounded bg-gray-200" />
-              )}
-            </div>
-          ))}
-        </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className={buttonClass}
+              >
+                {loading ? "SENDING CODE..." : "CONTINUE"}
+              </button>
+            </form>
+          )}
 
-        {error && (
-          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+          {/* STEP 2: VERIFICATION CODE */}
+          {step === 2 && (
+            <form onSubmit={verifyCode} className="space-y-6">
+              <div>
+                <label className="mb-2 block text-sm font-bold tracking-wide text-gray-800">
+                  ENTER VERIFICATION CODE
+                </label>
 
-        {success && (
-          <div className="mb-5 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-            {success}
-          </div>
-        )}
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) =>
+                    setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  placeholder="000000"
+                  required
+                  className={`${inputClass} text-center text-2xl font-bold tracking-[0.65em]`}
+                />
 
-        {step === 1 && (
-          <form onSubmit={sendCode} className="space-y-5">
-            <label className="block text-sm font-semibold text-gray-800">
-              REGISTERED EMAIL ADDRESS
-            </label>
+                <p className="mt-3 break-all text-center text-xs text-gray-500">
+                  Verification email: {email}
+                </p>
+              </div>
 
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your registered email"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3.5 outline-none focus:border-[#C62828]"
-            />
+              <button
+                type="submit"
+                disabled={loading}
+                className={buttonClass}
+              >
+                {loading ? "VERIFYING..." : "VERIFY CODE"}
+              </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-[#C62828] py-4 font-bold text-white hover:bg-[#8E1717] disabled:opacity-60"
-            >
-              {loading ? "SENDING..." : "SEND VERIFICATION CODE"}
-            </button>
-          </form>
-        )}
+              <div className="text-center">
+                <p className="text-sm text-gray-500">
+                  Didn&apos;t receive the code?
+                </p>
 
-        {step === 2 && (
-          <form onSubmit={verifyCode} className="space-y-5">
-            <p className="text-sm text-gray-600">
-              Enter the 6-digit code sent to:
-              <strong className="block mt-1">{email}</strong>
-            </p>
+                <button
+                  type="button"
+                  onClick={resendCode}
+                  disabled={loading}
+                  className="mt-2 font-bold text-[#A77A12] hover:underline disabled:opacity-50"
+                >
+                  Resend Code
+                </button>
+              </div>
+            </form>
+          )}
 
-            <label className="block text-sm font-semibold text-gray-800">
-              VERIFICATION CODE
-            </label>
+          {/* STEP 3: NEW PASSWORD */}
+          {step === 3 && (
+            <form onSubmit={updatePassword} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-bold tracking-wide text-gray-800">
+                  NEW PASSWORD
+                </label>
 
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              minLength={6}
-              required
-              value={code}
-              onChange={(e) =>
-                setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              placeholder="000000"
-              className="w-full rounded-xl border border-gray-300 px-4 py-4 text-center text-2xl tracking-[0.5em] outline-none focus:border-[#C62828]"
-            />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    className={`${inputClass} pr-16`}
+                  />
 
-            <button
-              type="submit"
-              disabled={loading || code.length !== 6}
-              className="w-full rounded-xl bg-[#C62828] py-4 font-bold text-white hover:bg-[#8E1717] disabled:opacity-60"
-            >
-              {loading ? "VERIFYING..." : "VERIFY CODE"}
-            </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#A77A12]"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
 
+                <p className="mt-2 text-xs text-gray-500">
+                  Password must contain at least 8 characters.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold tracking-wide text-gray-800">
+                  CONFIRM NEW PASSWORD
+                </label>
+
+                <div className="relative">
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    autoComplete="new-password"
+                    required
+                    className={`${inputClass} pr-16`}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#A77A12]"
+                  >
+                    {showConfirm ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={buttonClass}
+              >
+                {loading ? "UPDATING PASSWORD..." : "RESET PASSWORD"}
+              </button>
+            </form>
+          )}
+
+          {/* Back Button */}
+          {step > 1 && (
             <button
               type="button"
-              onClick={() => {
-                setStep(1);
-                setCode("");
-                setError("");
-                setSuccess("");
-              }}
-              className="w-full text-sm font-semibold text-[#C62828]"
-            >
-              CHANGE EMAIL ADDRESS
-            </button>
-          </form>
-        )}
-
-        {step === 3 && (
-          <form onSubmit={resetPassword} className="space-y-5">
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-800">
-                NEW PASSWORD
-              </label>
-
-              <input
-                type="password"
-                required
-                minLength={8}
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3.5 outline-none focus:border-[#C62828]"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-800">
-                CONFIRM NEW PASSWORD
-              </label>
-
-              <input
-                type="password"
-                required
-                minLength={8}
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3.5 outline-none focus:border-[#C62828]"
-              />
-            </div>
-
-            <button
-              type="submit"
+              onClick={goBack}
               disabled={loading}
-              className="w-full rounded-xl bg-[#C62828] py-4 font-bold text-white hover:bg-[#8E1717] disabled:opacity-60"
+              className="mt-6 block w-full text-center text-sm font-bold text-[#A77A12] hover:underline"
             >
-              {loading ? "UPDATING..." : "RESET PASSWORD"}
+              ← Back
             </button>
-          </form>
-        )}
+          )}
 
-        <p className="mt-7 text-center text-sm text-gray-600">
-          Remember your password?{" "}
-          <Link
-            href="/login"
-            className="font-bold text-[#C62828] hover:underline"
-          >
-            BACK TO LOGIN
-          </Link>
-        </p>
+          {/* Login Link */}
+          <div className="mt-8 border-t border-gray-100 pt-5 text-center">
+            <p className="text-sm text-gray-500">
+              Remember your password?{" "}
+              <Link
+                href="/login"
+                className="font-bold text-[#A77A12] hover:underline"
+              >
+                Back to Login
+              </Link>
+            </p>
+          </div>
+        </section>
 
-        <p className="mt-7 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} HEWAD COIN. All rights reserved.
-        </p>
+        {/* Footer */}
+        <footer className="mt-6 pb-2 text-center text-xs text-gray-400">
+          © 2026 HEWAD COIN. All rights reserved.
+        </footer>
       </div>
     </main>
   );
