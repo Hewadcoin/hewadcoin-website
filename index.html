@@ -21,7 +21,7 @@
       if(!doc||doc.getElementById('hewad-live-enhancements'))return;
       function loadScript(id,src,next){
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261122-1955';
+        script.id=id;script.src=src+'?v=20261122-1649';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
@@ -31,7 +31,11 @@
         loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
           loadScript('hewad-signup-polish','hewad-signup-polish.js',function(){
             loadScript('hewad-signup-final','hewad-signup-final.js',function(){
-            loadScript('hewad-password-recovery','hewad-password-recovery.js',function(){frame.style.visibility='visible';});
+            loadScript('hewad-phone-metadata','https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/libphonenumber-max.js',function(){
+              loadScript('hewad-phone-validation','hewad-phone-validation.js',function(){
+                loadScript('hewad-password-recovery','hewad-password-recovery.js',function(){frame.style.visibility='visible';});
+              });
+            });
           });
           });
         });
