@@ -390,4 +390,59 @@
   ].join('');
   document.head.appendChild(signupLayoutStyle);
 
+
+  /* Final registration form refinements requested by the site owner. */
+  (function refineSignupFields(){
+    const form = (document.getElementById('referral') && document.getElementById('referral').closest('form')) || document.querySelector('#signup form');
+    if (!form) return;
+    const firstName = form.querySelector('input[name*="first" i],input[id*="first" i]');
+    if (firstName) {
+      firstName.placeholder = 'Name';
+      firstName.setAttribute('aria-label','Name');
+      Array.from(form.querySelectorAll('label')).forEach(label => {
+        const associated = label.contains(firstName) || label.htmlFor === firstName.id;
+        if (!associated || !/first\s*name/i.test(label.textContent || '')) return;
+        if (label.contains(firstName)) {
+          Array.from(label.childNodes).forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE && /first\s*name/i.test(node.textContent)) node.textContent = node.textContent.replace(/first\s*name/i,'Name');
+          });
+        } else {
+          label.textContent = 'Name';
+        }
+      });
+    }
+    const countryCode = document.getElementById('hwcCountryCallingCode');
+    const countryInfo = document.getElementById('hwcCountryDetected');
+    if (countryCode && countryInfo) {
+      function showCountryName() {
+        if (!countryInfo.dataset.flag) {
+          const match = countryInfo.textContent.trim().match(/[\u{1F1E6}-\u{1F1FF}]{2}/u);
+          countryInfo.dataset.flag = match ? match[0] : '❓';
+        }
+        const countryName = countryInfo.getAttribute('aria-label') || 'Unknown country';
+        countryInfo.textContent = countryInfo.dataset.flag + ' ' + countryName;
+        countryInfo.title = countryName;
+      }
+      showCountryName();
+      countryCode.addEventListener('input', showCountryName);
+      countryCode.addEventListener('change', showCountryName);
+    }
+    const compact = document.createElement('style');
+    compact.id = 'hwc-signup-final-refinements';
+    compact.textContent = [
+      '#signup form .hwc-country-field{display:flex!important;flex:0 0 42%!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:3px!important;height:auto!important;min-width:0!important}',
+      '#signup form .hwc-country-field input#hwcCountryCallingCode{height:38px!important;min-height:38px!important;padding:0 7px!important;text-align:center!important}',
+      '#signup form .hwc-country-detected{position:static!important;display:block!important;transform:none!important;min-width:0!important;width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:center!important;font-size:10px!important;line-height:13px!important;color:#e4c36c!important}',
+      '#signup form .hwc-phone-row{align-items:flex-start!important;gap:8px!important}',
+      '#signup form .hwc-phone-row input[type=tel]{height:38px!important;min-height:38px!important;align-self:flex-start!important}',
+      '#signup form input[type=email],#signup form input[type=password]{margin-top:2px!important;margin-bottom:1px!important}',
+      '#signup form .hwc-field-hint{margin-top:0!important;margin-bottom:2px!important;min-height:10px!important;line-height:1.15!important}',
+      '#signup form .password-input-wrap{margin-top:1px!important;margin-bottom:0!important}',
+      '#signup form .password-input-wrap+ .hwc-field-hint{margin-top:0!important;margin-bottom:2px!important}',
+      '#signup form label{margin-top:2px!important;margin-bottom:2px!important;line-height:1.25!important}',
+      '@media(max-width:390px){#signup form .hwc-country-detected{font-size:9px!important}.hwc-name-referral-row{gap:6px!important}}'
+    ].join('');
+    document.head.appendChild(compact);
+  })();
+
 })();
