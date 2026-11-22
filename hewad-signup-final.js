@@ -177,8 +177,8 @@
     formGrid.replaceChildren();
     nameRow.appendChild(firstField);
     nameRow.appendChild(referralField);
-    phoneRow.appendChild(countryWrap);
     phoneRow.appendChild(mobileField);
+    phoneRow.appendChild(countryWrap);
     formGrid.appendChild(nameRow);
     formGrid.appendChild(phoneRow);
     formGrid.appendChild(emailField);
@@ -223,7 +223,7 @@
       '#signup .hwc-final-name-referral>.field:nth-child(1){grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;max-width:100%!important}',
       '#signup .hwc-final-name-referral>.field:nth-child(2){grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important;max-width:100%!important}',
       '#signup .hwc-final-name-referral>.field:nth-child(1) input,#signup .hwc-final-name-referral>.field:nth-child(2) input{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}',
-      '#signup .hwc-final-phone-row{grid-template-columns:minmax(0,3fr) minmax(0,7fr)!important;grid-auto-flow:column!important}',
+      '#signup .hwc-final-phone-row{grid-template-columns:minmax(0,7fr) minmax(0,3fr)!important;grid-auto-flow:column!important}',
       '#signup .field{display:flex!important;flex-direction:column!important;gap:5px!important;width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important}',
       '#signup .field label,#signup .hwc-final-country label{display:block!important;margin:0!important;color:#ffe08a!important;font-size:13px!important;font-weight:700!important;line-height:1.25!important}',
       '#signup .field input,#signup .hwc-final-country input{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;height:43px!important;min-height:43px!important;margin:0!important;padding:0 11px!important;border:1px solid rgba(255,205,70,.72)!important;border-radius:10px!important;background:#fff!important;color:#17120a!important;font-size:15px!important;line-height:normal!important;box-sizing:border-box!important}',
