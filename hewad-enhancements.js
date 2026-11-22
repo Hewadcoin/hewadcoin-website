@@ -121,7 +121,7 @@ bindReferralExperience();bind();db.auth.onAuthStateChange(function(event,session
 /* Live signup field validation: password policy, confirmation and email feedback. */
 function bindSignupValidation(){
   var ref=$('referral');
-  var form=ref&&(ref.closest('form')||null);
+  var form=ref&&(ref.closest('form')||document);
   if(!form)return;
   var email=form.querySelector('input[type="email"],input[name*="email" i],input[id*="email" i]');
   var passwords=Array.from(form.querySelectorAll('input[type="password"]'));
