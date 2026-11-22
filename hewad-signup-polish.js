@@ -215,7 +215,7 @@
         '+880':['🇧🇩','Bangladesh'], '+998':['🇺🇿','Uzbekistan'], '+992':['🇹🇯','Tajikistan']
       };
       function updateDetectedCountry() {
-        let code = countryCode.value.trim().replace(/[^+\\d]/g, '');
+        let code = countryCode.value.trim().replace(/[^+\d]/g, '');
         if (code && code[0] !== '+') code = '+' + code;
         if (countryCode.value !== code) countryCode.value = code;
         const found = countryMap[code];
