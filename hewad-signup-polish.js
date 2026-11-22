@@ -184,7 +184,7 @@
       mobile.setAttribute('autocomplete', 'tel-national');
       mobile.setAttribute('inputmode', 'tel');
       let countryCode = Array.from(signupForm.querySelectorAll('select')).find(sel =>
-        Array.from(sel.options).some(opt => /^\\+\\d{1,4}$/.test(opt.value.trim()) || /^\\+\\d{1,4}$/.test(opt.textContent.trim()))
+        Array.from(sel.options).some(opt => /^\+\d{1,4}$/.test(opt.value.trim()) || /^\+\d{1,4}$/.test(opt.textContent.trim()))
       );
       if (!countryCode) {
         countryCode = document.createElement('select');
@@ -202,6 +202,13 @@
       } else {
         countryCode.required = true;
         countryCode.id = countryCode.id || 'hwcCountryCallingCode';
+      }
+      if (!mobile.closest('.hwc-phone-row')) {
+        const phoneRow = document.createElement('div');
+        phoneRow.className = 'hwc-phone-row';
+        mobile.parentNode.insertBefore(phoneRow, mobile);
+        phoneRow.appendChild(countryCode);
+        phoneRow.appendChild(mobile);
       }
       let phoneHint = $('hwcMobileValidationHint');
       if (!phoneHint) {
@@ -227,7 +234,7 @@
       let phoneCheckTimer = null;
       function normalizedPhone() {
         const code = (countryCode.value || '').trim();
-        let digits = (mobile.value || '').replace(/\\D/g, '');
+        let digits = (mobile.value || '').replace(/\D/g, '');
         digits = digits.replace(/^0+/, '');
         return code && digits ? code + digits : '';
       }
@@ -242,7 +249,7 @@
       async function validateMobile() {
         const ticket = ++phoneCheckVersion;
         const full = normalizedPhone();
-        const localDigits = (mobile.value || '').replace(/\\D/g, '').replace(/^0+/, '');
+        const localDigits = (mobile.value || '').replace(/\D/g, '').replace(/^0+/, '');
         if (!countryCode.value) {
           paintPhone(false, '✕ Please select your country calling code.', false);
           return false;
@@ -280,7 +287,7 @@
         signupDb.auth.signUp = async function (credentials) {
           const valid = await validateMobile();
           if (!valid) {
-            return { data: { user: null, session: null }, error: { message: phoneHint.textContent.replace(/^✕\\s*/, '') || 'Please enter a valid mobile number.' } };
+            return { data: { user: null, session: null }, error: { message: phoneHint.textContent.replace(/^✕\s*/, '') || 'Please enter a valid mobile number.' } };
           }
           const full = normalizedPhone();
           const args = Object.assign({}, credentials || {});
