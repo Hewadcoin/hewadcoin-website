@@ -20,14 +20,19 @@
       var doc=frame.contentDocument;
       if(!doc||doc.getElementById('hewad-live-enhancements'))return;
       function loadScript(id,src,next){
-        var script=doc.createElement('script');
-        script.id=id;script.src=src+'?v=20261122-1148';
-        script.onload=next;
-        script.onerror=function(){console.error('Could not load '+src);};
+        var script=doc.createElement('script'),finished=false;
+        script.id=id;script.src=src+'?v=20261122-1200';
+        function finish(){if(finished)return;finished=true;if(next)next();}
+        script.onload=finish;
+        script.onerror=function(){console.error('Could not load '+src);finish();};
         doc.body.appendChild(script);
       }
       loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
-        loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){loadScript('hewad-signup-polish','hewad-signup-polish.js',function(){frame.style.visibility='visible';});});
+        loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
+          loadScript('hewad-signup-polish','hewad-signup-polish.js',function(){
+            loadScript('hewad-signup-final','hewad-signup-final.js',function(){frame.style.visibility='visible';});
+          });
+        });
       });
     }catch(error){console.error('HEWAD COIN live features could not initialize:',error);}
   });
