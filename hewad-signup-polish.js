@@ -753,6 +753,18 @@ function hewadExactSignupForm(){
   const find=fn=>inputs().find(fn);
   const first=find(el=>/first.?name|firstname/.test(meta(el)))||find(el=>/^name$/.test((el.name||el.id||'').toLowerCase()))||find(el=>/name/.test(meta(el))&&!/last|referral|user/.test(meta(el)));
   const referral=document.getElementById('referral')||find(el=>/referral/.test(meta(el)));
+  // Apply the approved field labels/placeholders after older polish rules.
+  first.placeholder='Enter first name';
+  first.setAttribute('aria-label','First Name');
+  const firstLabel=Array.from(form.querySelectorAll('label')).find(label=>label.contains(first)||label.htmlFor===first.id);
+  if(firstLabel){
+    if(firstLabel.contains(first)){
+      Array.from(firstLabel.childNodes).forEach(node=>{
+        if(node.nodeType===Node.TEXT_NODE && /^(\\s*)(name|first\\s*name)(\\s*)$/i.test(node.textContent||'')) node.textContent='First Name';
+      });
+    }else firstLabel.textContent='First Name';
+  }
+  if(referral)referral.placeholder='Enter referral code';
   const mobile=find(el=>el.type==='tel'||/mobile|phone/.test(meta(el)));
   if(!first||!referral||!mobile)return;
   form.dataset.hwcExactLayout='yes';
@@ -858,7 +870,8 @@ function hewadExactSignupForm(){
     '#signup form{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;width:100%!important;box-sizing:border-box!important}',
     '#signup form .hwc-exact-name-referral,#signup form .hwc-exact-phone-row{display:grid!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;gap:8px!important;align-items:end!important;margin:0!important}',
     '#signup form .hwc-exact-name-referral{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}',
-    '#signup form .hwc-exact-phone-row{grid-template-columns:minmax(0,22fr) minmax(0,78fr)!important}',
+    '#signup form .hwc-exact-phone-row{grid-template-columns:minmax(0,22fr) minmax(0,78fr)!important;grid-auto-flow:row!important}',
+    '#signup form .hwc-exact-phone-row input[type=tel]{white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;direction:ltr!important;text-align:left!important;font-variant-numeric:tabular-nums!important}',
     '#signup form .hwc-exact-name-referral>* ,#signup form .hwc-exact-phone-row>*{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important;margin:0!important}',
     '#signup form .hwc-exact-name-referral input,#signup form .hwc-exact-phone-row input{width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;box-sizing:border-box!important;white-space:nowrap!important}',
     '#signup form .hwc-exact-country{position:relative!important;width:100%!important;height:40px!important;min-width:0!important;box-sizing:border-box!important}',
