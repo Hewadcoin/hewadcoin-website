@@ -183,26 +183,39 @@
       mobile.required = true;
       mobile.setAttribute('autocomplete', 'tel-national');
       mobile.setAttribute('inputmode', 'tel');
-      let countryCode = Array.from(signupForm.querySelectorAll('select')).find(sel =>
-        Array.from(sel.options).some(opt => /^\+\d{1,4}$/.test(opt.value.trim()) || /^\+\d{1,4}$/.test(opt.textContent.trim()))
-      );
-      if (!countryCode) {
-        countryCode = document.createElement('select');
-        countryCode.id = 'hwcCountryCallingCode';
-        countryCode.name = 'country_calling_code';
-        countryCode.required = true;
-        countryCode.setAttribute('aria-label', 'Country calling code');
-        countryCode.innerHTML = '<option value="">Country code</option>' +
-          [['Afghanistan','+93'],['Pakistan','+92'],['India','+91'],['Iran','+98'],['United Arab Emirates','+971'],['Saudi Arabia','+966'],['Turkey','+90'],['United States','+1'],['United Kingdom','+44'],['Canada','+1'],['Germany','+49'],['France','+33'],['China','+86'],['Bangladesh','+880'],['Uzbekistan','+998'],['Tajikistan','+992']].map(x => '<option value="'+x[1]+'">'+x[0]+' ('+x[1]+')</option>').join('');
-        const phoneRow = document.createElement('div');
-        phoneRow.className = 'hwc-phone-row';
-        mobile.parentNode.insertBefore(phoneRow, mobile);
-        phoneRow.appendChild(countryCode);
-        phoneRow.appendChild(mobile);
-      } else {
-        countryCode.required = true;
-        countryCode.id = countryCode.id || 'hwcCountryCallingCode';
+      const previousCountry = signupForm.querySelector('#hwcCountryCallingCode');
+      const countryCode = document.createElement('input');
+      countryCode.type = 'text';
+      countryCode.id = 'hwcCountryCallingCode';
+      countryCode.name = 'country_calling_code';
+      countryCode.required = true;
+      countryCode.placeholder = '+93';
+      countryCode.inputMode = 'tel';
+      countryCode.autocomplete = 'off';
+      countryCode.maxLength = 5;
+      countryCode.setAttribute('aria-label', 'Country calling code, for example +93');
+      countryCode.value = previousCountry ? (previousCountry.value || '+93') : '+93';
+      const countryInfo = document.createElement('span');
+      countryInfo.id = 'hwcCountryDetected';
+      countryInfo.className = 'hwc-country-detected';
+      const countryMap = {
+        '+93':['🇦🇫','Afghanistan'], '+92':['🇵🇰','Pakistan'], '+91':['🇮🇳','India'],
+        '+98':['🇮🇷','Iran'], '+971':['🇦🇪','United Arab Emirates'], '+966':['🇸🇦','Saudi Arabia'],
+        '+90':['🇹🇷','Turkey'], '+1':['🇺🇸','United States / Canada'], '+44':['🇬🇧','United Kingdom'],
+        '+49':['🇩🇪','Germany'], '+33':['🇫🇷','France'], '+86':['🇨🇳','China'],
+        '+880':['🇧🇩','Bangladesh'], '+998':['🇺🇿','Uzbekistan'], '+992':['🇹🇯','Tajikistan']
+      };
+      function updateDetectedCountry() {
+        let code = countryCode.value.trim().replace(/[^+\\d]/g, '');
+        if (code && code[0] !== '+') code = '+' + code;
+        if (countryCode.value !== code) countryCode.value = code;
+        const found = countryMap[code];
+        countryInfo.textContent = found ? found[0] + ' ' + found[1] : (code ? '🌐 Unknown country code' : '');
+        countryInfo.style.color = found ? '#d8ad3e' : '#ff6262';
       }
+      countryCode.insertAdjacentElement('afterend', countryInfo);
+      countryCode.addEventListener('input', updateDetectedCountry);
+      updateDetectedCountry();
       if (!mobile.closest('.hwc-phone-row')) {
         const phoneRow = document.createElement('div');
         phoneRow.className = 'hwc-phone-row';
@@ -222,11 +235,12 @@
       phoneStyle.id = 'hwc-phone-signup-styles';
       phoneStyle.textContent = [
         '.hwc-phone-row{display:flex!important;align-items:stretch!important;gap:7px!important;width:100%!important;min-width:0!important;margin:5px 0!important}',
-        '.hwc-phone-row select{flex:0 0 42%!important;min-width:0!important;width:42%!important;height:44px!important;border:1px solid #c9c9c9!important;border-radius:9px!important;background:#fff!important;color:#171717!important;padding:0 8px!important;font-size:13px!important}',
+        '.hwc-phone-row input#hwcCountryCallingCode{flex:0 0 30%!important;min-width:76px!important;width:30%!important;height:44px!important;border:1px solid #c9c9c9!important;border-radius:9px!important;background:#fff!important;color:#171717!important;padding:0 8px!important;font-size:14px!important;text-align:center!important}',
+        '.hwc-country-detected{flex:1 1 auto!important;align-self:center!important;min-width:0!important;color:#d8ad3e!important;font-size:12px!important;font-weight:700!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}',
         '.hwc-phone-row input{flex:1 1 58%!important;min-width:0!important;width:58%!important;height:44px!important;box-sizing:border-box!important}',
         '#hwcMobileValidationHint{display:block!important;width:100%!important;min-height:0!important;margin:5px 0 10px!important;font-size:11px!important;line-height:1.4!important}',
         '@media(max-height:760px){#signup form{gap:6px!important}#signup form input,#signup form select{min-height:37px!important;height:37px!important}#signup form button{min-height:38px!important;padding-top:8px!important;padding-bottom:8px!important}#signup form label{margin-top:3px!important;margin-bottom:3px!important}#signup h1,#signup h2{margin-top:5px!important;margin-bottom:7px!important}}',
-        '@media(max-width:480px){.hwc-phone-row select{font-size:11px!important;padding:0 5px!important}}'
+        '@media(max-width:480px){.hwc-phone-row input#hwcCountryCallingCode{font-size:12px!important;padding:0 5px!important}.hwc-country-detected{font-size:10px!important}}'
       ].join('');
       document.head.appendChild(phoneStyle);
 
@@ -279,7 +293,7 @@
         phoneCheckTimer = setTimeout(validateMobile, 450);
       }
       mobile.addEventListener('input', schedulePhoneCheck);
-      countryCode.addEventListener('change', validateMobile);
+      countryCode.addEventListener('input', function(){ updateDetectedCountry(); schedulePhoneCheck(); });
       mobile.addEventListener('blur', validateMobile);
 
       if (!signupDb.auth.__hwcPhoneSignupWrapped) {
@@ -302,6 +316,50 @@
         signupDb.auth.__hwcPhoneSignupWrapped = true;
       }
     }
+  }
+
+
+  /* Registration form: compact two-column rows and no surname field. */
+  if (signupForm) {
+    const findField = (terms) => Array.from(signupForm.querySelectorAll('input')).find(input =>
+      terms.some(term => ((input.name || '') + ' ' + (input.id || '') + ' ' +
+        (input.closest('label')?.textContent || input.parentElement?.textContent || '')).toLowerCase().includes(term)
+      )
+    );
+    const firstName = findField(['first name','firstname','first_name']);
+    const referralField = $('referral');
+    const lastName = findField(['last name','lastname','last_name']);
+    const wrapperFor = (el) => el && (el.closest('.form-group,.input-group,.field-group,.form-field,.input-field,label') || el.parentElement);
+    if (lastName) {
+      const lastWrap = wrapperFor(lastName);
+      if (lastWrap && lastWrap !== signupForm) lastWrap.style.setProperty('display','none','important');
+      lastName.required = false;
+      lastName.disabled = true;
+    }
+    function makeCompactRow(a,b,cls) {
+      if (!a || !b || a === b) return;
+      let wa=wrapperFor(a), wb=wrapperFor(b);
+      if (!wa || !wb || wa===wb || wa.parentElement!==wb.parentElement) return;
+      let row=wa.parentElement.querySelector(':scope > .' + cls);
+      if (!row) { row=document.createElement('div'); row.className=cls; wa.parentElement.insertBefore(row,wa); }
+      row.appendChild(wa); row.appendChild(wb);
+    }
+    makeCompactRow(firstName,referralField,'hwc-name-referral-row');
+    const formStyle=document.createElement('style');
+    formStyle.id='hwc-registration-layout-style';
+    formStyle.textContent=[
+      '.hwc-name-referral-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:9px!important;width:100%!important;align-items:start!important}',
+      '.hwc-name-referral-row>*{min-width:0!important;width:100%!important;margin:0!important}',
+      '#signup form .hwc-name-referral-row input{width:100%!important;min-width:0!important}',
+      '#signup form .hwc-phone-row{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:7px!important}',
+      '#signup form .hwc-phone-row input[type=tel]{flex:1 1 48%!important;width:auto!important;min-width:0!important}',
+      '#signup form input[type=email],#signup form input[type=password]{margin-bottom:4px!important}',
+      '#signup form .hwc-field-hint{margin-top:2px!important;margin-bottom:5px!important;min-height:11px!important;font-size:10px!important;line-height:1.25!important}',
+      '#signup form .password-input-wrap{margin-bottom:0!important}',
+      '#signup form .password-input-wrap+ .hwc-field-hint{margin-top:2px!important;margin-bottom:4px!important}',
+      '@media(max-width:390px){.hwc-name-referral-row{gap:6px!important}.hwc-name-referral-row input{font-size:12px!important;padding-left:8px!important;padding-right:8px!important}}'
+    ].join('');
+    document.head.appendChild(formStyle);
   }
 
   /* Keep the registration panel compact and fixed on small screens. */
