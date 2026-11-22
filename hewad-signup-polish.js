@@ -102,8 +102,9 @@
     ['hwcEmailValidationHint', 'hwcPasswordValidationHint', 'hwcConfirmPasswordValidationHint'].forEach((id) => {
       const node = $(id);
       if (!node) return;
-      if (!node.dataset.hwcMessageKey) node.dataset.hwcMessageKey = hintKeyByEnglish[node.textContent.trim()] || '';
-      const key = node.dataset.hwcMessageKey;
+      const detectedKey = hintKeyByEnglish[node.textContent.trim()];
+      if (detectedKey) node.dataset.hwcMessageKey = detectedKey;
+      const key = node.dataset.hwcMessageKey || '';
       if (key && hintMessages[lang][key] && node.textContent !== hintMessages[lang][key]) {
         node.textContent = hintMessages[lang][key];
       }
