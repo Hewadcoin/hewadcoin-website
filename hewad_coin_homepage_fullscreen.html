@@ -58,6 +58,7 @@ body{min-height:100vh} button,input,select{font:inherit}
 .dash-brand-mark{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#fff0a1,#c88708 48%,#3c2500);color:#171006;border:2px solid #ffe17b;box-shadow:0 0 18px #e5a60066;font-family:Georgia,serif;font-size:25px;font-weight:900}
 .dash-top-actions{display:flex;gap:10px}
 .dash-top-actions button{width:38px;height:38px;border-radius:50%;border:1px solid #70500f;background:#17130b;color:#f5c743;font-size:17px}
+#hwcThemeButton{font-weight:900;display:grid;place-items:center;flex:0 0 38px}body.theme-light #hwcThemeButton{background:#fff!important;color:#9b7418!important;border-color:#d8c28b!important}
 .hwc-card{position:relative;overflow:hidden;border:1px solid #d5a62b;border-radius:23px;padding:17px 16px 14px;background:radial-gradient(circle at 15% 10%,#6e5017 0%,#3c2a0d 37%,#17120a 100%);box-shadow:0 12px 35px #000b,0 0 26px #d49b1c33;color:#fff6d5}
 .hwc-card:before{content:"";position:absolute;inset:0;opacity:.14;background-image:repeating-radial-gradient(circle at 20% 35%,transparent 0 18px,#e9c15a 19px 20px,transparent 21px 38px);pointer-events:none}
 .hwc-card-head,.hwc-card-columns,.hwc-card-foot{position:relative;z-index:1}
@@ -267,7 +268,7 @@ body.theme-light .admin-pagination button{background:#fff;color:#555b66;border-c
  <div class="dash-shell">
   <header class="dash-top">
    <div class="dash-brand"><span class="dash-brand-mark">H</span><span>HEWAD COIN</span></div>
-   <div class="dash-top-actions"><button type="button" aria-label="Notifications">♧</button><button type="button" aria-label="Menu">☰</button><button type="button" id="hwcLogout" aria-label="Log out" title="Log out">↪</button></div>
+   <div class="dash-top-actions"><button type="button" aria-label="Notifications">♧</button><button type="button" id="hwcThemeButton" aria-label="Switch to light mode" title="Switch to light mode">☀</button><button type="button" aria-label="Menu">☰</button><button type="button" id="hwcLogout" aria-label="Log out" title="Log out">↪</button></div>
   </header>
 
   <section class="hwc-card" id="memberCard" aria-label="Hewad Coin member card">
@@ -663,9 +664,10 @@ restoreHwcSession();
  const $=id=>document.getElementById(id);
  const provinces=["Badakhshan","Badghis","Baghlan","Balkh","Bamyan","Daykundi","Farah","Faryab","Ghazni","Ghor","Helmand","Herat","Jowzjan","Kabul","Kandahar","Kapisa","Khost","Kunar","Kunduz","Laghman","Logar","Nangarhar","Nimroz","Nuristan","Paktia","Paktika","Panjshir","Parwan","Samangan","Sar-e Pol","Takhar","Uruzgan","Wardak","Zabul"];
  const ps=$("kycProvince"); if(ps)provinces.forEach(p=>{let o=document.createElement("option");o.value=p;o.textContent=p;ps.appendChild(o)});
- function setTheme(mode){document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");if($("themeLabel"))$("themeLabel").textContent=mode==="light"?"Light Mode":"Dark Mode";localStorage.setItem("hwc_theme",mode)}
+ function setTheme(mode){mode=mode==="light"?"light":"dark";document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");if($("themeLabel"))$("themeLabel").textContent=mode==="light"?"Light Mode":"Dark Mode";const themeButton=$("hwcThemeButton");if(themeButton){themeButton.textContent=mode==="light"?"☾":"☀";themeButton.setAttribute("aria-label",mode==="light"?"Switch to dark mode":"Switch to light mode");themeButton.title=mode==="light"?"Switch to dark mode":"Switch to light mode"}localStorage.setItem("hwc_theme",mode)}
  setTheme(localStorage.getItem("hwc_theme")||"dark");
  $("themeToggle")?.addEventListener("click",()=>setTheme(document.body.classList.contains("theme-light")?"dark":"light"));
+ $("hwcThemeButton")?.addEventListener("click",()=>setTheme(document.body.classList.contains("theme-light")?"dark":"light"));
  const openKyc=()=>{$("kycScreen").hidden=false;window.scrollTo(0,0)};
  $("addCardBtn")?.addEventListener("click",openKyc);$("kycProfileRow")?.addEventListener("click",openKyc);$("closeKyc")?.addEventListener("click",()=>{$("kycScreen").hidden=true});
  $("kycCountry")?.addEventListener("change",e=>{ps.innerHTML='<option value="">Select Province</option>';if(e.target.value==="Afghanistan")provinces.forEach(p=>{let o=document.createElement("option");o.value=p;o.textContent=p;ps.appendChild(o)});else{let o=document.createElement("option");o.value="Other";o.textContent="Other";ps.appendChild(o)}});
