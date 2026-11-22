@@ -19,7 +19,24 @@
     const confirm = byId('confirmPassword');
     if (!first || !mobile || !referral || !email || !password || !confirm) return false;
 
-    const fieldOf = input => input.closest('.field') || input.parentElement;
+    function fieldOf(input) {
+      const content = input.closest('.password-input-wrap') || input;
+      let field = input.closest('.field');
+      if (field && field.contains(content)) return field;
+      const label = Array.from(form.querySelectorAll('label')).find(node =>
+        node.htmlFor === input.id || node.contains(input)
+      );
+      field = label && label.closest('.field');
+      if (field) {
+        if (!field.contains(content)) field.appendChild(content);
+        return field;
+      }
+      field = document.createElement('div');
+      field.className = 'field';
+      if (label) field.appendChild(label);
+      field.appendChild(content);
+      return field;
+    }
     const firstField = fieldOf(first);
     const referralField = fieldOf(referral);
     const mobileField = fieldOf(mobile);
