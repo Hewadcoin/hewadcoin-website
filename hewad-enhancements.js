@@ -142,7 +142,7 @@ function bindSignupValidation(){
   }
   function emailValid(){
     var value=email.value.trim();
-    return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(value);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
   }
   function passwordValid(){
     var value=password.value;
