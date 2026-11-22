@@ -857,7 +857,7 @@
     '#signup form{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;width:100%!important;box-sizing:border-box!important}',
     '#signup form .hwc-exact-name-referral,#signup form .hwc-exact-phone-row{display:grid!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;gap:8px!important;align-items:end!important;margin:0!important}',
     '#signup form .hwc-exact-name-referral{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}',
-    '#signup form .hwc-exact-phone-row{grid-template-columns:minmax(0,32fr) minmax(0,68fr)!important}',
+    '#signup form .hwc-exact-phone-row{grid-template-columns:minmax(0,25fr) minmax(0,75fr)!important}',
     '#signup form .hwc-exact-name-referral>* ,#signup form .hwc-exact-phone-row>*{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important;margin:0!important}',
     '#signup form .hwc-exact-name-referral input,#signup form .hwc-exact-phone-row input{width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;box-sizing:border-box!important}',
     '#signup form .hwc-exact-country{position:relative!important;width:100%!important;height:40px!important;min-width:0!important;box-sizing:border-box!important}',
