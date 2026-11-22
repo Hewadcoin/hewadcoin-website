@@ -78,6 +78,14 @@
     setLabel(first, 'First Name');
     setLabel(referral, 'Referral Code');
     setLabel(mobile, 'Mobile Number');
+    // Remove legacy duplicate phone labels left by earlier signup scripts.
+    const phoneLabels = Array.from(mobileField.querySelectorAll('label')).filter(label =>
+      label.htmlFor === mobile.id || label.contains(mobile) || /mobile number/i.test(label.textContent || '')
+    );
+    phoneLabels.forEach((label, index) => {
+      if (index > 0) label.remove();
+      else { label.htmlFor = mobile.id; label.textContent = 'Mobile Number'; }
+    });
     setLabel(email, 'Email Address');
     setLabel(password, 'Password');
     setLabel(confirm, 'Confirm Password');
@@ -211,7 +219,9 @@
       '#signup form{display:block!important;width:100%!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:0!important;box-sizing:border-box!important}',
       '#signup .form-grid{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:11px!important;width:100%!important;min-width:0!important;margin:0!important}',
       '#signup .hwc-final-name-referral,#signup .hwc-final-phone-row{display:grid!important;align-items:end!important;gap:9px!important;width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important}',
-      '#signup .hwc-final-name-referral{grid-template-columns:minmax(0,78fr) minmax(0,22fr)!important}',
+      '#signup .hwc-final-name-referral{grid-template-columns:minmax(0,78fr) minmax(0,22fr)!important;grid-auto-flow:column!important}',
+      '#signup .hwc-final-name-referral>.field:first-child{grid-column:1!important;min-width:0!important}',
+      '#signup .hwc-final-name-referral>.field:last-child{grid-column:2!important;min-width:0!important}',
       '#signup .hwc-final-phone-row{grid-template-columns:minmax(0,22fr) minmax(0,78fr)!important;grid-auto-flow:column!important}',
       '#signup .field{display:flex!important;flex-direction:column!important;gap:5px!important;width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important}',
       '#signup .field label,#signup .hwc-final-country label{display:block!important;margin:0!important;color:#ffe08a!important;font-size:13px!important;font-weight:700!important;line-height:1.25!important}',
