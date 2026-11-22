@@ -511,3 +511,71 @@
   })();
 
 })();
+
+/* Final owner-requested signup layout: name/referral, compact phone prefix, full-width remaining fields. */
+(function finalOwnerSignupLayout(){
+  'use strict';
+  const form=(document.getElementById('referral')&&document.getElementById('referral').closest('form'))||document.querySelector('#signup form');
+  if(!form)return;
+  const wrap=el=>el&&(el.closest('.form-group,.input-group,.field-group,.form-field,.input-field')||el.parentElement);
+  const find=(terms)=>Array.from(form.querySelectorAll('input')).find(el=>{
+    const meta=[el.name,el.id,el.placeholder,...Array.from(el.labels||[]).map(x=>x.textContent)].join(' ').toLowerCase();
+    return terms.some(t=>meta.includes(t));
+  });
+  const name=find(['first name','firstname','first_name'])||find(['name']);
+  const referral=document.getElementById('referral');
+  const mobile=form.querySelector('input[type="tel"],input[name*="mobile" i],input[id*="mobile" i],input[name*="phone" i],input[id*="phone" i]');
+  const phoneRow=mobile&&mobile.closest('.hwc-phone-row');
+  function placePair(a,b,className){
+    const wa=wrap(a),wb=wrap(b);
+    if(!wa||!wb||wa===wb)return;
+    let row=form.querySelector(':scope > .'+className);
+    if(!row){row=document.createElement('div');row.className=className;const anchor=wa.compareDocumentPosition(wb)&Node.DOCUMENT_POSITION_FOLLOWING?wa:wb;anchor.parentNode.insertBefore(row,anchor);}
+    row.append(wa,wb);
+  }
+  placePair(name,referral,'hwc-name-referral-row');
+  if(phoneRow&&phoneRow.parentElement!==form){
+    const country=phoneRow.querySelector('.hwc-country-field');
+    if(country)country.style.width='100%';
+  }
+  const detected=document.getElementById('hwcCountryDetected');
+  if(detected){
+    const updateFlag=()=>{
+      const match=(detected.getAttribute('aria-label')||'').trim();
+      const emoji=detected.textContent.match(/[\\u{1F1E6}-\\u{1F1FF}]{2}/u);
+      const known={
+        Afghanistan:'🇦🇫',Pakistan:'🇵🇰',India:'🇮🇳',Iran:'🇮🇷',
+        'United Arab Emirates':'🇦🇪','Saudi Arabia':'🇸🇦',Turkey:'🇹🇷',
+        'United States / Canada':'🇺🇸','United Kingdom':'🇬🇧',Germany:'🇩🇪',
+        France:'🇫🇷',China:'🇨🇳',Bangladesh:'🇧🇩',Uzbekistan:'🇺🇿',Tajikistan:'🇹🇯'
+      };
+      detected.textContent=known[match]||(emoji?emoji[0]:'❓');
+      detected.title=match;
+      detected.setAttribute('aria-label',match||'Unknown country');
+    };
+    updateFlag();
+    const code=document.getElementById('hwcCountryCallingCode');
+    code&&code.addEventListener('input',updateFlag);
+  }
+  const style=document.createElement('style');
+  style.id='hwc-owner-final-layout';
+  style.textContent=[
+    '#signup form{display:flex!important;flex-direction:column!important;gap:5px!important;width:100%!important;box-sizing:border-box!important}',
+    '#signup form .hwc-name-referral-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:8px!important;width:100%!important;align-items:stretch!important}',
+    '#signup form .hwc-name-referral-row>*{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important;margin:0!important}',
+    '#signup form .hwc-name-referral-row input{width:100%!important;min-width:0!important;box-sizing:border-box!important}',
+    '#signup form .hwc-phone-row{display:grid!important;grid-template-columns:minmax(0,32fr) minmax(0,68fr)!important;gap:8px!important;width:100%!important;align-items:stretch!important;box-sizing:border-box!important}',
+    '#signup form .hwc-country-field{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important;position:relative!important}',
+    '#signup form #hwcCountryCallingCode{width:100%!important;min-width:0!important;height:40px!important;box-sizing:border-box!important;padding:0 28px 0 5px!important;text-align:center!important;direction:ltr!important}',
+    '#signup form #hwcCountryDetected{position:absolute!important;right:7px!important;top:50%!important;transform:translateY(-50%)!important;display:block!important;width:auto!important;font-size:17px!important;line-height:1!important;pointer-events:none!important}',
+    '#signup form .hwc-phone-row input[type=tel]{width:100%!important;min-width:0!important;height:40px!important;box-sizing:border-box!important}',
+    '#signup form input[type=email],#signup form input[type=password]{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important;margin-top:0!important;margin-bottom:0!important}',
+    '#signup form .hwc-field-hint{margin-top:1px!important;margin-bottom:2px!important;min-height:0!important;line-height:1.2!important}',
+    '#signup form .password-input-wrap{margin-top:0!important;margin-bottom:0!important}',
+    '#signup form .password-input-wrap+.hwc-field-hint{margin-top:1px!important;margin-bottom:2px!important}',
+    '#signup form label{margin-top:1px!important;margin-bottom:1px!important}',
+    '@media(max-width:360px){#signup form .hwc-name-referral-row,#signup form .hwc-phone-row{gap:6px!important}#signup form .hwc-phone-row{grid-template-columns:minmax(0,30fr) minmax(0,70fr)!important}}'
+  ].join('');
+  document.getElementById(style.id)?.remove();
+  document.head.appendChild(style);
+})();
