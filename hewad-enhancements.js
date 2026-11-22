@@ -118,4 +118,85 @@ function bindReferralExperience(){
   }else{validate()}
 }
 bindReferralExperience();bind();db.auth.onAuthStateChange(function(event,session){if(session&&session.user)setTimeout(function(){loadHwcProfileLive(session.user)},0);else if(event==='SIGNED_OUT'){profile=null;wallet=null;isAdmin=false}});if(user())loadHwcProfileLive(user()).catch(console.error);
+/* Live signup field validation: password policy, confirmation and email feedback. */
+function bindSignupValidation(){
+  var ref=$('referral');
+  var form=ref&&(ref.closest('form')||null);
+  if(!form)return;
+  var email=form.querySelector('input[type="email"],input[name*="email" i],input[id*="email" i]');
+  var passwords=Array.from(form.querySelectorAll('input[type="password"]'));
+  var password=passwords[0],confirm=passwords[1];
+  if(!email||!password)return;
+  var style=document.createElement('style');
+  style.textContent='.hwc-field-valid{border-color:#25c878!important;box-shadow:0 0 0 1px #25c878!important}.hwc-field-invalid{border-color:#ff555d!important;box-shadow:0 0 0 1px #ff555d!important}.hwc-field-hint{display:block;font-size:11px;line-height:1.45;margin:-7px 0 10px;min-height:14px}.hwc-field-hint.ok{color:#25c878}.hwc-field-hint.bad{color:#ff6262}';
+  document.head.appendChild(style);
+  function hint(input,id){var el=$(id);if(!el){el=document.createElement('small');el.id=id;el.className='hwc-field-hint';input.insertAdjacentElement('afterend',el)}return el}
+  var emailHint=hint(email,'hwcEmailValidationHint');
+  var passHint=hint(password,'hwcPasswordValidationHint');
+  var confirmHint=confirm?hint(confirm,'hwcConfirmPasswordValidationHint'):null;
+  function paint(input,node,valid,message,neutral){
+    input.classList.toggle('hwc-field-valid',!!valid&&!neutral);
+    input.classList.toggle('hwc-field-invalid',!valid&&!neutral);
+    node.className='hwc-field-hint '+(neutral?'':valid?'ok':'bad');
+    node.textContent=message||'';
+  }
+  function emailValid(){
+    var value=email.value.trim();
+    return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(value);
+  }
+  function passwordValid(){
+    var value=password.value;
+    return value.length>=8 && /[A-Za-z]/.test(value) && /[0-9]/.test(value);
+  }
+  function checkEmail(){
+    if(!email.value.trim()){paint(email,emailHint,false,'',true);return false}
+    var ok=emailValid();
+    paint(email,emailHint,ok,ok?'✓ Email format is valid.':'✕ Enter a valid email address.');
+    return ok;
+  }
+  function checkPassword(){
+    if(!password.value){paint(password,passHint,false,'',true);return false}
+    var ok=passwordValid();
+    paint(password,passHint,ok,ok?'✓ Password meets the requirements.':'✕ Use at least 8 characters, including letters and numbers.');
+    if(confirm&&confirm.value)checkConfirm();
+    return ok;
+  }
+  function checkConfirm(){
+    if(!confirm)return true;
+    if(!confirm.value){paint(confirm,confirmHint,false,'',true);return false}
+    var ok=confirm.value===password.value;
+    paint(confirm,confirmHint,ok,ok?'✓ Passwords match.':'✕ Passwords do not match.');
+    return ok;
+  }
+  email.addEventListener('input',checkEmail);
+  password.addEventListener('input',checkPassword);
+  if(confirm)confirm.addEventListener('input',checkConfirm);
+  form.addEventListener('submit',function(e){
+    var eok=checkEmail(),pok=checkPassword(),cok=checkConfirm();
+    if(!eok||!pok||!cok){e.preventDefault();e.stopImmediatePropagation();say('Please correct the highlighted registration fields.')}
+  },true);
+  /* Supabase Auth intentionally avoids revealing registered addresses during typing.
+     Its signup response identifies an existing account without querying auth.users. */
+  if(!db.auth.__hwcSignupWrapped){
+    var originalSignUp=db.auth.signUp.bind(db.auth);
+    db.auth.signUp=async function(){
+      var result=await originalSignUp.apply(null,arguments);
+      var u=result&&result.data&&result.data.user;
+      if(u&&Array.isArray(u.identities)&&u.identities.length===0){
+        paint(email,emailHint,false,'✕ This email address is already registered.');
+        return {data:result.data,error:{message:'This email address is already registered.'}};
+      }
+      if(!result.error&&u){
+        paint(email,emailHint,true,'✓ Email is available. Check your inbox if confirmation is required.');
+      }
+      if(result.error&&/already registered|already been registered|user exists/i.test(result.error.message||'')){
+        paint(email,emailHint,false,'✕ This email address is already registered.');
+      }
+      return result;
+    };
+    db.auth.__hwcSignupWrapped=true;
+  }
+}
+bindSignupValidation();
+
 })();
