@@ -19,10 +19,16 @@
     try{
       var doc=frame.contentDocument;
       if(!doc||doc.getElementById('hewad-live-enhancements'))return;
-      var script=doc.createElement('script');
-      script.id='hewad-live-enhancements';
-      script.src='hewad-enhancements.js';
-      doc.body.appendChild(script);
+      function loadScript(id,src,next){
+        var script=doc.createElement('script');
+        script.id=id;script.src=src;
+        script.onload=next;
+        script.onerror=function(){console.error('Could not load '+src);};
+        doc.body.appendChild(script);
+      }
+      loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
+        loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){frame.style.visibility='visible';});
+      });
     }catch(error){console.error('HEWAD COIN live features could not initialize:',error);}
   });
 })();
