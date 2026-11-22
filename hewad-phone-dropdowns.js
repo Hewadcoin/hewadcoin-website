@@ -16,6 +16,7 @@ let selected=(countries.find(c=>c.calling===code.value.trim())||countries.find(c
 const style=document.createElement('style');style.id='hwc-phone-dropdown-style';style.textContent=`
 #signup .hwc-final-country label{display:none!important}
 #signup .hwc-country-field{position:relative!important;display:flex!important;flex-direction:column!important;gap:0!important}
+#signup #hwcCountryDetected{display:none!important}
 #signup .hwc-country-field #hwcCountryCallingCode{position:absolute!important;opacity:0!important;pointer-events:none!important;width:1px!important;height:1px!important;min-height:1px!important;padding:0!important;border:0!important}
 .hwc-country-trigger{display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;width:100%!important;height:40px!important;min-height:40px!important;padding:0 5px!important;border:1px solid #d0ad4d!important;border-radius:9px!important;background:#17130b!important;color:#f5d77f!important;font:700 14px inherit!important;cursor:pointer!important;white-space:nowrap!important}
 .hwc-country-trigger .hwc-country-flag{font-size:19px!important}
