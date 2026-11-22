@@ -542,7 +542,7 @@
   if(detected){
     const updateFlag=()=>{
       const match=(detected.getAttribute('aria-label')||'').trim();
-      const emoji=detected.textContent.match(/[\\u{1F1E6}-\\u{1F1FF}]{2}/u);
+      const emoji=detected.textContent.match(/[\u{1F1E6}-\u{1F1FF}]{2}/u);
       const known={
         Afghanistan:'🇦🇫',Pakistan:'🇵🇰',India:'🇮🇳',Iran:'🇮🇷',
         'United Arab Emirates':'🇦🇪','Saudi Arabia':'🇸🇦',Turkey:'🇹🇷',
