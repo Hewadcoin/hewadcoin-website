@@ -27,7 +27,7 @@
         doc.body.appendChild(script);
       }
       loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
-        loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){frame.style.visibility='visible';});
+        loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){loadScript('hewad-signup-polish','hewad-signup-polish.js',function(){frame.style.visibility='visible';});});
       });
     }catch(error){console.error('HEWAD COIN live features could not initialize:',error);}
   });
