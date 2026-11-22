@@ -743,10 +743,9 @@
 
 
 /* Hard override: exact owner-requested signup order and country-code entry. */
-(function hewadExactSignupForm(){
+function hewadExactSignupForm(){
   const form=(document.getElementById('referral')&&document.getElementById('referral').closest('form'))||document.querySelector('#signup form');
   if(!form||form.dataset.hwcExactLayout==='yes')return;
-  form.dataset.hwcExactLayout='yes';
 
   const inputs=()=>Array.from(form.querySelectorAll('input'));
   const labelText=el=>Array.from(el.labels||[]).map(l=>l.textContent||'').join(' ');
@@ -755,6 +754,8 @@
   const first=find(el=>/first.?name|firstname/.test(meta(el)))||find(el=>/^name$/.test((el.name||el.id||'').toLowerCase()))||find(el=>/name/.test(meta(el))&&!/last|referral|user/.test(meta(el)));
   const referral=document.getElementById('referral')||find(el=>/referral/.test(meta(el)));
   const mobile=find(el=>el.type==='tel'||/mobile|phone/.test(meta(el)));
+  if(!first||!referral||!mobile)return;
+  form.dataset.hwcExactLayout='yes';
   const email=find(el=>el.type==='email'||/email/.test(meta(el)));
   const password=find(el=>el.type==='password'&&!/confirm|repeat/.test(meta(el)));
   const confirm=find(el=>el.type==='password'&&(/confirm|repeat/.test(meta(el))||el!==password));
@@ -872,4 +873,13 @@
   ].join('');
   document.getElementById(style.id)?.remove();
   document.head.appendChild(style);
-})();
+}
+
+// The signup form is rendered only after the user opens CREATE ACCOUNT.
+// Watch for that dynamically-created form instead of running only at page load.
+hewadExactSignupForm();
+if(!window.hwcExactSignupObserver){
+  window.hwcExactSignupObserver=new MutationObserver(()=>hewadExactSignupForm());
+  window.hwcExactSignupObserver.observe(document.documentElement,{childList:true,subtree:true});
+}
+
