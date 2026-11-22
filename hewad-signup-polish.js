@@ -184,6 +184,10 @@
       mobile.setAttribute('autocomplete', 'tel-national');
       mobile.setAttribute('inputmode', 'tel');
       const previousCountry = signupForm.querySelector('#hwcCountryCallingCode');
+      const oldCountrySelect = Array.from(signupForm.querySelectorAll('select')).find(sel =>
+        /country/i.test((sel.name || '') + ' ' + (sel.id || '') + ' ' + (sel.getAttribute('aria-label') || '') + ' ' + (sel.parentElement?.textContent || '')) ||
+        Array.from(sel.options || []).some(opt => /Afghanistan.*\+93|Pakistan.*\+92|India.*\+91|United Arab Emirates.*\+971/i.test(opt.textContent || ''))
+      );
       const countryCode = document.createElement('input');
       countryCode.type = 'text';
       countryCode.id = 'hwcCountryCallingCode';
@@ -193,9 +197,13 @@
       countryCode.inputMode = 'tel';
       countryCode.autocomplete = 'off';
       countryCode.maxLength = 5;
-      countryCode.setAttribute('aria-label', 'Country calling code, for example +93');
+      countryCode.setAttribute('aria-label', 'Type country calling code, for example +93');
       countryCode.value = previousCountry ? (previousCountry.value || '+93') : '+93';
-      if (previousCountry) previousCountry.remove();
+      if (oldCountrySelect) {
+        const oldWrap = oldCountrySelect.closest('.form-group,.input-group,.field-group,.form-field,.input-field') || oldCountrySelect.parentElement;
+        oldCountrySelect.replaceWith(countryCode);
+        if (oldWrap && oldWrap !== countryCode && !oldWrap.querySelector('input,select,textarea')) oldWrap.remove();
+      } else if (previousCountry) previousCountry.replaceWith(countryCode);
       const countryInfo = document.createElement('span');
       countryInfo.id = 'hwcCountryDetected';
       countryInfo.className = 'hwc-country-detected';
@@ -334,13 +342,16 @@
     );
     const firstName = findField(['first name','firstname','first_name']);
     const referralField = $('referral');
-    const lastName = findField(['last name','lastname','last_name']);
-    const wrapperFor = (el) => el && (el.closest('.form-group,.input-group,.field-group,.form-field,.input-field,label') || el.parentElement);
+    let lastName = findField(['last name','lastname','last_name','surname','family name']);
+    if (!lastName) {
+      const lastLabel = Array.from(signupForm.querySelectorAll('label')).find(label => /last\s*name|surname|family\s*name/i.test(label.textContent || ''));
+      if (lastLabel) lastName = lastLabel.querySelector('input') || (lastLabel.htmlFor && $(lastLabel.htmlFor)) || lastLabel.parentElement?.querySelector('input');
+    }
+    const wrapperFor = (el) => el && (el.closest('.form-group,.input-group,.field-group,.form-field,.input-field') || el.parentElement);
     if (lastName) {
       const lastWrap = wrapperFor(lastName);
-      if (lastWrap && lastWrap !== signupForm) lastWrap.style.setProperty('display','none','important');
-      lastName.required = false;
-      lastName.disabled = true;
+      if (lastWrap && lastWrap !== signupForm) lastWrap.remove();
+      else { lastName.required = false; lastName.disabled = true; lastName.remove(); }
     }
     function makeCompactRow(a,b,cls) {
       if (!a || !b || a === b) return;
