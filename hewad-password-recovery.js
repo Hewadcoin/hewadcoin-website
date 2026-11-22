@@ -4,7 +4,7 @@
   window.__hewadPasswordRecoveryLoaded = true;
 
   const $ = (id) => document.getElementById(id);
-  const db = window.hwcSupabase;
+  const db = typeof hwcSupabase !== 'undefined' ? hwcSupabase : window.hwcSupabase;
   if (!db || !db.auth) {
     console.error('HEWAD password recovery: Supabase client is unavailable.');
     return;
@@ -13,7 +13,7 @@
   const style = document.createElement('style');
   style.id = 'hwc-password-recovery-style';
   style.textContent = `
-    #hwcForgotPasswordLink{display:block;width:max-content;max-width:100%;margin:10px 0 4px auto;padding:0;border:0;background:none;color:#e8bd4a;font:600 13px inherit;text-decoration:underline;cursor:pointer}
+    #hwcForgotPasswordLink{display:block;width:max-content;max-width:100%;margin:10px 0 4px auto;padding:0;border:0;background:none;color:#e8bd4a;font-family:inherit;font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer}
     #hwcRecoveryModal{display:none;position:fixed;inset:0;z-index:100001;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.78);backdrop-filter:blur(5px);box-sizing:border-box}
     #hwcRecoveryModal.open{display:flex}
     #hwcRecoveryModal .hwc-recovery-card{position:relative;width:min(100%,430px);max-height:90vh;overflow:auto;padding:24px 20px;border:1px solid #765c27;border-radius:18px;background:#111319;color:#f7f7f7;box-shadow:0 20px 70px #000b;box-sizing:border-box}
@@ -159,5 +159,4 @@
   addForgotLink();
   const observer = new MutationObserver(addForgotLink);
   observer.observe(document.body, { childList: true, subtree: true });
-  setInterval(addForgotLink, 1200);
 })();
