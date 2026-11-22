@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08090c">
+<meta name="description" content="Official HEWAD COIN member platform">
+<title>HEWAD COIN</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090c}#hewad-app{display:block;width:100%;height:100%;border:0;background:#08090c}</style>
+</head>
+<body>
+<iframe id="hewad-app" title="HEWAD COIN" src="../hewad_coin_homepage_fullscreen.html"></iframe>
+<script>
+(function(){
+  var frame=document.getElementById('hewad-app');
+  var params=window.location.search+window.location.hash;
+  if(params)frame.src='../hewad_coin_homepage_fullscreen.html'+params;
+  frame.addEventListener('load',function(){
+    try{
+      var doc=frame.contentDocument;
+      if(!doc||!doc.body)return;
+      function loadScript(id,src,next){
+        if(doc.getElementById(id)){if(next)next();return;}
+        var script=doc.createElement('script'),finished=false;
+        script.id=id;script.src=src+'?v=20261122-2100';
+        function finish(){if(finished)return;finished=true;if(next)next();}
+        script.onload=finish;
+        script.onerror=function(){console.error('Could not load '+src);finish();};
+        doc.body.appendChild(script);
+      }
+      /* Load every enhancement independently. An existing live-enhancement tag
+         must not prevent the compact-menu script from loading. */
+      loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
+        loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
+          loadScript('hewad-phone-metadata','https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/max.js',function(){
+            try{
+              var lib=doc.defaultView.libphonenumber;
+              if(lib&&lib.getCountries&&lib.getCountryCallingCode){
+                var all={};
+                lib.getCountries().forEach(function(iso){
+                  var code='+'+lib.getCountryCallingCode(iso);
+                  if(!all[code])all[code]=[Array.from(iso).map(function(ch){return String.fromCodePoint(ch.charCodeAt(0)+127397);}).join(''),iso];
+                });
+                doc.defaultView.__HWC_PHONE_COUNTRIES=all;
+              }
+            }catch(e){console.warn('Phone country metadata setup:',e);}
+            loadScript('hewad-signup-polish','preview/hewad-signup-polish.js',function(){
+              loadScript('hewad-signup-final','hewad-signup-final.js',function(){
+                loadScript('hewad-password-recovery','hewad-password-recovery.js',function(){
+                  loadScript('hewad-compact-menus','preview/hewad-compact-menus.js',function(){
+                    loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js',function(){
+                      frame.style.visibility='visible';
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    }catch(error){console.error('HEWAD COIN live features could not initialize:',error);}
+  });
+})();
+</script>
+</body>
+</html>
