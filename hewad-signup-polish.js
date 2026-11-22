@@ -282,7 +282,13 @@
           paintPhone(false, '✕ Enter a valid country calling code, for example +93.', false);
           return false;
         }
-        if (localDigits.length < 7 || localDigits.length > 14) {
+        if (window.__HWC_STRICT_PHONE_VALIDATOR) {
+          const strictResult = window.__HWC_STRICT_PHONE_VALIDATOR();
+          if (!strictResult.valid) {
+            paintPhone(false, '✕ ' + (strictResult.message || 'Enter a complete valid mobile number.'), false);
+            return false;
+          }
+        } else if (localDigits.length < 7 || localDigits.length > 14) {
           paintPhone(false, localDigits ? '✕ Enter a valid mobile number.' : '✕ Mobile number is required.', false);
           return false;
         }
