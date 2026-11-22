@@ -753,6 +753,8 @@ function hewadExactSignupForm(){
   const find=fn=>inputs().find(fn);
   const first=find(el=>/first.?name|firstname/.test(meta(el)))||find(el=>/^name$/.test((el.name||el.id||'').toLowerCase()))||find(el=>/name/.test(meta(el))&&!/last|referral|user/.test(meta(el)));
   const referral=document.getElementById('referral')||find(el=>/referral/.test(meta(el)));
+  const mobile=find(el=>el.type==='tel'||/mobile|phone/.test(meta(el)));
+  if(!first||!referral||!mobile)return;
   // Apply the approved field labels/placeholders after older polish rules.
   first.placeholder='Enter first name';
   first.setAttribute('aria-label','First Name');
@@ -760,13 +762,11 @@ function hewadExactSignupForm(){
   if(firstLabel){
     if(firstLabel.contains(first)){
       Array.from(firstLabel.childNodes).forEach(node=>{
-        if(node.nodeType===Node.TEXT_NODE && /^(\\s*)(name|first\\s*name)(\\s*)$/i.test(node.textContent||'')) node.textContent='First Name';
+        if(node.nodeType===Node.TEXT_NODE && /^(\s*)(name|first\s*name)(\s*)$/i.test(node.textContent||'')) node.textContent='First Name';
       });
     }else firstLabel.textContent='First Name';
   }
-  if(referral)referral.placeholder='Enter referral code';
-  const mobile=find(el=>el.type==='tel'||/mobile|phone/.test(meta(el)));
-  if(!first||!referral||!mobile)return;
+  referral.placeholder='Enter referral code';
   form.dataset.hwcExactLayout='yes';
   const email=find(el=>el.type==='email'||/email/.test(meta(el)));
   const password=find(el=>el.type==='password'&&!/confirm|repeat/.test(meta(el)));
