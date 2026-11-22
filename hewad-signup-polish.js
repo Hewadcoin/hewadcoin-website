@@ -641,3 +641,102 @@
   document.getElementById(style.id)?.remove();
   document.head.appendChild(style);
 })();
+
+
+/* Authoritative registration layout: two paired rows, then full-width fields. */
+(function enforceRequestedSignupRows(){
+  'use strict';
+  const form=(document.getElementById('referral')&&document.getElementById('referral').closest('form'))||document.querySelector('#signup form');
+  if(!form||form.dataset.hwcRequestedRowsApplied==='1')return;
+  form.dataset.hwcRequestedRowsApplied='1';
+
+  const allInputs=()=>Array.from(form.querySelectorAll('input'));
+  const meta=el=>[el.name,el.id,el.placeholder,...Array.from(el.labels||[]).map(x=>x.textContent||'')].join(' ').toLowerCase();
+  const find=terms=>allInputs().find(el=>terms.some(term=>meta(el).includes(term)));
+  const name=find(['first name','firstname','first_name'])||find(['name']);
+  const referral=document.getElementById('referral');
+  const mobile=form.querySelector('#hwcCountryCallingCode')?.closest('.hwc-phone-row')?.querySelector('input[type="tel"]')
+    ||form.querySelector('input[type="tel"],input[name*="mobile" i],input[id*="mobile" i],input[name*="phone" i],input[id*="phone" i]');
+
+  const wrapper=el=>{
+    if(!el)return null;
+    const candidate=el.closest('.form-group,.input-group,.field-group,.form-field,.input-field');
+    if(candidate&&candidate!==form)return candidate;
+    return el.parentElement&&el.parentElement!==form?el.parentElement:el;
+  };
+  const removeSurname=()=>{
+    const input=find(['last name','lastname','last_name','surname','family name']);
+    const label=Array.from(form.querySelectorAll('label')).find(l=>/last\s*name|surname|family\s*name/i.test(l.textContent||''));
+    const box=wrapper(input)||(label&&(label.closest('.form-group,.input-group,.field-group,.form-field,.input-field')||label));
+    if(box&&box!==form)box.remove();
+    else if(label)label.remove();
+  };
+  removeSurname();
+
+  const nameBox=wrapper(name),refBox=wrapper(referral);
+  let nameRow=form.querySelector(':scope > .hwc-name-referral-row');
+  if(nameBox&&refBox&&nameBox!==refBox){
+    if(!nameRow){nameRow=document.createElement('div');nameRow.className='hwc-name-referral-row';}
+    nameRow.append(nameBox,refBox);
+    form.insertBefore(nameRow,form.firstChild);
+  }
+
+  let phoneRow=mobile?.closest('.hwc-phone-row');
+  if(phoneRow){
+    const country=phoneRow.querySelector('.hwc-country-field');
+    const code=phoneRow.querySelector('#hwcCountryCallingCode');
+    const flag=phoneRow.querySelector('#hwcCountryDetected');
+    const mobileLabel=Array.from(form.querySelectorAll('label')).find(l=>l!==mobile.closest('label')&&
+      (l.htmlFor===mobile.id||(/mobile number|phone number/i.test(l.textContent||'')&&l.querySelector('input')===mobile)));
+    const mobileCell=document.createElement('div');
+    mobileCell.className='hwc-mobile-cell';
+    if(mobileLabel)mobileCell.appendChild(mobileLabel);
+    mobileCell.appendChild(mobile);
+    phoneRow.replaceChildren();
+    if(country)phoneRow.appendChild(country);
+    phoneRow.appendChild(mobileCell);
+    const hint=document.getElementById('hwcMobileValidationHint');
+    form.insertBefore(phoneRow,nameRow?.nextSibling||form.firstChild);
+    if(hint)phoneRow.insertAdjacentElement('afterend',hint);
+    if(code){
+      const countryMap={
+        '+93':['🇦🇫','Afghanistan'],'+92':['🇵🇰','Pakistan'],'+91':['🇮🇳','India'],
+        '+98':['🇮🇷','Iran'],'+971':['🇦🇪','United Arab Emirates'],'+966':['🇸🇦','Saudi Arabia'],
+        '+90':['🇹🇷','Turkey'],'+1':['🇺🇸','United States / Canada'],'+44':['🇬🇧','United Kingdom'],
+        '+49':['🇩🇪','Germany'],'+33':['🇫🇷','France'],'+86':['🇨🇳','China'],
+        '+880':['🇧🇩','Bangladesh'],'+998':['🇺🇿','Uzbekistan'],'+992':['🇹🇯','Tajikistan']
+      };
+      const update=()=>{
+        const value=code.value.trim().replace(/[^+\d]/g,'');
+        if(code.value!==value)code.value=value;
+        const found=countryMap[value];
+        if(flag){flag.textContent=found?found[0]:'❓';flag.title=found?found[1]:'Unknown country';flag.setAttribute('aria-label',flag.title);}
+      };
+      code.addEventListener('input',update);
+      update();
+    }
+  }
+
+  const style=document.createElement('style');
+  style.id='hwc-requested-two-row-layout';
+  style.textContent=[
+    '#signup form{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;width:100%!important;box-sizing:border-box!important}',
+    '#signup form .hwc-name-referral-row,#signup form .hwc-phone-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:8px!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;margin:0!important;align-items:end!important}',
+    '#signup form .hwc-name-referral-row>* ,#signup form .hwc-phone-row>*{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important;margin:0!important}',
+    '#signup form .hwc-name-referral-row input,#signup form .hwc-phone-row input{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;box-sizing:border-box!important}',
+    '#signup form .hwc-phone-row{grid-template-columns:minmax(0,.38fr) minmax(0,.62fr)!important;align-items:end!important}',
+    '#signup form .hwc-country-field{position:relative!important;width:100%!important;height:40px!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important}',
+    '#signup form #hwcCountryCallingCode{padding:0 27px 0 5px!important;text-align:center!important;direction:ltr!important}',
+    '#signup form #hwcCountryDetected{position:absolute!important;right:6px!important;top:50%!important;transform:translateY(-50%)!important;font-size:16px!important;line-height:1!important;pointer-events:none!important}',
+    '#signup form .hwc-mobile-cell{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important;width:100%!important}',
+    '#signup form .hwc-mobile-cell label{display:block!important;margin:0 0 2px!important}',
+    '#signup form input[type=email],#signup form input[type=password]{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;box-sizing:border-box!important;margin:0!important}',
+    '#signup form .password-input-wrap{width:100%!important;margin:0!important}',
+    '#signup form .password-input-wrap>input{width:100%!important;min-width:0!important}',
+    '#signup form .hwc-field-hint{width:100%!important;min-height:0!important;margin:1px 0 3px!important;line-height:1.2!important;box-sizing:border-box!important}',
+    '#signup form label{margin-top:1px!important;margin-bottom:2px!important;line-height:1.2!important}',
+    '@media(max-width:380px){#signup form .hwc-name-referral-row,#signup form .hwc-phone-row{gap:6px!important}#signup form .hwc-phone-row{grid-template-columns:minmax(0,.38fr) minmax(0,.62fr)!important}}'
+  ].join('');
+  document.getElementById(style.id)?.remove();
+  document.head.appendChild(style);
+})();
