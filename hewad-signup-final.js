@@ -178,6 +178,7 @@
     formGrid.appendChild(confirmField);
 
     const hintTargets = [
+      ['hwcReferralOwnerHint', referralField],
       ['hwcMobileValidationHint', mobileField],
       ['hwcEmailValidationHint', emailField],
       ['hwcPasswordValidationHint', passwordField],
