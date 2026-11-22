@@ -740,3 +740,136 @@
   document.getElementById(style.id)?.remove();
   document.head.appendChild(style);
 })();
+
+
+/* Hard override: exact owner-requested signup order and country-code entry. */
+(function hewadExactSignupForm(){
+  const form=(document.getElementById('referral')&&document.getElementById('referral').closest('form'))||document.querySelector('#signup form');
+  if(!form||form.dataset.hwcExactLayout==='yes')return;
+  form.dataset.hwcExactLayout='yes';
+
+  const inputs=()=>Array.from(form.querySelectorAll('input'));
+  const labelText=el=>Array.from(el.labels||[]).map(l=>l.textContent||'').join(' ');
+  const meta=el=>[el.id,el.name,el.placeholder,labelText(el)].join(' ').toLowerCase();
+  const find=fn=>inputs().find(fn);
+  const first=find(el=>/first.?name|firstname/.test(meta(el)))||find(el=>/^name$/.test((el.name||el.id||'').toLowerCase()))||find(el=>/name/.test(meta(el))&&!/last|referral|user/.test(meta(el)));
+  const referral=document.getElementById('referral')||find(el=>/referral/.test(meta(el)));
+  const mobile=find(el=>el.type==='tel'||/mobile|phone/.test(meta(el)));
+  const email=find(el=>el.type==='email'||/email/.test(meta(el)));
+  const password=find(el=>el.type==='password'&&!/confirm|repeat/.test(meta(el)));
+  const confirm=find(el=>el.type==='password'&&(/confirm|repeat/.test(meta(el))||el!==password));
+  const fieldBox=el=>{
+    if(!el)return null;
+    const group=el.closest('.form-group,.input-group,.field-group,.form-field,.input-field');
+    if(group&&group!==form)return group;
+    const label=el.closest('label');
+    if(label&&label.parentElement!==form)return label.parentElement;
+    return el.parentElement&&el.parentElement!==form?el.parentElement:el;
+  };
+  const lastInput=find(el=>/last.?name|surname|family.?name/.test(meta(el)));
+  const lastLabel=Array.from(form.querySelectorAll('label')).find(l=>/last\s*name|surname|family\s*name/i.test(l.textContent||''));
+  const lastBox=fieldBox(lastInput)||(lastLabel&&(lastLabel.closest('.form-group,.input-group,.field-group,.form-field,.input-field')||lastLabel.parentElement));
+  if(lastBox&&lastBox!==form)lastBox.remove(); else if(lastLabel)lastLabel.remove();
+
+  const makeRow=cls=>{
+    let row=form.querySelector(':scope > .'+cls);
+    if(!row){row=document.createElement('div');row.className=cls;}
+    return row;
+  };
+  const nameRow=makeRow('hwc-exact-name-referral');
+  const nameBox=fieldBox(first),refBox=fieldBox(referral);
+  if(nameBox&&nameBox!==refBox)nameRow.appendChild(nameBox);
+  if(refBox&&refBox!==nameBox)nameRow.appendChild(refBox);
+
+  let phoneRow=makeRow('hwc-exact-phone-row');
+  let countryWrap=phoneRow.querySelector('.hwc-exact-country');
+  let code=phoneRow.querySelector('#hwcCountryCallingCode');
+  let flag=phoneRow.querySelector('#hwcCountryDetected');
+  const existingCode=form.querySelector('#hwcCountryCallingCode');
+  const existingCountry=form.querySelector('.hwc-country-field');
+  const oldSelect=Array.from(form.querySelectorAll('select')).find(el=>/country/i.test((el.name||'')+' '+(el.id||'')+' '+(el.getAttribute('aria-label')||'')));
+  if(!countryWrap){
+    countryWrap=document.createElement('div');
+    countryWrap.className='hwc-exact-country';
+    code=existingCode||document.createElement('input');
+    code.type='text';code.id='hwcCountryCallingCode';code.name='country_calling_code';
+    code.placeholder='+93';code.maxLength=5;code.inputMode='tel';code.autocomplete='off';
+    code.setAttribute('aria-label','Country calling code, e.g. +93');
+    code.required=true;
+    if(existingCountry){
+      const oldFlag=existingCountry.querySelector('#hwcCountryDetected');
+      if(oldFlag)flag=oldFlag;
+      existingCountry.replaceWith(countryWrap);
+      countryWrap.appendChild(code);
+    }else{
+      if(oldSelect)oldSelect.remove();
+      countryWrap.appendChild(code);
+    }
+    flag=flag||document.createElement('span');
+    flag.id='hwcCountryDetected';flag.className='hwc-country-detected';
+    countryWrap.appendChild(flag);
+  }
+  const phoneBox=fieldBox(mobile);
+  const phoneLabel=Array.from(form.querySelectorAll('label')).find(l=>/mobile number|phone number/i.test(l.textContent||'')&&(l.contains(mobile)||l.htmlFor===mobile?.id));
+  if(phoneBox&&phoneBox!==countryWrap){
+    phoneRow.appendChild(countryWrap);
+    phoneRow.appendChild(phoneBox);
+  }else{
+    phoneRow.appendChild(countryWrap);
+    if(mobile)phoneRow.appendChild(mobile);
+  }
+  if(phoneLabel&&!phoneRow.contains(phoneLabel)&&mobile&&phoneBox)phoneBox.insertBefore(phoneLabel,mobile);
+
+  const map={
+    '+93':['🇦🇫','Afghanistan'],'+92':['🇵🇰','Pakistan'],'+91':['🇮🇳','India'],
+    '+98':['🇮🇷','Iran'],'+971':['🇦🇪','United Arab Emirates'],'+966':['🇸🇦','Saudi Arabia'],
+    '+90':['🇹🇷','Turkey'],'+1':['🇺🇸','United States / Canada'],'+44':['🇬🇧','United Kingdom'],
+    '+49':['🇩🇪','Germany'],'+33':['🇫🇷','France'],'+86':['🇨🇳','China'],
+    '+880':['🇧🇩','Bangladesh'],'+998':['🇺🇿','Uzbekistan'],'+992':['🇹🇯','Tajikistan']
+  };
+  const updateCountry=()=>{
+    let v=(code.value||'').replace(/[^+\d]/g,'');
+    if(v&&!v.startsWith('+'))v='+'+v;
+    if(code.value!==v)code.value=v;
+    const hit=map[v];
+    flag.textContent=hit?hit[0]:'';
+    flag.title=hit?hit[1]:'Enter a supported calling code';
+    flag.setAttribute('aria-label',flag.title);
+  };
+  if(code.dataset.hwcCountryListener!=='1'){
+    code.addEventListener('input',updateCountry);
+    code.dataset.hwcCountryListener='1';
+  }
+  updateCountry();
+
+  const emailBox=fieldBox(email),passBox=fieldBox(password),confirmBox=fieldBox(confirm);
+  const mobileHint=document.getElementById('hwcMobileValidationHint');
+  const emailHint=document.getElementById('hwcEmailValidationHint');
+  const passHint=document.getElementById('hwcPasswordValidationHint');
+  const confirmHint=document.getElementById('hwcConfirmPasswordValidationHint');
+  const ordered=[nameRow,phoneRow,emailBox,emailHint,passBox,passHint,confirmBox,confirmHint];
+  ordered.forEach(node=>{if(node&&node!==form)form.appendChild(node);});
+  if(mobileHint)phoneRow.insertAdjacentElement('afterend',mobileHint);
+
+  const style=document.createElement('style');
+  style.id='hwc-exact-owner-form-style';
+  style.textContent=[
+    '#signup form{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;width:100%!important;box-sizing:border-box!important}',
+    '#signup form .hwc-exact-name-referral,#signup form .hwc-exact-phone-row{display:grid!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;gap:8px!important;align-items:end!important;margin:0!important}',
+    '#signup form .hwc-exact-name-referral{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}',
+    '#signup form .hwc-exact-phone-row{grid-template-columns:minmax(0,32fr) minmax(0,68fr)!important}',
+    '#signup form .hwc-exact-name-referral>* ,#signup form .hwc-exact-phone-row>*{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important;margin:0!important}',
+    '#signup form .hwc-exact-name-referral input,#signup form .hwc-exact-phone-row input{width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;box-sizing:border-box!important}',
+    '#signup form .hwc-exact-country{position:relative!important;width:100%!important;height:40px!important;min-width:0!important;box-sizing:border-box!important}',
+    '#signup form #hwcCountryCallingCode{padding:0 28px 0 5px!important;text-align:center!important;direction:ltr!important}',
+    '#signup form #hwcCountryDetected{position:absolute!important;right:6px!important;top:50%!important;transform:translateY(-50%)!important;font-size:16px!important;line-height:1!important;pointer-events:none!important}',
+    '#signup form input[type=email],#signup form input[type=password]{display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;height:40px!important;min-height:40px!important;box-sizing:border-box!important;margin:0!important}',
+    '#signup form .password-input-wrap{display:flex!important;flex-wrap:wrap!important;width:100%!important;min-width:0!important;margin:0!important}',
+    '#signup form .password-input-wrap>input{width:100%!important;min-width:0!important;flex:1 1 100%!important}',
+    '#signup form .hwc-field-hint{display:block!important;width:100%!important;min-height:0!important;margin:1px 0 3px!important;line-height:1.2!important;font-size:10px!important}',
+    '#signup form label{margin:1px 0 2px!important;line-height:1.2!important}',
+    '@media(max-width:360px){#signup form .hwc-exact-name-referral,#signup form .hwc-exact-phone-row{gap:6px!important}}'
+  ].join('');
+  document.getElementById(style.id)?.remove();
+  document.head.appendChild(style);
+})();
