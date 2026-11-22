@@ -55,6 +55,66 @@
     languageSelect.setAttribute('aria-label', 'Choose language');
   }
 
+  const hintMessages = {
+    en: {
+      emailValid: '✓ Email format is valid.',
+      emailInvalid: '✕ Enter a valid email address.',
+      emailDuplicate: '✕ This email address is already registered.',
+      emailAvailable: '✓ Email format is valid.',
+      passwordValid: '✓ Password meets the requirements.',
+      passwordInvalid: '✕ Use at least 8 characters, including letters and numbers.',
+      confirmValid: '✓ Passwords match.',
+      confirmInvalid: '✕ Passwords do not match.'
+    },
+    ps: {
+      emailValid: '✓ د ایمیل بڼه سمه ده.',
+      emailInvalid: '✕ مهرباني وکړئ سم ایمیل ولیکئ.',
+      emailDuplicate: '✕ دا ایمیل مخکې ثبت شوی دی.',
+      emailAvailable: '✓ د ایمیل بڼه سمه ده.',
+      passwordValid: '✓ پاسورډ شرایط پوره کوي.',
+      passwordInvalid: '✕ لږ تر لږه ۸ توري او شمېرې وکاروئ.',
+      confirmValid: '✓ پاسورډونه سره برابر دي.',
+      confirmInvalid: '✕ پاسورډونه سره برابر نه دي.'
+    },
+    fa: {
+      emailValid: '✓ قالب ایمیل درست است.',
+      emailInvalid: '✕ لطفاً یک آدرس ایمیل معتبر وارد کنید.',
+      emailDuplicate: '✕ این ایمیل قبلاً ثبت شده است.',
+      emailAvailable: '✓ قالب ایمیل درست است.',
+      passwordValid: '✓ رمز عبور شرایط را دارد.',
+      passwordInvalid: '✕ حداقل ۸ نویسه شامل حروف و اعداد وارد کنید.',
+      confirmValid: '✓ رمزهای عبور مطابقت دارند.',
+      confirmInvalid: '✕ رمزهای عبور یکسان نیستند.'
+    }
+  };
+  const hintKeyByEnglish = {
+    '✓ Email format is valid.': 'emailValid',
+    '✕ Enter a valid email address.': 'emailInvalid',
+    '✕ This email address is already registered.': 'emailDuplicate',
+    '✓ Email is available. Check your inbox if confirmation is required.': 'emailAvailable',
+    '✓ Password meets the requirements.': 'passwordValid',
+    '✕ Use at least 8 characters, including letters and numbers.': 'passwordInvalid',
+    '✓ Passwords match.': 'confirmValid',
+    '✕ Passwords do not match.': 'confirmInvalid'
+  };
+  function localizeValidationHints() {
+    const lang = supportedLanguages.includes(document.documentElement.lang) ? document.documentElement.lang : 'en';
+    ['hwcEmailValidationHint', 'hwcPasswordValidationHint', 'hwcConfirmPasswordValidationHint'].forEach((id) => {
+      const node = $(id);
+      if (!node) return;
+      if (!node.dataset.hwcMessageKey) node.dataset.hwcMessageKey = hintKeyByEnglish[node.textContent.trim()] || '';
+      const key = node.dataset.hwcMessageKey;
+      if (key && hintMessages[lang][key] && node.textContent !== hintMessages[lang][key]) {
+        node.textContent = hintMessages[lang][key];
+      }
+    });
+  }
+  const hintObserver = new MutationObserver(localizeValidationHints);
+  ['hwcEmailValidationHint', 'hwcPasswordValidationHint', 'hwcConfirmPasswordValidationHint'].forEach((id) => {
+    const node = $(id);
+    if (node) hintObserver.observe(node, { childList: true, characterData: true, subtree: true });
+  });
+
   const originalApplyLanguage = window.applyLanguage;
   if (typeof originalApplyLanguage === 'function') {
     window.applyLanguage = function (language) {
@@ -72,6 +132,7 @@
         if (field) field.placeholder = resetPlaceholders[selected][index];
       });
       if (languageSelect) languageSelect.value = selected;
+      localizeValidationHints();
       try { localStorage.setItem('hewad-coin-language', selected); } catch (_) {}
     };
   }
@@ -92,6 +153,7 @@
   });
   const emailHint = $('hwcEmailValidationHint');
   if (emailHint) emailHint.setAttribute('aria-live', 'polite');
+  localizeValidationHints();
 
   const email = $('email');
   if (email) {
