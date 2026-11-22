@@ -207,7 +207,7 @@
       const countryInfo = document.createElement('span');
       countryInfo.id = 'hwcCountryDetected';
       countryInfo.className = 'hwc-country-detected';
-      const countryMap = {
+      const countryMap = window.__HWC_PHONE_COUNTRIES || {
         '+93':['🇦🇫','Afghanistan'], '+92':['🇵🇰','Pakistan'], '+91':['🇮🇳','India'],
         '+98':['🇮🇷','Iran'], '+971':['🇦🇪','United Arab Emirates'], '+966':['🇸🇦','Saudi Arabia'],
         '+90':['🇹🇷','Turkey'], '+1':['🇺🇸','United States / Canada'], '+44':['🇬🇧','United Kingdom'],
