@@ -3,6 +3,8 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const supportedLanguages = ['en', 'ps', 'fa'];
+  const languageNodes = document.querySelectorAll('#languageSelect');
+  languageNodes.forEach((node, index) => { if (index > 0) node.remove(); });
   const languageSelect = $('languageSelect');
 
   const home = $('home');
@@ -126,6 +128,8 @@
       try { originalApplyLanguage(selected); } catch (error) { console.warn('Language switch fallback:', error); }
       document.documentElement.lang = selected;
       document.documentElement.dir = selected === 'en' ? 'ltr' : 'rtl';
+      if (home) { home.style.position = 'fixed'; home.style.inset = '0'; home.style.width = '100vw'; home.style.height = '100dvh'; home.style.overflow = 'hidden'; }
+      window.scrollTo(0, 0);
       const resetPlaceholders = {
         en: ['Email address', '000000', 'Enter new password', 'Confirm new password'],
         ps: ['ایمیل ادرس', '۰۰۰۰۰۰', 'نوی پاسورډ ولیکئ', 'نوی پاسورډ بیا ولیکئ'],
