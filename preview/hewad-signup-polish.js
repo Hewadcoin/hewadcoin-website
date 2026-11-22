@@ -288,8 +288,8 @@
             paintPhone(false, '✕ ' + (strictResult.message || 'Enter a complete valid mobile number.'), false);
             return false;
           }
-        } else if (localDigits.length < 7 || localDigits.length > 14) {
-          paintPhone(false, localDigits ? '✕ Enter a valid mobile number.' : '✕ Mobile number is required.', false);
+        } else {
+          paintPhone(false, '✕ Phone validation is temporarily unavailable. Please try again.', false);
           return false;
         }
         paintPhone(true, 'Checking mobile number…', true);
