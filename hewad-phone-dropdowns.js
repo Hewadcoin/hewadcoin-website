@@ -51,6 +51,7 @@ function validate(show=true){
  else{hint.textContent='The number is incomplete or invalid for the selected country.';}
  hint.style.color='#ff6262';return false;
 }
+window.__HWC_STRICT_PHONE_VALIDATOR=function(){return{valid:validate(),message:hint.textContent};};
 phone.addEventListener('input',()=>validate());
 phone.addEventListener('blur',()=>validate());
 form.addEventListener('submit',e=>{if(!validate()){e.preventDefault();e.stopImmediatePropagation();phone.focus();}},true);
