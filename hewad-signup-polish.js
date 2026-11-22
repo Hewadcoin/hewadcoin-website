@@ -169,4 +169,143 @@
     email.setAttribute('inputmode', 'email');
     email.setAttribute('spellcheck', 'false');
   }
+  /* Required international mobile number + duplicate check before signup. */
+  const signupForm = ($('referral') && $('referral').closest('form')) || document.querySelector('#signup form');
+  const signupDb = typeof hwcSupabase !== 'undefined' ? hwcSupabase : null;
+  if (signupForm && signupDb && signupDb.auth) {
+    let mobile = signupForm.querySelector('input[type="tel"],input[name*="mobile" i],input[id*="mobile" i],input[name*="phone" i],input[id*="phone" i]');
+    if (!mobile) {
+      const mobileLabel = Array.from(signupForm.querySelectorAll('label')).find(el => /mobile number|phone number/i.test(el.textContent || ''));
+      if (mobileLabel) mobile = mobileLabel.querySelector('input');
+    }
+    if (mobile) {
+      mobile.type = 'tel';
+      mobile.required = true;
+      mobile.setAttribute('autocomplete', 'tel-national');
+      mobile.setAttribute('inputmode', 'tel');
+      let countryCode = Array.from(signupForm.querySelectorAll('select')).find(sel =>
+        Array.from(sel.options).some(opt => /^\\+\\d{1,4}$/.test(opt.value.trim()) || /^\\+\\d{1,4}$/.test(opt.textContent.trim()))
+      );
+      if (!countryCode) {
+        countryCode = document.createElement('select');
+        countryCode.id = 'hwcCountryCallingCode';
+        countryCode.name = 'country_calling_code';
+        countryCode.required = true;
+        countryCode.setAttribute('aria-label', 'Country calling code');
+        countryCode.innerHTML = '<option value="">Country code</option>' +
+          [['Afghanistan','+93'],['Pakistan','+92'],['India','+91'],['Iran','+98'],['United Arab Emirates','+971'],['Saudi Arabia','+966'],['Turkey','+90'],['United States','+1'],['United Kingdom','+44'],['Canada','+1'],['Germany','+49'],['France','+33'],['China','+86'],['Bangladesh','+880'],['Uzbekistan','+998'],['Tajikistan','+992']].map(x => '<option value="'+x[1]+'">'+x[0]+' ('+x[1]+')</option>').join('');
+        const phoneRow = document.createElement('div');
+        phoneRow.className = 'hwc-phone-row';
+        mobile.parentNode.insertBefore(phoneRow, mobile);
+        phoneRow.appendChild(countryCode);
+        phoneRow.appendChild(mobile);
+      } else {
+        countryCode.required = true;
+        countryCode.id = countryCode.id || 'hwcCountryCallingCode';
+      }
+      let phoneHint = $('hwcMobileValidationHint');
+      if (!phoneHint) {
+        phoneHint = document.createElement('small');
+        phoneHint.id = 'hwcMobileValidationHint';
+        phoneHint.className = 'hwc-field-hint';
+        const row = mobile.closest('.hwc-phone-row') || mobile;
+        row.insertAdjacentElement('afterend', phoneHint);
+      }
+      const phoneStyle = document.createElement('style');
+      phoneStyle.id = 'hwc-phone-signup-styles';
+      phoneStyle.textContent = [
+        '.hwc-phone-row{display:flex!important;align-items:stretch!important;gap:7px!important;width:100%!important;min-width:0!important;margin:5px 0!important}',
+        '.hwc-phone-row select{flex:0 0 42%!important;min-width:0!important;width:42%!important;height:44px!important;border:1px solid #c9c9c9!important;border-radius:9px!important;background:#fff!important;color:#171717!important;padding:0 8px!important;font-size:13px!important}',
+        '.hwc-phone-row input{flex:1 1 58%!important;min-width:0!important;width:58%!important;height:44px!important;box-sizing:border-box!important}',
+        '#hwcMobileValidationHint{display:block!important;width:100%!important;min-height:0!important;margin:5px 0 10px!important;font-size:11px!important;line-height:1.4!important}',
+        '@media(max-height:760px){#signup form{gap:6px!important}#signup form input,#signup form select{min-height:37px!important;height:37px!important}#signup form button{min-height:38px!important;padding-top:8px!important;padding-bottom:8px!important}#signup form label{margin-top:3px!important;margin-bottom:3px!important}#signup h1,#signup h2{margin-top:5px!important;margin-bottom:7px!important}}',
+        '@media(max-width:480px){.hwc-phone-row select{font-size:11px!important;padding:0 5px!important}}'
+      ].join('');
+      document.head.appendChild(phoneStyle);
+
+      let phoneCheckVersion = 0;
+      let phoneCheckTimer = null;
+      function normalizedPhone() {
+        const code = (countryCode.value || '').trim();
+        let digits = (mobile.value || '').replace(/\\D/g, '');
+        digits = digits.replace(/^0+/, '');
+        return code && digits ? code + digits : '';
+      }
+      function paintPhone(ok, message, neutral) {
+        mobile.classList.toggle('hwc-field-invalid', !ok && !neutral);
+        mobile.classList.toggle('hwc-field-valid', !!ok && !neutral);
+        countryCode.classList.toggle('hwc-field-invalid', !ok && !neutral);
+        phoneHint.className = 'hwc-field-hint ' + (neutral ? '' : ok ? 'ok' : 'bad');
+        phoneHint.style.color = neutral ? '' : ok ? '#25c878' : '#ff6262';
+        phoneHint.textContent = message || '';
+      }
+      async function validateMobile() {
+        const ticket = ++phoneCheckVersion;
+        const full = normalizedPhone();
+        const localDigits = (mobile.value || '').replace(/\\D/g, '').replace(/^0+/, '');
+        if (!countryCode.value) {
+          paintPhone(false, '✕ Please select your country calling code.', false);
+          return false;
+        }
+        if (localDigits.length < 7 || localDigits.length > 14) {
+          paintPhone(false, localDigits ? '✕ Enter a valid mobile number.' : '✕ Mobile number is required.', false);
+          return false;
+        }
+        paintPhone(true, 'Checking mobile number…', true);
+        const result = await signupDb.rpc('is_registration_mobile_registered', { p_mobile: full });
+        if (ticket !== phoneCheckVersion) return false;
+        if (result.error) {
+          paintPhone(false, '✕ Could not verify this mobile number. Please try again.', false);
+          return false;
+        }
+        if (result.data === true) {
+          paintPhone(false, '✕ This mobile number is already registered.', false);
+          return false;
+        }
+        paintPhone(true, '✓ Mobile number is available.', false);
+        return true;
+      }
+      function schedulePhoneCheck() {
+        clearTimeout(phoneCheckTimer);
+        phoneCheckVersion++;
+        paintPhone(false, '', true);
+        phoneCheckTimer = setTimeout(validateMobile, 450);
+      }
+      mobile.addEventListener('input', schedulePhoneCheck);
+      countryCode.addEventListener('change', validateMobile);
+      mobile.addEventListener('blur', validateMobile);
+
+      if (!signupDb.auth.__hwcPhoneSignupWrapped) {
+        const previousSignUp = signupDb.auth.signUp.bind(signupDb.auth);
+        signupDb.auth.signUp = async function (credentials) {
+          const valid = await validateMobile();
+          if (!valid) {
+            return { data: { user: null, session: null }, error: { message: phoneHint.textContent.replace(/^✕\\s*/, '') || 'Please enter a valid mobile number.' } };
+          }
+          const full = normalizedPhone();
+          const args = Object.assign({}, credentials || {});
+          args.options = Object.assign({}, args.options || {});
+          args.options.data = Object.assign({}, args.options.data || {}, { mobile_number: full, phone: full });
+          const result = await previousSignUp(args);
+          if (result && result.error && /mobile number is already registered/i.test(result.error.message || '')) {
+            paintPhone(false, '✕ This mobile number is already registered.', false);
+          }
+          return result;
+        };
+        signupDb.auth.__hwcPhoneSignupWrapped = true;
+      }
+    }
+  }
+
+  /* Keep the registration panel compact and fixed on small screens. */
+  const signupLayoutStyle = document.createElement('style');
+  signupLayoutStyle.id = 'hwc-signup-compact-layout';
+  signupLayoutStyle.textContent = [
+    '#signup{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;overflow:hidden!important;overscroll-behavior:none!important}',
+    '#signup form{box-sizing:border-box!important;max-height:calc(100dvh - 14px)!important;overflow:hidden!important;overscroll-behavior:none!important}',
+    '#signup input,#signup select{box-sizing:border-box!important}',
+    '@media(max-height:760px){#signup form{padding-top:10px!important;padding-bottom:10px!important}#signup form>*{margin-top:5px!important;margin-bottom:5px!important}#signup form input{height:38px!important;min-height:38px!important}#signup form button{height:39px!important;min-height:39px!important}}'
+  ].join('');
+  document.head.appendChild(signupLayoutStyle);
+
 })();
