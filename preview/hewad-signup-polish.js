@@ -278,10 +278,6 @@
         const ticket = ++phoneCheckVersion;
         const full = normalizedPhone();
         const localDigits = (mobile.value || '').replace(/\D/g, '').replace(/^0+/, '');
-        if (!countryMap[countryCode.value.trim()]) {
-          paintPhone(false, '✕ Enter a valid country calling code, for example +93.', false);
-          return false;
-        }
         if (window.__HWC_STRICT_PHONE_VALIDATOR) {
           const strictResult = window.__HWC_STRICT_PHONE_VALIDATOR();
           if (!strictResult.valid) {
