@@ -118,7 +118,7 @@
     code.autocomplete = 'off';
     code.placeholder = '+93';
     code.setAttribute('aria-label', 'Country calling code, for example +93');
-    if (!code.value.trim()) code.value = '+93';
+    code.value = '+93';
     mobile.type = 'tel';
     mobile.required = true;
     mobile.setAttribute('inputmode', 'tel');
