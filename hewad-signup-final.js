@@ -218,7 +218,7 @@
       '#signup .hwc-signup-subtitle{margin:0 0 15px!important;text-align:center!important;color:#e8d6a4!important;font-size:13px!important;line-height:1.4!important}',
       '#signup form{display:block!important;width:100%!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:0!important;box-sizing:border-box!important}',
       '#signup .form-grid{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:11px!important;width:100%!important;min-width:0!important;margin:0!important}',
-      '#signup .hwc-final-name-referral,#signup .hwc-final-phone-row{display:grid!important;align-items:end!important;gap:9px!important;width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important}',
+      '#signup .hwc-final-name-referral,#signup .hwc-final-phone-row{display:grid!important;align-items:start!important;gap:9px!important;width:100%!important;min-width:0!important;margin:0!important;box-sizing:border-box!important}',
       '#signup .hwc-final-name-referral{grid-template-columns:minmax(0,7fr) minmax(0,3fr)!important;grid-auto-flow:column!important}',
       '#signup .hwc-final-name-referral>.field:nth-child(1){grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;max-width:100%!important}',
       '#signup .hwc-final-name-referral>.field:nth-child(2){grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important;max-width:100%!important}',
