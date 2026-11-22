@@ -238,7 +238,7 @@
       phoneStyle.textContent = [
         '.hwc-phone-row{display:flex!important;align-items:stretch!important;gap:7px!important;width:100%!important;min-width:0!important;margin:5px 0!important}',
         '.hwc-phone-row input#hwcCountryCallingCode{flex:0 0 30%!important;min-width:76px!important;width:30%!important;height:44px!important;border:1px solid #c9c9c9!important;border-radius:9px!important;background:#fff!important;color:#171717!important;padding:0 8px!important;font-size:14px!important;text-align:center!important}',
-        '.hwc-country-detected{flex:1 1 auto!important;align-self:center!important;min-width:0!important;color:#d8ad3e!important;font-size:12px!important;font-weight:700!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}',
+        '.hwc-country-detected{flex:0 1 auto!important;align-self:center!important;min-width:0!important;max-width:34%!important;color:#d8ad3e!important;font-size:12px!important;font-weight:700!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}',
         '.hwc-phone-row input{flex:1 1 58%!important;min-width:0!important;width:58%!important;height:44px!important;box-sizing:border-box!important}',
         '#hwcMobileValidationHint{display:block!important;width:100%!important;min-height:0!important;margin:5px 0 10px!important;font-size:11px!important;line-height:1.4!important}',
         '@media(max-height:760px){#signup form{gap:6px!important}#signup form input,#signup form select{min-height:37px!important;height:37px!important}#signup form button{min-height:38px!important;padding-top:8px!important;padding-bottom:8px!important}#signup form label{margin-top:3px!important;margin-bottom:3px!important}#signup h1,#signup h2{margin-top:5px!important;margin-bottom:7px!important}}',
@@ -354,7 +354,7 @@
       '.hwc-name-referral-row>*{min-width:0!important;width:100%!important;margin:0!important}',
       '#signup form .hwc-name-referral-row input{width:100%!important;min-width:0!important}',
       '#signup form .hwc-phone-row{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:7px!important}',
-      '#signup form .hwc-phone-row input[type=tel]{flex:1 1 48%!important;width:auto!important;min-width:0!important}',
+      '#signup form .hwc-phone-row input[type=tel]{flex:1 1 38%!important;width:auto!important;min-width:0!important}',
       '#signup form input[type=email],#signup form input[type=password]{margin-bottom:4px!important}',
       '#signup form .hwc-field-hint{margin-top:2px!important;margin-bottom:5px!important;min-height:11px!important;font-size:10px!important;line-height:1.25!important}',
       '#signup form .password-input-wrap{margin-bottom:0!important}',
