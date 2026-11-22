@@ -506,7 +506,8 @@ document.getElementById("resetPasswordForm").addEventListener("submit",async e=>
 });
 document.getElementById("resetBack").addEventListener("click",()=>{resetToStart();showScreen("login")});
 document.getElementById("signupForm").addEventListener("submit",async e=>{
- e.preventDefault();if(!e.currentTarget.reportValidity())return;
+ const signupForm=e.currentTarget;
+ e.preventDefault();if(!signupForm.reportValidity())return;
  const firstName=document.getElementById("firstName").value.trim(),lastName=document.getElementById("lastName").value.trim();
  const phone=document.getElementById("phone").value.trim(),referral=document.getElementById("referral").value.trim();
  const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
@@ -515,7 +516,7 @@ document.getElementById("signupForm").addEventListener("submit",async e=>{
  try{
   const {data,error}=await hwcSupabase.auth.signUp({email,password,options:{data:{first_name:firstName,last_name:lastName,full_name:(firstName+" "+lastName).trim(),mobile_number:phone,referred_by_code:referral},emailRedirectTo:window.location.origin+window.location.pathname}});
   if(error)throw error;
-  e.currentTarget.reset();
+  signupForm.reset();
   if(data.session){hwcCurrentUser=data.user;await loadHwcProfile(data.user);showScreen("dashboard");showNotice("Your account has been created successfully.");}
   else{showNotice("Registration received. Open the verification link sent to your email, then log in.");showScreen("login");document.getElementById("loginEmail").value=email;}
  }catch(err){showNotice(authErrorMessage(err));}
