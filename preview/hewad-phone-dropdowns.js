@@ -46,7 +46,7 @@
     }
     const style = document.createElement('style');
     style.id = 'hwc-country-name-only-style';
-    style.textContent = '#signup .hwc-selected-country-name{display:block!important;margin:2px 0 0!important;padding:0!important;width:100%!important;min-height:12px!important;text-align:center!important;font-size:10px!important;line-height:1.2!important;font-weight:600!important;pointer-events:none!important}';
+    style.textContent = '#signup .hwc-selected-country-name{display:block!important;margin:2px 0 0!important;padding:0!important;width:100%!important;min-height:12px!important;text-align:center!important;font-size:10px!important;line-height:1.2!important;font-weight:600!important;pointer-events:none!important}#signup input.hwc-field-invalid{border-color:#ff4545!important;box-shadow:0 0 0 1px #ff4545!important}';
     document.head.appendChild(style);
 
     function nationalDigits() {
@@ -110,7 +110,7 @@
       } else {
         let parsed = result.parsed || null;
         if (!parsed) {
-          try { parsed = lib.parsePhoneNumberFromString((code.value || '').trim() + digits); } catch (_) {}
+          try { parsed = result.country ? lib.parsePhoneNumberFromString(digits, result.country.iso) : lib.parsePhoneNumberFromString((code.value || '').trim() + digits); } catch (_) {}
         }
         valid = !!(parsed && parsed.isValid() && parsed.country && parsed.number);
         if (valid) {
