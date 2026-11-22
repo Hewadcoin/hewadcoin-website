@@ -211,18 +211,21 @@
         if (code && code[0] !== '+') code = '+' + code;
         if (countryCode.value !== code) countryCode.value = code;
         const found = countryMap[code];
-        countryInfo.textContent = found ? found[0] + ' ' + found[1] : (code ? '🌐 Unknown country code' : '');
+        countryInfo.textContent = found ? found[0] : (code ? '❓' : '');
+        countryInfo.setAttribute('aria-label', found ? found[1] : 'Unknown country code');
         countryInfo.style.color = found ? '#d8ad3e' : '#ff6262';
       }
-      countryCode.insertAdjacentElement('afterend', countryInfo);
+      const countryField = document.createElement('div');
+      countryField.className = 'hwc-country-field';
+      countryField.appendChild(countryCode);
+      countryField.appendChild(countryInfo);
       countryCode.addEventListener('input', updateDetectedCountry);
       updateDetectedCountry();
       if (!mobile.closest('.hwc-phone-row')) {
         const phoneRow = document.createElement('div');
         phoneRow.className = 'hwc-phone-row';
         mobile.parentNode.insertBefore(phoneRow, mobile);
-        phoneRow.appendChild(countryCode);
-        phoneRow.appendChild(countryInfo);
+        phoneRow.appendChild(countryField);
         phoneRow.appendChild(mobile);
       }
       let phoneHint = $('hwcMobileValidationHint');
@@ -236,13 +239,14 @@
       const phoneStyle = document.createElement('style');
       phoneStyle.id = 'hwc-phone-signup-styles';
       phoneStyle.textContent = [
-        '.hwc-phone-row{display:flex!important;align-items:stretch!important;gap:7px!important;width:100%!important;min-width:0!important;margin:5px 0!important}',
-        '.hwc-phone-row input#hwcCountryCallingCode{flex:0 0 30%!important;min-width:76px!important;width:30%!important;height:44px!important;border:1px solid #c9c9c9!important;border-radius:9px!important;background:#fff!important;color:#171717!important;padding:0 8px!important;font-size:14px!important;text-align:center!important}',
-        '.hwc-country-detected{flex:0 1 auto!important;align-self:center!important;min-width:0!important;max-width:34%!important;color:#d8ad3e!important;font-size:12px!important;font-weight:700!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}',
-        '.hwc-phone-row input{flex:1 1 58%!important;min-width:0!important;width:58%!important;height:44px!important;box-sizing:border-box!important}',
+        '.hwc-phone-row{display:flex!important;align-items:stretch!important;gap:8px!important;width:100%!important;min-width:0!important;margin:5px 0!important}',
+        '.hwc-country-field{position:relative!important;display:flex!important;flex:0 0 42%!important;min-width:0!important;height:44px!important}',
+        '.hwc-country-field input#hwcCountryCallingCode{width:100%!important;min-width:0!important;height:44px!important;border:1px solid #c9c9c9!important;border-radius:9px!important;background:#fff!important;color:#171717!important;padding:0 34px 0 8px!important;font-size:14px!important;text-align:center!important;box-sizing:border-box!important;direction:ltr!important}',
+        '.hwc-country-detected{position:absolute!important;right:8px!important;top:50%!important;transform:translateY(-50%)!important;min-width:20px!important;color:#d8ad3e!important;font-size:17px!important;font-weight:700!important;line-height:1!important;pointer-events:none!important}',
+        '.hwc-phone-row input[type=tel]{flex:1 1 58%!important;min-width:0!important;width:auto!important;height:44px!important;box-sizing:border-box!important}',
         '#hwcMobileValidationHint{display:block!important;width:100%!important;min-height:0!important;margin:5px 0 10px!important;font-size:11px!important;line-height:1.4!important}',
         '@media(max-height:760px){#signup form{gap:6px!important}#signup form input,#signup form select{min-height:37px!important;height:37px!important}#signup form button{min-height:38px!important;padding-top:8px!important;padding-bottom:8px!important}#signup form label{margin-top:3px!important;margin-bottom:3px!important}#signup h1,#signup h2{margin-top:5px!important;margin-bottom:7px!important}}',
-        '@media(max-width:480px){.hwc-phone-row input#hwcCountryCallingCode{font-size:12px!important;padding:0 5px!important}.hwc-country-detected{font-size:10px!important}}'
+        '@media(max-width:480px){.hwc-country-field{flex-basis:42%!important}.hwc-country-field input#hwcCountryCallingCode{font-size:12px!important;padding-right:29px!important}.hwc-country-detected{font-size:15px!important;right:7px!important}}'
       ].join('');
       document.head.appendChild(phoneStyle);
 
