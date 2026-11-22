@@ -50,7 +50,7 @@
     document.head.appendChild(style);
 
     function nationalDigits() {
-      return (phone.value || '').replace(/\\D/g, '');
+      return (phone.value || '').replace(/\D/g, '');
     }
     function resolveNumber() {
       const calling = (code.value || '').trim().replace(/[^+0-9]/g, '');
