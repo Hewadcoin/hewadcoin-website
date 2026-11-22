@@ -195,6 +195,7 @@
       countryCode.maxLength = 5;
       countryCode.setAttribute('aria-label', 'Country calling code, for example +93');
       countryCode.value = previousCountry ? (previousCountry.value || '+93') : '+93';
+      if (previousCountry) previousCountry.remove();
       const countryInfo = document.createElement('span');
       countryInfo.id = 'hwcCountryDetected';
       countryInfo.className = 'hwc-country-detected';
@@ -324,7 +325,7 @@
   if (signupForm) {
     const findField = (terms) => Array.from(signupForm.querySelectorAll('input')).find(input =>
       terms.some(term => ((input.name || '') + ' ' + (input.id || '') + ' ' +
-        (input.closest('label')?.textContent || input.parentElement?.textContent || '')).toLowerCase().includes(term)
+        Array.from(input.labels || []).map(label => label.textContent || '').join(' ')).toLowerCase().includes(term)
       )
     );
     const firstName = findField(['first name','firstname','first_name']);
