@@ -22,7 +22,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261122-2358';
+        script.id=id;script.src=src+'?v=20261122-1638';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
@@ -32,7 +32,7 @@
          must not prevent the compact-menu script from loading. */
       loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
         loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
-          loadScript('hewad-phone-metadata','https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/max.js',function(){
+          loadScript('hewad-phone-metadata','https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/libphonenumber-max.js',function(){
             try{
               var lib=doc.defaultView.libphonenumber;
               if(lib&&lib.getCountries&&lib.getCountryCallingCode){
