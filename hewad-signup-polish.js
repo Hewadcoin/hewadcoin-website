@@ -221,6 +221,7 @@
         phoneRow.className = 'hwc-phone-row';
         mobile.parentNode.insertBefore(phoneRow, mobile);
         phoneRow.appendChild(countryCode);
+        phoneRow.appendChild(countryInfo);
         phoneRow.appendChild(mobile);
       }
       let phoneHint = $('hwcMobileValidationHint');
@@ -264,8 +265,8 @@
         const ticket = ++phoneCheckVersion;
         const full = normalizedPhone();
         const localDigits = (mobile.value || '').replace(/\D/g, '').replace(/^0+/, '');
-        if (!countryCode.value) {
-          paintPhone(false, '✕ Please select your country calling code.', false);
+        if (!countryMap[countryCode.value.trim()]) {
+          paintPhone(false, '✕ Enter a valid country calling code, for example +93.', false);
           return false;
         }
         if (localDigits.length < 7 || localDigits.length > 14) {
