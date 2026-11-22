@@ -579,3 +579,65 @@
   document.getElementById(style.id)?.remove();
   document.head.appendChild(style);
 })();
+
+
+/* Final compact signup alignment: equal row widths and tighter field spacing. */
+(function finalCompactSignupAlignment(){
+  'use strict';
+  const form=(document.getElementById('referral')&&document.getElementById('referral').closest('form'))||document.querySelector('#signup form');
+  if(!form)return;
+  const getWrap=el=>el&&(el.closest('.form-group,.input-group,.field-group,.form-field,.input-field')||el.parentElement);
+  const inputs=Array.from(form.querySelectorAll('input'));
+  const find=terms=>inputs.find(el=>{
+    const meta=[el.name,el.id,el.placeholder,...Array.from(el.labels||[]).map(x=>x.textContent||'')].join(' ').toLowerCase();
+    return terms.some(term=>meta.includes(term));
+  });
+  const name=find(['first name','firstname','first_name'])||find(['name']);
+  const referral=document.getElementById('referral');
+  function pair(a,b,className){
+    const wa=getWrap(a),wb=getWrap(b);
+    if(!wa||!wb||wa===wb)return;
+    let row=form.querySelector(':scope > .'+className);
+    if(!row){
+      row=document.createElement('div');
+      row.className=className;
+      const anchor=wa.compareDocumentPosition(wb)&Node.DOCUMENT_POSITION_FOLLOWING?wa:wb;
+      anchor.parentNode.insertBefore(row,anchor);
+    }
+    if(wa.parentElement!==row)row.appendChild(wa);
+    if(wb.parentElement!==row)row.appendChild(wb);
+  }
+  pair(name,referral,'hwc-name-referral-row');
+  const mobile=form.querySelector('input[type="tel"],input[name*="mobile" i],input[id*="mobile" i],input[name*="phone" i],input[id*="phone" i]');
+  const phoneRow=mobile&&mobile.closest('.hwc-phone-row');
+  const lastLabel=Array.from(form.querySelectorAll('label')).find(el=>/last\s*name|surname|family\s*name/i.test(el.textContent||''));
+  if(lastLabel){
+    const lastInput=lastLabel.querySelector('input')||(lastLabel.htmlFor&&document.getElementById(lastLabel.htmlFor));
+    const lastWrap=lastInput&&getWrap(lastInput);
+    if(lastWrap&&lastWrap!==form)lastWrap.remove();else lastLabel.remove();
+  }
+  const style=document.createElement('style');
+  style.id='hwc-final-equal-row-layout';
+  style.textContent=[
+    '#signup form{display:flex!important;flex-direction:column!important;gap:4px!important;width:100%!important;box-sizing:border-box!important}',
+    '#signup form .hwc-name-referral-row,#signup form .hwc-phone-row{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;margin:0!important;align-items:stretch!important}',
+    '#signup form .hwc-name-referral-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:8px!important}',
+    '#signup form .hwc-name-referral-row>*{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;width:100%!important;min-width:0!important;max-width:none!important;flex:1 1 0!important;box-sizing:border-box!important;margin:0!important}',
+    '#signup form .hwc-name-referral-row input{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;box-sizing:border-box!important}',
+    '#signup form .hwc-phone-row{display:grid!important;grid-template-columns:minmax(0,32fr) minmax(0,68fr)!important;gap:8px!important}',
+    '#signup form .hwc-country-field{display:block!important;position:relative!important;width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;box-sizing:border-box!important}',
+    '#signup form #hwcCountryCallingCode,#signup form .hwc-phone-row input[type=tel]{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;box-sizing:border-box!important}',
+    '#signup form #hwcCountryCallingCode{padding:0 28px 0 5px!important;text-align:center!important;direction:ltr!important}',
+    '#signup form #hwcCountryDetected{position:absolute!important;right:6px!important;top:50%!important;transform:translateY(-50%)!important;display:block!important;width:auto!important;font-size:17px!important;line-height:1!important;pointer-events:none!important}',
+    '#signup form input[type=email],#signup form input[type=password]{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;margin-top:0!important;margin-bottom:0!important;box-sizing:border-box!important}',
+    '#signup form .password-input-wrap{display:flex!important;flex-wrap:wrap!important;width:100%!important;margin:0!important;gap:0!important}',
+    '#signup form .password-input-wrap>input{flex:1 1 100%!important}',
+    '#signup form .hwc-field-hint{display:block!important;width:100%!important;min-height:0!important;margin:1px 0 2px!important;line-height:1.2!important;font-size:10px!important;box-sizing:border-box!important}',
+    '#signup form .password-input-wrap+.hwc-field-hint{margin-top:1px!important;margin-bottom:2px!important}',
+    '#signup form label{margin-top:1px!important;margin-bottom:1px!important;line-height:1.2!important}',
+    '#signup form button{margin-top:3px!important}',
+    '@media(max-width:360px){#signup form .hwc-name-referral-row,#signup form .hwc-phone-row{gap:6px!important}#signup form .hwc-phone-row{grid-template-columns:minmax(0,30fr) minmax(0,70fr)!important}}'
+  ].join('');
+  document.getElementById(style.id)?.remove();
+  document.head.appendChild(style);
+})();
