@@ -22,7 +22,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261122-1638';
+        script.id=id;script.src=src+'?v=20261122-1645';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
@@ -44,11 +44,11 @@
                 doc.defaultView.__HWC_PHONE_COUNTRIES=all;
               }
             }catch(e){console.warn('Phone country metadata setup:',e);}
-            loadScript('hewad-signup-final','hewad-signup-final.js',function(){
-              loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js',function(){
-                loadScript('hewad-signup-polish','preview/hewad-signup-polish.js',function(){
-                  loadScript('hewad-password-recovery','hewad-password-recovery.js',function(){
-                    loadScript('hewad-compact-menus','preview/hewad-compact-menus.js',function(){
+            loadScript('hewad-signup-polish','preview/hewad-signup-polish.js',function(){
+              loadScript('hewad-signup-final','hewad-signup-final.js',function(){
+                loadScript('hewad-password-recovery','hewad-password-recovery.js',function(){
+                  loadScript('hewad-compact-menus','preview/hewad-compact-menus.js',function(){
+                    loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js',function(){
                       frame.style.visibility='visible';
                     });
                   });
