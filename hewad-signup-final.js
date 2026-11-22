@@ -130,6 +130,12 @@
     }
     updateCountryFlag();
 
+    // Earlier scripts wrapped the phone input in their own row. Restore it to
+    // its original .field so this final layout owns the complete phone row.
+    const oldMobileContainer = mobile.closest('.hwc-phone-row');
+    if (mobile.parentElement !== mobileField) mobileField.appendChild(mobile);
+    if (oldMobileContainer && oldMobileContainer !== mobileField && !oldMobileContainer.contains(code)) oldMobileContainer.remove();
+
     const formGrid = form.querySelector('.form-grid') || document.createElement('div');
     if (!formGrid.classList.contains('form-grid')) {
       formGrid.className = 'form-grid';
