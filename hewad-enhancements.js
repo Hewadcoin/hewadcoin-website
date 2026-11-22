@@ -128,7 +128,7 @@ function bindSignupValidation(){
   var password=passwords[0],confirm=passwords[1];
   if(!email||!password)return;
   var style=document.createElement('style');
-  style.textContent='.hwc-field-valid{border-color:#25c878!important;box-shadow:0 0 0 1px #25c878!important}.hwc-field-invalid{border-color:#ff555d!important;box-shadow:0 0 0 1px #ff555d!important}.hwc-field-hint{display:block;font-size:11px;line-height:1.45;margin:-7px 0 10px;min-height:14px}.hwc-field-hint.ok{color:#25c878}.hwc-field-hint.bad{color:#ff6262}';
+  style.textContent='.hwc-field-valid{border-color:#25c878!important;box-shadow:0 0 0 1px #25c878!important}.hwc-field-invalid{border-color:#ff555d!important;box-shadow:0 0 0 1px #ff555d!important}.hwc-field-hint{display:block;font-size:11px;line-height:1.45;margin:6px 0 12px;min-height:14px;position:static;display:block;width:100%;box-sizing:border-box}.hwc-field-hint.ok{color:#25c878}.hwc-field-hint.bad{color:#ff6262}';
   document.head.appendChild(style);
   function hint(input,id){var el=$(id);if(!el){el=document.createElement('small');el.id=id;el.className='hwc-field-hint';input.insertAdjacentElement('afterend',el)}return el}
   var emailHint=hint(email,'hwcEmailValidationHint');
