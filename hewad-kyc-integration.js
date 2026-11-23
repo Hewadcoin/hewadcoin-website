@@ -15,7 +15,8 @@ dashboardPolish.textContent=`
 #dashboard .dash-brand-mark{width:32px!important;height:32px!important;font-size:21px!important}
 #dashboard .dash-top-actions{gap:6px!important}
 #dashboard .dash-top-actions button{width:32px!important;height:32px!important;font-size:15px!important}
-#dashboard #memberCard{display:block!important;position:relative!important;width:calc(100% - 8px)!important;max-width:none!important;min-width:0!important;margin:0 4px 6px!important;padding:9px 10px 7px!important;border-radius:15px!important;box-sizing:border-box!important;transform:none!important;zoom:1!important}
+#dashboard #memberCard:not([hidden]){display:block!important;position:relative!important;}
+#dashboard #memberCard[hidden]{display:none!important}width:calc(100% - 8px)!important;max-width:none!important;min-width:0!important;margin:0 4px 6px!important;padding:9px 10px 7px!important;border-radius:15px!important;box-sizing:border-box!important;transform:none!important;zoom:1!important}
 #memberCard .hwc-card-head{margin-bottom:6px!important;gap:6px!important}
 #memberCard .hwc-logo-name{gap:7px!important}
 #memberCard .hwc-coin-logo{width:35px!important;height:35px!important;font-size:23px!important}
