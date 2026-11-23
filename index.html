@@ -17,7 +17,7 @@
 (function(){
   var frame=document.getElementById('hewad-app');
   var release='20261123-final-17';
-  var params=window.location.search.replace(/^\\?/,'');
+  var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
   frame.addEventListener('load',function(){
