@@ -66,11 +66,11 @@
       body='<h4>د استوګنې معلومات</h4><label>هېواد<select name="country" required><option value="">هېواد انتخاب کړئ</option>'+countries.map(c=>'<option value="'+esc(c)+'" '+(v.country===c?'selected':'')+'>'+esc(c)+'</option>').join('')+'</select></label>'+(v.country==='Afghanistan'?'<label>ولایت<select name="province" required><option value="">ولایت انتخاب کړئ</option>'+provinces.map(p=>'<option value="'+esc(p)+'" '+(v.province===p?'selected':'')+'>'+esc(p)+'</option>').join('')+'</select></label>':'<label>ولایت / سیمه<input name="province" required maxlength="100" value="'+esc(v.province)+'"></label>');
     } else if(state.step===3){
       const photo=(name,title,help)=>'<div class="hwc-kyc-photo"><b>'+title+'</b><small>'+(state.files[name]?esc(state.files[name].name):help)+'</small><input type="file" name="'+name+'" accept="image/jpeg,image/png,image/webp" capture="'+(name==='selfie'?'user':'environment')+'" required></div>';
-      body='<h4>د اسنادو عکسونه</h4><p class="hwc-kyc-help">یوازې JPG، PNG یا WebP عکسونه؛ هر عکس تر ۱۰ MB پورې.</p><div class="hwc-kyc-photo-grid">'+(state.type==='tazkira'?photo('front','مخکینی عکس','د تذکرې مخ')+photo('back','شاتنی عکس','د تذکرې شا'):photo('passport_page','د پاسپورټ عکس','د معلوماتو لرونکې صفحه'))+photo('selfie','شخصي سلفي','مخ باید روښانه ښکاره وي')+'</div>';
+      body='<h4>د اسنادو عکسونه</h4><p class="hwc-kyc-help">یوازې JPG، PNG یا WebP عکسونه؛ هر عکس تر ۱۰ MB پورې.</p><div class="hwc-kyc-photo-grid">'+(state.type==='tazkira'?photo('front','مخکینی عکس','د تذکرې مخ')+photo('back','شاتنی عکس','د تذکرې شا'):photo('passport_page','د معلوماتو لرونکې پاڼې عکس','یوازې هغه پاڼه چې نوم او عکس پکې وي'))+photo('selfie','شخصي سلفي','مخ باید روښانه ښکاره وي')+'</div>';
     } else {
-      const rows=[['د سند ډول',state.type==='tazkira'?'برېښنايي تذکره':'پاسپورټ'],['د سند شمېره',v.document_number],['نوم',v.first_name],['تخلص',v.last_name],['د زېږېدو نېټه',v.date_of_birth],['هېواد',v.country],['ولایت',v.province]];
+      const rows=[['د سند ډول',state.type==='tazkira'?'برېښنايي تذکره':'پاسپورټ'],[(state.type==='tazkira'?'د تذکرې ID':'د پاسپورټ شمېره'),v.document_number],['نوم',v.first_name],['تخلص',v.last_name],['د زېږېدو نېټه',v.date_of_birth],['هېواد',v.country],['ولایت',v.province]];
       if(state.type==='passport')rows.push(['د ختمېدو نېټه',v.passport_expiry_date]);
-      const names=state.type==='tazkira'?[['مخکینی عکس',state.files.front],['شاتنی عکس',state.files.back],['سلفي عکس',state.files.selfie]]:[['د پاسپورټ عکس',state.files.passport_page],['سلفي عکس',state.files.selfie]];
+      const names=state.type==='tazkira'?[['مخکینی عکس',state.files.front],['شاتنی عکس',state.files.back],['سلفي عکس',state.files.selfie]]:[['د معلوماتو لرونکې پاڼې عکس',state.files.passport_page],['سلفي عکس',state.files.selfie]];
       body='<h4>وروستۍ بیاکتنه</h4><div class="hwc-kyc-review">'+rows.map(r=>'<div class="hwc-kyc-review-row"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>').join('')+names.map(r=>'<div class="hwc-kyc-review-row"><span>'+esc(r[0])+'</span><b>'+esc(r[1]&&r[1].name)+'</b></div>').join('')+'</div><p class="hwc-kyc-help" style="margin-top:10px">د لېږلو وروسته به اډمین ستاسو غوښتنه وارزوي. تر تأیید مخکې حساب تصدیق شوی نه وي.</p>';
     }
     const back=state.step>1?'<button type="button" class="hwc-kyc-back" data-kyc-back>مخکینۍ صفحه</button>':'';
@@ -148,6 +148,15 @@
   });
   window.renderHwcKycFlow=openKyc;
   window.openHwcKyc=openKyc;
+
+  // Replace the legacy demo KYC click handlers with the production four-step flow.
+  document.addEventListener('click',function(event){
+    const trigger=event.target.closest&&event.target.closest('#addCardBtn,#kycProfileRow');
+    if(!trigger)return;
+    event.preventDefault();event.stopPropagation();
+    if(event.stopImmediatePropagation)event.stopImmediatePropagation();
+    openKyc();
+  },true);
 
   const lockedActions=['Deposit','Withdraw','Mining','Gift','Gift Code','Wallet','AFN Wallet','Send Hewad'];
   const locked=action=>!isApproved()&&lockedActions.includes(action);
