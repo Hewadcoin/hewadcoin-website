@@ -208,7 +208,7 @@
     openKyc();
   },true);
 
-  const lockedActions=['Deposit','Withdraw','Mining','Gift','Gift Code','Wallet','AFN Wallet','Send Hewad'];
+  const lockedActions=['Convert','Send Hewad','Deposit','Staking','Withdraw','Withdrawal Stats','Mining','Gift','Gift Code','Wallet','AFN Wallet','Transactions'];
   const locked=action=>!isApproved()&&lockedActions.includes(action);
   const originalOpen=window.openHwcModule;
   if(typeof originalOpen==='function')window.openHwcModule=async function(action){if(locked(action))return openKyc();return originalOpen.apply(this,arguments);};
