@@ -12,6 +12,8 @@ function openModal(title,html){$('hwcLiveTitle').textContent=title;$('hwcLiveBod
 function closeModal(){modal.classList.remove('open')}
 $('hwcLiveClose').onclick=closeModal;modal.querySelector('.hwc-live-backdrop').onclick=closeModal;
 function put(id,value){if($(id))$(id).textContent=value}
+// Keep card identity hidden until the KYC application is approved.
+put('memberCountry','—');put('memberCardNumber','KYC REQUIRED');put('cardCreatedDate','—');if($('cardCreatedWrap'))$('cardCreatedWrap').hidden=true;
 
 function renderWalletEmpty(){var v=$('walletPage');if(!v)return;v.innerHTML='<section class="dash-subpage-card" style="text-align:center;padding:42px 18px"><div style="font-size:42px;margin-bottom:12px">💼</div><h2>WALLET</h2><p class="muted">Your wallet section is being prepared. Details will appear here soon.</p></section>'}
 function renderSupportEmpty(){var v=$('supportPage');if(!v)return;v.innerHTML='<section class="dash-subpage-card" style="text-align:center;padding:42px 18px"><div style="font-size:42px;margin-bottom:12px">🛟</div><h2>SUPPORT</h2><p class="muted">The support center is being prepared. You will be able to contact us here soon.</p></section>'}
