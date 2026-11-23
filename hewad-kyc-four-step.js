@@ -222,7 +222,7 @@
     if(dial&&country){const selected=country.textContent.trim();const flag=countryFlagForName(selected);const code=dialCodes[selected]||'';dial.textContent=code?flag+' '+code:flag;dial.setAttribute('aria-label',selected+' country flag and calling code');}
     if(!number||!statusEl)return;
     if(number.textContent.trim()!=='KYC REQUIRED'&&number.textContent.trim()!=='—')number.dataset.memberNumber=number.textContent.trim();
-    const approved=window.HEWAD_KYC_STATUS==='approved'||statusEl.textContent.trim()==='ACTIVE';
+    const badgeStatus=statusEl.textContent.trim().toUpperCase();const approved=window.HEWAD_KYC_STATUS==='approved'||badgeStatus==='ACTIVE'||badgeStatus==='KYC VERIFIED';if(approved)window.HEWAD_KYC_STATUS='approved';
     if(approved){if(number.dataset.memberNumber&&number.textContent!==number.dataset.memberNumber)number.textContent=number.dataset.memberNumber;if(copy)copy.hidden=false;}
     else{if(number.textContent!=='KYC REQUIRED')number.textContent='KYC REQUIRED';if(copy)copy.hidden=true;}
   }
