@@ -51,15 +51,29 @@ async function loadKyc(category){
  const host=ensureHost();if(!host)return;
  const status=category==='requests'?'pending':category;window.currentAdminKycCategory=category;
  host.innerHTML='<p>Loading…</p>';
- const {data,error}=await hwcSupabase.from('kyc_applications').select('id,user_id,first_name,last_name,country,province,mobile_number,document_type,national_id_number,date_of_birth,passport_expiry_date,status,created_at,front_document_path,back_document_path,selfie_document_path').eq('status',status).order('created_at',{ascending:false}).limit(40);
+ const {data,error}=await hwcSupabase.from('kyc_applications').select('id,user_id,first_name,last_name,country,province,district,mobile_number,document_type,national_id_number,date_of_birth,passport_expiry_date,status,rejection_reason,created_at,front_document_path,back_document_path,selfie_document_path').eq('status',status).order('created_at',{ascending:false}).limit(40);
  if(error){host.textContent=error.message;return;}
  if(!data||!data.length){host.textContent='No KYC applications';return;}
- host.innerHTML=data.map(x=>'<article class="hwc-record"><div><strong>'+[x.first_name,x.last_name].filter(Boolean).join(' ')+'</strong><small>'+[x.country,x.province,x.mobile_number||'',new Date(x.created_at).toLocaleString()].join(' · ')+'</small><small>'+x.document_type+': '+x.national_id_number+'</small><small>Birth date: '+(x.date_of_birth||'—')+(x.passport_expiry_date?' · Passport expiry: '+x.passport_expiry_date:'')+'</small><small>Member: '+x.user_id+'</small><div class="hwc-admin-actions"><button data-kyc-file="'+x.front_document_path+'">'+(x.document_type==='Passport'?'Passport page':'Front ID')+'</button>'+(x.back_document_path?'<button data-kyc-file="'+x.back_document_path+'">Back ID</button>':'')+'<button data-kyc-file="'+x.selfie_document_path+'">Selfie</button></div></div><div>'+statusBadge(x.status)+(x.status==='pending'?'<div class="hwc-admin-actions"><button data-kyc-review="approved" data-kyc-id="'+x.id+'">Approve</button><button data-kyc-review="rejected" data-kyc-id="'+x.id+'">Reject</button></div>':'')+'</div></article>').join('');
+ host.innerHTML=data.map(x=>'<article class="hwc-record"><div><strong>'+[x.first_name,x.last_name].filter(Boolean).join(' ')+'</strong><small>'+[x.country,x.province,x.district||'',x.mobile_number||'',new Date(x.created_at).toLocaleString()].join(' · ')+'</small><small>'+x.document_type+': '+x.national_id_number+'</small><small>Birth date: '+(x.date_of_birth||'—')+(x.passport_expiry_date?' · Passport expiry: '+x.passport_expiry_date:'')+'</small><small>Member: '+x.user_id+'</small><div class="hwc-admin-actions"><button data-kyc-file="'+x.front_document_path+'">'+(x.document_type==='Passport'?'Passport page':'Front ID')+'</button>'+(x.back_document_path?'<button data-kyc-file="'+x.back_document_path+'">Back ID</button>':'')+'<button data-kyc-file="'+x.selfie_document_path+'">Selfie</button></div></div><div>'+statusBadge(x.status)+(x.status==='pending'?'<div class="hwc-admin-actions"><button data-kyc-review="approved" data-kyc-id="'+x.id+'">Approve</button><button data-kyc-review="rejected" data-kyc-id="'+x.id+'">Reject</button></div>':'')+'</div></article>').join('');
 }
 document.querySelectorAll('[data-kyc-category]').forEach(b=>b.addEventListener('click',()=>loadKyc(b.dataset.kycCategory).catch(e=>notify(e.message))));
 adminList?.addEventListener('click',async e=>{
  const file=e.target.closest('[data-kyc-file]');if(file){try{const {data,error}=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(file.dataset.kycFile,120);if(error)throw error;window.open(data.signedUrl,'_blank','noopener');}catch(err){notify(err.message);}return;}
- const review=e.target.closest('[data-kyc-review]');if(review){let reason=null;if(review.dataset.kycReview==='rejected'){reason=prompt('Reason for rejection (required):')||'';if(!reason.trim())return notify('A rejection reason is required.');}review.disabled=true;const {error}=await hwcSupabase.from('kyc_applications').update({status:review.dataset.kycReview,rejection_reason:reason}).eq('id',review.dataset.kycId);if(error){notify(error.message);review.disabled=false;}else{notify('KYC application reviewed.');await loadKyc(window.currentAdminKycCategory||'requests');if(window.__HWC_USER)await window.loadHwcProfile(window.__HWC_USER);}}
+ const review=e.target.closest('[data-kyc-review]');if(review){
+  let reason=null;
+  if(review.dataset.kycReview==='rejected'){reason=prompt('Write the rejection reason. This message will be sent to the member:')||'';if(!reason.trim())return notify('A rejection reason is required.');}
+  review.disabled=true;
+  try{
+   const {data,error}=await hwcSupabase.from('kyc_applications')
+    .update({status:review.dataset.kycReview,rejection_reason:reason})
+    .eq('id',review.dataset.kycId).select('id,status').single();
+   if(error)throw error;
+   if(!data)throw new Error('The review could not be confirmed.');
+   notify(review.dataset.kycReview==='approved'?'KYC approved. The member card is now activated.':'KYC rejected. The reason was sent to the member.');
+   await loadKyc(window.currentAdminKycCategory||'requests');
+   if(window.__HWC_USER)await window.loadHwcProfile(window.__HWC_USER);
+  }catch(err){console.error('HEWAD admin KYC review:',err);notify(err.message||'KYC review failed.');review.disabled=false;}
+ }
 });
 const nav=$('.admin-nav-btn');if(nav)nav.addEventListener('click',()=>{if(window.HEWAD_USER_ROLE==='admin')setTimeout(()=>{const v=$('adminKyc');if(v&&!v.hidden)loadKyc('requests');},0);});
 window.hwcLoadAdminKyc=loadKyc;
