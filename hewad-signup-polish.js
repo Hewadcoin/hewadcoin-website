@@ -329,7 +329,7 @@
           const result = await previousSignUp(args);
           const authError = result && result.error && result.error.message ? result.error.message : '';
           const returnedUser = result && result.data && result.data.user;
-          const duplicateEmail = /already registered|already exists|email.*taken|user exists/i.test(authError) ||
+          const duplicateEmail = /email.*(?:already registered|already exists|taken)|(?:user|account) already (?:registered|exists)/i.test(authError) ||
             !!(returnedUser && Array.isArray(returnedUser.identities) && returnedUser.identities.length === 0);
           if (duplicateEmail) {
             const hint = $('hwcEmailValidationHint');
