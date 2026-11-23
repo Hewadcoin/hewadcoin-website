@@ -39,7 +39,11 @@
   }
   function renderStatus(s, reason) {
     const approved=s==='approved', pending=s==='pending';
-    panel('<div class="hwc-kyc-status"><strong>'+(approved?'✓ هویت مو تأیید شوی':pending?'⏳ د هویت غوښتنه تر ارزونې لاندې ده':'د KYC بیا غوښتنه')+'</strong><p>'+(approved?'ستاسو حساب تصدیق شوی او د کارت اسانتیاوې فعالې دي.':pending?'🎉✨ مبارک دې وي! ستاسو د KYC غوښتنه په بریالیتوب سره ثبت او اډمین ته ولېږل شوه. اډمین به ستاسو اسناد وارزوي او د پایلې خبر به درکړل شي.':'ستاسو پخوانۍ غوښتنه رد شوې ده. د رد دلیل: '+esc(reason||'له ملاتړ سره اړیکه ونیسئ')+'. تاسو کولای شئ معلومات اصلاح او بیا یې ولېږئ.')+'</p></div>'+(approved||pending?'':'<button type="button" class="hwc-kyc-yellow" style="width:100%;margin-top:12px;padding:13px;border:0;border-radius:10px;font-weight:900" data-kyc-restart>بیا غوښتنه وکړئ</button>'));
+    if(pending){
+      panel('<div class="hwc-kyc-success" dir="rtl"><div class="hwc-kyc-success-orbit"><span>✓</span></div><div class="hwc-kyc-success-confetti">✦　✧　✦　✧　✦</div><strong>🎉 مبارک دې وي! غوښتنه مو ولېږل شوه</strong><p>ستاسو د هویت معلومات او اسناد په بریالیتوب سره ثبت شول او د اډمین د ارزونې لپاره ولېږل شول.</p><div class="hwc-kyc-success-note">⏳ ستاسو غوښتنه اوس د اډمین تر ارزونې لاندې ده. کله چې تایید شي، خبرتیا به درته راشي او د HEWAD COIN غړیتوب کارت به مو فعال شي.</div><div class="hwc-kyc-success-wave"></div></div>');
+      return;
+    }
+    panel('<div class="hwc-kyc-status"><strong>'+(approved?'✓ هویت مو تأیید شوی':'د KYC بیا غوښتنه')+'</strong><p>'+(approved?'ستاسو حساب تصدیق شوی او د کارت اسانتیاوې فعالې دي.':'ستاسو پخوانۍ غوښتنه رد شوې ده. د رد دلیل: '+esc(reason||'له ملاتړ سره اړیکه ونیسئ')+'. تاسو کولای شئ معلومات اصلاح او بیا یې ولېږئ.')+'</p></div>'+(approved?'':'<button type="button" class="hwc-kyc-yellow" style="width:100%;margin-top:12px;padding:13px;border:0;border-radius:10px;font-weight:900" data-kyc-restart>بیا غوښتنه وکړئ</button>'));
   }
   async function openKyc() {
     if (!hwcCurrentUser) { if(typeof showNotice==='function')showNotice('Please log in to continue.'); return; }
