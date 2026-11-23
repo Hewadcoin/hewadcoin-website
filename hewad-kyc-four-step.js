@@ -182,8 +182,8 @@
     if(!number||!statusEl)return;
     if(number.textContent.trim()!=='KYC REQUIRED'&&number.textContent.trim()!=='—')number.dataset.memberNumber=number.textContent.trim();
     const approved=window.HEWAD_KYC_STATUS==='approved'||statusEl.textContent.trim()==='ACTIVE';
-    if(approved){if(number.dataset.memberNumber)number.textContent=number.dataset.memberNumber;if(copy)copy.hidden=false;}
-    else{number.textContent='KYC REQUIRED';if(copy)copy.hidden=true;}
+    if(approved){if(number.dataset.memberNumber&&number.textContent!==number.dataset.memberNumber)number.textContent=number.dataset.memberNumber;if(copy)copy.hidden=false;}
+    else{if(number.textContent!=='KYC REQUIRED')number.textContent='KYC REQUIRED';if(copy)copy.hidden=true;}
   }
   const cardObserver=new MutationObserver(refreshCard);
   ['memberCountry','memberCardNumber','cardKycStatus'].forEach(id=>{const el=document.getElementById(id);if(el)cardObserver.observe(el,{childList:true,characterData:true,subtree:true});});
