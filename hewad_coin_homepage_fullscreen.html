@@ -655,7 +655,8 @@ restoreHwcSession();
  document.getElementById("walletHwcBalance").textContent=document.getElementById("hwcBalance").textContent;
  document.getElementById("walletUsdBalance").textContent=document.getElementById("usdBalance").textContent;
  document.getElementById("walletAfnBalance").textContent=document.getElementById("afnBalance").textContent;
- document.getElementById("profileMemberName").textContent=document.getElementById("memberName").textContent;
+ const profileMemberName=document.getElementById("profileMemberName"),memberName=document.getElementById("memberName");
+ if(profileMemberName&&memberName)profileMemberName.textContent=memberName.textContent;
  // Dashboard visibility is controlled only by a valid Supabase session.
 })();
 
