@@ -39,7 +39,7 @@
   }
   function renderStatus(s, reason) {
     const approved=s==='approved', pending=s==='pending';
-    panel('<div class="hwc-kyc-status"><strong>'+(approved?'✓ هویت مو تأیید شوی':pending?'⏳ د هویت غوښتنه تر ارزونې لاندې ده':'د KYC بیا غوښتنه')+'</strong><p>'+(approved?'ستاسو حساب تصدیق شوی او د کارت اسانتیاوې فعالې دي.':pending?'🎉✨ مبارک دې وي! ستاسو د KYC غوښتنه په بریالیتوب سره ثبت او اډمین ته ولېږل شوه. د اډمین ټیم به ستاسو اسناد په راتلونکو ۲۴ ساعتونو کې وارزوي. د وروستۍ پایلې خبر به درکړل شي.':'ستاسو پخوانۍ غوښتنه رد شوې ده. د رد دلیل: '+esc(reason||'له ملاتړ سره اړیکه ونیسئ')+'. تاسو کولای شئ معلومات اصلاح او بیا یې ولېږئ.')+'</p></div>'+(approved||pending?'':'<button type="button" class="hwc-kyc-yellow" style="width:100%;margin-top:12px;padding:13px;border:0;border-radius:10px;font-weight:900" data-kyc-restart>بیا غوښتنه وکړئ</button>'));
+    panel('<div class="hwc-kyc-status"><strong>'+(approved?'✓ هویت مو تأیید شوی':pending?'⏳ د هویت غوښتنه تر ارزونې لاندې ده':'د KYC بیا غوښتنه')+'</strong><p>'+(approved?'ستاسو حساب تصدیق شوی او د کارت اسانتیاوې فعالې دي.':pending?'🎉✨ مبارک دې وي! ستاسو د KYC غوښتنه په بریالیتوب سره ثبت او اډمین ته ولېږل شوه. اډمین به ستاسو اسناد وارزوي او د پایلې خبر به درکړل شي.':'ستاسو پخوانۍ غوښتنه رد شوې ده. د رد دلیل: '+esc(reason||'له ملاتړ سره اړیکه ونیسئ')+'. تاسو کولای شئ معلومات اصلاح او بیا یې ولېږئ.')+'</p></div>'+(approved||pending?'':'<button type="button" class="hwc-kyc-yellow" style="width:100%;margin-top:12px;padding:13px;border:0;border-radius:10px;font-weight:900" data-kyc-restart>بیا غوښتنه وکړئ</button>'));
   }
   async function openKyc() {
     if (!hwcCurrentUser) { if(typeof showNotice==='function')showNotice('Please log in to continue.'); return; }
