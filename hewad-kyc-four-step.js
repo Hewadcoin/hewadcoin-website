@@ -209,10 +209,16 @@
     }
   },true);
 
+  function countryFlagForName(name){
+    const codes='AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL JM JP JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV MT MH MR MU MX FM MD MC MN MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TW TJ TZ TH TL TG TO TT TN TR TM TV UG UA GB US UY UZ VU VA VE VN YE ZM ZW'.split(' ');
+    const names=new Intl.DisplayNames(['en'],{type:'region'});
+    const code=codes.find(code=>{try{return names.of(code).toLowerCase()===String(name||'').trim().toLowerCase();}catch(e){return false;}});
+    return code?String.fromCodePoint(...[...code].map(ch=>127397+ch.charCodeAt(0))):'🌐';
+  }
   function refreshCard(){
     const country=document.getElementById('memberCountry'),dial=document.getElementById('memberDialCode');
     const statusEl=document.getElementById('cardKycStatus'),number=document.getElementById('memberCardNumber'),copy=document.getElementById('copyCardNumber');
-    if(dial&&country){const selected=country.textContent.trim();const flag=countryFlags[selected]||'🌐';const code=dialCodes[selected]||'';dial.textContent=code?flag+' '+code:flag;dial.setAttribute('aria-label',selected+' country flag and calling code');}
+    if(dial&&country){const selected=country.textContent.trim();const flag=countryFlagForName(selected);const code=dialCodes[selected]||'';dial.textContent=code?flag+' '+code:flag;dial.setAttribute('aria-label',selected+' country flag and calling code');}
     if(!number||!statusEl)return;
     if(number.textContent.trim()!=='KYC REQUIRED'&&number.textContent.trim()!=='—')number.dataset.memberNumber=number.textContent.trim();
     const approved=window.HEWAD_KYC_STATUS==='approved'||statusEl.textContent.trim()==='ACTIVE';
