@@ -35,7 +35,7 @@ dashboardPolish.textContent=`
 #memberCard .hwc-card-foot{margin-top:5px!important;padding-top:5px!important;gap:6px!important}
 #memberCard .hwc-card-chip{width:29px!important;height:20px!important;border-radius:5px!important}
 #memberCard .hwc-card-chip-group{display:inline-flex!important;align-items:center!important;gap:6px!important;flex:0 0 auto!important}
-#memberCard .hwc-card-country-flag{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:29px!important;height:20px!important;min-width:29px!important;padding:0!important;border:1px solid #d7b65a!important;border-radius:0!important;background:#fff!important;font-size:17px!important;line-height:1!important;overflow:hidden!important;box-sizing:border-box!important}
+#memberCard .hwc-card-country-flag{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:29px!important;height:20px!important;min-width:29px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;font-size:17px!important;line-height:1!important;overflow:hidden!important;box-sizing:border-box!important}
 #memberCard .hwc-card-country-flag[hidden]{display:none!important}
 #memberCard .hwc-card-date{font-size:8px!important;letter-spacing:.7px!important}
 #memberCard .add-card-btn{width:100%!important;margin-top:6px!important;padding:7px 8px!important;font-size:12px!important;border-radius:9px!important}
@@ -93,7 +93,7 @@ if(typeof originalLoad==='function'){
    hwcSupabase.from('user_roles').select('role').eq('user_id',user.id)
   ]);
   if(p.error)console.warn('KYC profile:',p.error.message);
-  const profile=p.data||{},wallet=w.data||{},status=profile.kyc_status||'not_verified';
+  const profile=p.data||{},wallet=w.data||{},rawStatus=String(profile.kyc_status||'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_'),status=['approved','verified','active','kyc_verified'].includes(rawStatus)?'approved':rawStatus;
   window.HEWAD_KYC_STATUS=status;
   window.HEWAD_USER_ROLE=(r.data||[]).some(x=>x.role==='admin')?'admin':'member';
   const put=(id,v)=>{const el=$(id);if(el)el.textContent=v==null?'':String(v);};
@@ -113,7 +113,7 @@ if(typeof originalLoad==='function'){
       }
     }
   }
-  put('memberCardNumber',profile.card_number||'—');
+  put('memberCardNumber',status==='approved'?(profile.card_number||'CARD NUMBER PENDING'):'KYC REQUIRED');
   put('profileKycStatus',status==='approved'?'Verified':status==='pending'?'Pending':status==='rejected'?'Rejected':'Unverified');
   put('cardKycStatus',status==='approved'?'ACTIVE':status==='pending'?'KYC PENDING':status==='rejected'?'KYC REJECTED':'KYC NOT VERIFIED');
   applyAddCardVisibility();
