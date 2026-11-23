@@ -4,11 +4,11 @@
   window.__hewadPasswordRecoveryLoaded = true;
 
   const $ = (id) => document.getElementById(id);
-  const db = typeof hwcSupabase !== 'undefined' ? hwcSupabase : window.hwcSupabase;
-  if (!db || !db.auth) {
-    console.error('HEWAD password recovery: Supabase client is unavailable.');
-    return;
+  function getAuthClient() {
+    const client = typeof hwcSupabase !== 'undefined' ? hwcSupabase : window.hwcSupabase;
+    return client && client.auth ? client : null;
   }
+  let db = getAuthClient();
 
   const style = document.createElement('style');
   style.id = 'hwc-password-recovery-style';
@@ -78,13 +78,19 @@
 
   // Supabase sends a secure recovery link. Opening it establishes a recovery
   // session and emits PASSWORD_RECOVERY; no six-digit OTP is requested.
-  db.auth.onAuthStateChange((event) => {
-    if (event !== 'PASSWORD_RECOVERY') return;
-    render('password');
-    modal.classList.add('open');
-    setMessage('Your email is verified. Set your new password below.');
-    setTimeout(() => $('hwcRecoveryPassword')?.focus(), 30);
-  });
+  function bindAuthListener() {
+    db = getAuthClient();
+    if (!db || !db.auth || window.__hwcRecoveryAuthListenerBound) return;
+    window.__hwcRecoveryAuthListenerBound = true;
+    db.auth.onAuthStateChange((event) => {
+      if (event !== 'PASSWORD_RECOVERY') return;
+      render('password');
+      modal.classList.add('open');
+      setMessage('Your email is verified. Set your new password below.');
+      setTimeout(() => $('hwcRecoveryPassword')?.focus(), 30);
+    });
+  }
+  bindAuthListener();
 
   $('hwcRecoveryForm').addEventListener('submit', async function (event) {
     event.preventDefault();
@@ -92,6 +98,9 @@
     setMessage('');
     submit.disabled = true;
     try {
+      db = getAuthClient();
+      if (!db) throw new Error('Account service is not ready. Please refresh the page and try again.');
+      bindAuthListener();
       if (stage === 'email') {
         const email = $('hwcRecoveryEmail').value.trim().toLowerCase();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Please enter a valid email address.');
