@@ -11,13 +11,13 @@ function applyAddCardVisibility(status){
  const approved=__hwcLatestKycStatus==='approved';
  const direct=$('addCardBtn');
  if(direct){direct.hidden=approved;direct.style.setProperty('display',approved?'none':'','important');}
- document.querySelectorAll('button,a,[role="button"],.add-card-btn,[data-action="add-card"]').forEach(el=>{
+ document.querySelectorAll('*').forEach(el=>{
   const label=(el.innerText||el.textContent||'').replace(/[+＋]/g,'').replace(/\\s+/g,' ').trim().toLowerCase();
-  if(label==='add card'){
-   if(approved){el.classList.add('hwc-add-card-hidden');el.setAttribute('aria-hidden','true');el.setAttribute('tabindex','-1');}
-   else{el.classList.remove('hwc-add-card-hidden');el.removeAttribute('aria-hidden');el.removeAttribute('tabindex');}
-  }
- });
+  if(label!=='add card')return;
+  const target=el.closest('button,a,[role="button"],.add-card,.add-card-btn,[id*="addCard"]')||el;
+  if(approved){target.classList.add('hwc-add-card-hidden');target.setAttribute('aria-hidden','true');target.setAttribute('tabindex','-1');}
+  else{target.classList.remove('hwc-add-card-hidden');target.removeAttribute('aria-hidden');target.removeAttribute('tabindex');}
+ });;
 }
 document.documentElement.style.setProperty('overflow-x','hidden','important');
 if(document.body)document.body.style.setProperty('overflow-x','hidden','important');
