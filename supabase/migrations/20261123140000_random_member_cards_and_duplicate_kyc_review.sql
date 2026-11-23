@@ -138,3 +138,13 @@ $$;
 
 revoke all on function public.hwc_find_duplicate_kyc_document(text, uuid) from public, anon;
 grant execute on function public.hwc_find_duplicate_kyc_document(text, uuid) to authenticated;
+
+
+-- Enforce one approved identity document number across all member accounts.
+-- This unique index also closes the race between simultaneous approval attempts.
+create unique index if not exists kyc_one_approved_document_per_id_uidx
+  on public.kyc_applications (
+    lower(regexp_replace(btrim(national_id_number), '[[:space:]]+', '', 'g'))
+  )
+  where status = 'approved'
+    and nullif(btrim(national_id_number), '') is not null;
