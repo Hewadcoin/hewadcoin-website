@@ -92,22 +92,39 @@ function findCardNumberElement(){
 }
 function bindCardNumberCopy(value,approved){
  const card=$('memberCard'),number=findCardNumberElement();if(!card||!number)return;
+ const getCopyValue=()=>String(value||number.textContent||'').trim();
+ const canCopy=()=>approved&&!/^(KYC REQUIRED|CARD NUMBER PENDING|—|-)$/i.test(getCopyValue());
  let button=$('copyCardNumber');
  const line=number.closest('.hwc-number-line')||number.parentElement||number;
  if(!button){button=document.createElement('button');button.type='button';button.id='copyCardNumber';button.className='hwc-copy';button.textContent='COPY';line.appendChild(button);}
- button.hidden=!approved||!value;button.style.setProperty('display',button.hidden?'none':'','important');
- button.onclick=async function(){
-  if(!value)return;
+ const copyNow=async function(){
+  if(!canCopy())return;
+  const text=getCopyValue();
   try{
-   if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(String(value));}
-   else{
-    const area=document.createElement('textarea');area.value=String(value);area.setAttribute('readonly','');
-    area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();
-    const ok=document.execCommand('copy');area.remove();if(!ok)throw new Error('Copy unavailable');
+   if(navigator.clipboard&&window.isSecureContext){
+    await navigator.clipboard.writeText(text);
+   }else{
+    const area=document.createElement('textarea');
+    area.value=text;area.setAttribute('readonly','');
+    area.style.cssText='position:fixed;left:0;top:0;width:1px;height:1px;padding:0;border:0;opacity:0;font-size:16px;';
+    document.body.appendChild(area);area.focus();area.select();area.setSelectionRange(0,area.value.length);
+    const ok=document.execCommand('copy');area.remove();
+    if(!ok)throw new Error('Copy command failed');
    }
    notify('Card number copied.');
-  }catch(err){notify('Could not copy the card number. Please select and copy it manually.');}
+  }catch(err){
+   notify('Copy failed. Please try again.');
+  }
  };
+ button.hidden=!canCopy();button.style.setProperty('display',button.hidden?'none':'','important');
+ button.onclick=copyNow;
+ // The card number itself is a one-tap copy target.
+ number.style.cursor=canCopy()?'pointer':'';
+ number.setAttribute('role',canCopy()?'button':'');
+ number.setAttribute('tabindex',canCopy()?'0':'-1');
+ number.setAttribute('aria-label',canCopy()?'Copy card number':'Card number');
+ number.onclick=copyNow;
+ number.onkeydown=function(event){if((event.key==='Enter'||event.key===' ')&&canCopy()){event.preventDefault();copyNow();}};
 }
 function renderCardNumber(profile,status){
  const value=status==='approved'?String(profile.card_number||''):'';
