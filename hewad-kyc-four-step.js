@@ -38,7 +38,9 @@
   }
   function renderStatus(s, reason) {
     const approved=s==='approved', pending=s==='pending';
-    panel('<div class="hwc-kyc-status"><strong>'+(approved?'✓ هویت مو تأیید شوی':pending?'⏳ د هویت غوښتنه تر ارزونې لاندې ده':'د KYC بیا غوښتنه')+'</strong><p>'+(approved?'ستاسو حساب تصدیق شوی او د کارت اسانتیاوې فعالې دي.':pending?'🎉✨ مبارک دې وي! ستاسو د KYC غوښتنه په بریالیتوب سره ثبت او اډمین ته ولېږل شوه. د اډمین ټیم به ستاسو اسناد په راتلونکو ۲۴ ساعتونو کې وارزوي. د وروستۍ پایلې خبر به درکړل شي.':'ستاسو پخوانۍ غوښتنه رد شوې ده. د رد دلیل: '+esc(reason||'له ملاتړ سره اړیکه ونیسئ')+'. تاسو کولای شئ معلومات اصلاح او بیا یې ولېږئ.')+'</p></div>'+(approved||pending?'':'<button type="button" class="hwc-kyc-yellow" style="width:100%;margin-top:12px;padding:13px;border:0;border-radius:10px;font-weight:900" data-kyc-restart>بیا غوښتنه وکړئ</button>'));
+    const confetti=pending?Array.from({length:22},(_,i)=>'<i class="hwc-kyc-confetti" style="left:'+((i*37)%100)+'%;background:'+['#facc15','#22c55e','#38bdf8','#fb7185'][i%4]+';animation-delay:'+((i%7)*.09)+'s"></i>').join(''):'';
+    const celebration=pending?'<style>@keyframes hwcConfettiFall{0%{transform:translateY(-25px) rotate(0);opacity:1}100%{transform:translateY(230px) rotate(540deg);opacity:0}}.hwc-kyc-confetti{position:absolute;top:0;width:8px;height:13px;border-radius:2px;animation:hwcConfettiFall 2.2s ease-out forwards;pointer-events:none}.hwc-kyc-celebration{position:relative;overflow:hidden;text-align:center;padding:28px 14px;border:1px solid rgba(255,196,0,.35);border-radius:16px;background:rgba(255,196,0,.07)}.hwc-kyc-celebration .hwc-kyc-party{font-size:42px;display:block;margin-bottom:10px}</style><div class="hwc-kyc-celebration">'+confetti+'<span class="hwc-kyc-party">🎉🥳✨</span><strong>مبارک مو شه!</strong><p>ستاسو د KYC غوښتنه په بریالیتوب سره ثبت او د HEWAD COIN اډمین ته ولېږل شوه.</p><p>د اډمین ټیم به ستاسو اسناد د راتلونکو ۲۴ ساعتونو په موده کې وارزوي. د تایید یا رد پایله به درته ښکاره شي.</p></div>':'';
+    panel(celebration+'<div class="hwc-kyc-status"><strong>'+(approved?'✓ هویت مو تأیید شوی':pending?'⏳ د هویت غوښتنه تر ارزونې لاندې ده':'د KYC بیا غوښتنه')+'</strong><p>'+(approved?'ستاسو حساب تصدیق شوی او د کارت اسانتیاوې فعالې دي.':pending?'ستاسو غوښتنه تر ارزونې لاندې ده.':'ستاسو پخوانۍ غوښتنه رد شوې ده. د رد دلیل: '+esc(reason||'له ملاتړ سره اړیکه ونیسئ')+'. تاسو کولای شئ معلومات اصلاح او بیا یې ولېږئ.')+'</p></div>'+(approved||pending?'':'<button type="button" class="hwc-kyc-yellow" style="width:100%;margin-top:12px;padding:13px;border:0;border-radius:10px;font-weight:900" data-kyc-restart>بیا غوښتنه وکړئ</button>'));
   }
   async function openKyc() {
     if (!hwcCurrentUser) { if(typeof showNotice==='function')showNotice('Please log in to continue.'); return; }
@@ -105,6 +107,7 @@
     if(state.submitting)return;state.submitting=true;
     const button=overlay.querySelector('[data-kyc-submit]');if(button){button.disabled=true;button.textContent='لېږل کېږي…';}
     const uploaded=[];
+    let saved=false;
     try{
       const profileResult=await hwcSupabase.from('profiles').select('mobile_number').eq('id',hwcCurrentUser.id).maybeSingle();
       if(profileResult.error)throw profileResult.error;
@@ -129,14 +132,14 @@
       }).select('id,status,created_at').single();
       if(insert.error)throw insert.error;
       if(!insert.data||insert.data.status!=='pending')throw new Error('KYC request was not saved as pending. Please try again.');
+      saved=true;
       // Do not publish country/name to the member card before admin approval.
       // The database review trigger copies the verified identity details only on approval.
       window.HEWAD_KYC_STATUS='pending';
-      if(typeof loadHwcProfile==='function')await loadHwcProfile(hwcCurrentUser);
+      try{if(typeof loadHwcProfile==='function')await loadHwcProfile(hwcCurrentUser);}catch(refreshError){console.warn('KYC saved; profile refresh will retry later:',refreshError);}
       renderStatus('pending','');
-      if(typeof showNotice==='function')showNotice('د KYC غوښتنه په بریالیتوب ولېږل شوه.');
     }catch(error){
-      for(const path of uploaded){try{await hwcSupabase.storage.from('kyc-documents').remove([path]);}catch(_){}}
+      if(!saved){for(const path of uploaded){try{await hwcSupabase.storage.from('kyc-documents').remove([path]);}catch(_){}}}
       const message=error&&error.message?error.message:'KYC submission failed.';
       console.error('HEWAD KYC submission failed:',error);
       if(typeof showNotice==='function')showNotice('د KYC غوښتنه ونه لېږل شوه: '+message);
@@ -180,6 +183,21 @@
     if(input&&input.type==='file'&&input.files&&input.files[0]){const key=input.name||input.dataset.fileKey;const file=input.files[0];if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>10*1024*1024){input.value='';if(typeof showNotice==='function')showNotice('عکس باید JPG، PNG یا WebP وي او تر ۱۰ MB زیات نه وي.');return;}if(state.previewUrls[key])URL.revokeObjectURL(state.previewUrls[key]);state.files[key]=file;state.previewUrls[key]=URL.createObjectURL(file);renderStep();}
     if(input&&input.name==='country'){state.values.country=input.value;state.values.province='';renderStep();}
   });
+  // Capture the final submit action at document level so it cannot be swallowed
+  // by a nested form/legacy click handler before reaching the KYC overlay.
+  document.addEventListener('click',function(event){
+    const submit=event.target&&event.target.closest&&event.target.closest('#kycScreen [data-kyc-submit]');
+    if(!submit)return;
+    event.preventDefault();event.stopPropagation();
+    if(event.stopImmediatePropagation)event.stopImmediatePropagation();
+    if(state.submitting)return;
+    const confirm=overlay.querySelector('[name="kyc_confirm"]');
+    if(!confirm||!confirm.checked){if(typeof showNotice==='function')showNotice('مهرباني وکړئ د معلوماتو د سمون تایید نښه کړئ.');return;}
+    readStep();
+    if(!validateFiles())return;
+    submitKyc();
+  },true);
+
   window.renderHwcKycFlow=openKyc;
   window.openHwcKyc=openKyc;
 
