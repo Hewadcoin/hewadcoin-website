@@ -80,6 +80,40 @@ function applyAddCardVisibility(){
  const approved=window.HEWAD_KYC_STATUS==='approved'||badge==='ACTIVE'||badge==='KYC VERIFIED';
  if(button){button.hidden=approved;button.style.setProperty('display',approved?'none':'','important');button.setAttribute('aria-hidden',approved?'true':'false');}
 }
+function findCardNumberElement(){
+ let el=$('memberCardNumber');if(el)return el;
+ const root=$('memberCard');if(!root)return null;
+ const field=Array.from(root.querySelectorAll('.hwc-field')).find(x=>/CARD NUMBER/i.test((x.querySelector('.hwc-field-label')||{}).textContent||''));
+ if(!field)return null;
+ el=field.querySelector('.hwc-field-value');
+ if(!el){el=document.createElement('span');el.className='hwc-field-value';field.appendChild(el);}
+ el.id='memberCardNumber';return el;
+}
+function bindCardNumberCopy(value,approved){
+ const card=$('memberCard'),number=findCardNumberElement();if(!card||!number)return;
+ let button=$('copyCardNumber');
+ const line=number.closest('.hwc-number-line')||number.parentElement||number;
+ if(!button){button=document.createElement('button');button.type='button';button.id='copyCardNumber';button.className='hwc-copy';button.textContent='COPY';line.appendChild(button);}
+ button.hidden=!approved||!value;button.style.setProperty('display',button.hidden?'none':'','important');
+ button.onclick=async function(){
+  if(!value)return;
+  try{
+   if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(String(value));}
+   else{
+    const area=document.createElement('textarea');area.value=String(value);area.setAttribute('readonly','');
+    area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();
+    const ok=document.execCommand('copy');area.remove();if(!ok)throw new Error('Copy unavailable');
+   }
+   notify('Card number copied.');
+  }catch(err){notify('Could not copy the card number. Please select and copy it manually.');}
+ };
+}
+function renderCardNumber(profile,status){
+ const value=status==='approved'?String(profile.card_number||''):'';
+ const number=findCardNumberElement();
+ if(number)number.textContent=value||(status==='approved'?'CARD NUMBER PENDING':'KYC REQUIRED');
+ bindCardNumberCopy(value,status==='approved');
+}
 
 const originalLoad=window.loadHwcProfile;
 if(typeof originalLoad==='function'){
@@ -113,7 +147,7 @@ if(typeof originalLoad==='function'){
       }
     }
   }
-  put('memberCardNumber',status==='approved'?(profile.card_number||'CARD NUMBER PENDING'):'KYC REQUIRED');
+  renderCardNumber(profile,status);
   put('profileKycStatus',status==='approved'?'Verified':status==='pending'?'Pending':status==='rejected'?'Rejected':'Unverified');
   put('cardKycStatus',status==='approved'?'ACTIVE':status==='pending'?'KYC PENDING':status==='rejected'?'KYC REJECTED':'KYC NOT VERIFIED');
   applyAddCardVisibility();
