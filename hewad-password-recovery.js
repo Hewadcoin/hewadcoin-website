@@ -131,31 +131,47 @@
     }
   });
 
-  function findLoginForm() {
-    const screen = $('login') || document.querySelector('[id*="login" i]');
-    if (!screen) return null;
-    return screen.querySelector('form') || screen;
+  function findLoginScreen() {
+    return $('login') || document.querySelector('[id*="login" i]');
   }
   function addForgotLink() {
-    const form = findLoginForm();
-    if (!form || $('hwcForgotPasswordLink')) return;
-    const password = form.querySelector('input[type="password"],input[autocomplete="current-password"],input[name*="password" i],input[id*="password" i]');
-    const link = document.createElement('button');
-    link.type = 'button';
+    const screen = findLoginScreen();
+    if (!screen) return;
+    const form = screen.querySelector('form') || screen;
+    const controls = Array.from(screen.querySelectorAll('a,button,[role="button"],input[type="button"],input[type="submit"]'));
+    const isForgot = el => /forgot\\s+password\\s*\\??/i.test(
+      ((el.textContent || '') + ' ' + (el.value || '') + ' ' + (el.getAttribute('aria-label') || '')).trim()
+    );
+    const matches = controls.filter(isForgot);
+    let link = matches[0] || null;
+    // Keep the original first Forgot Password control and remove duplicate copies.
+    matches.slice(1).forEach(el => el.remove());
+    if (!link) {
+      const password = form.querySelector('input[type="password"],input[autocomplete="current-password"],input[name*="password" i],input[id*="password" i]');
+      link = document.createElement('button');
+      link.type = 'button';
+      link.textContent = 'Forgot Password?';
+      const submitButton = form.querySelector('button[type="submit"],input[type="submit"]');
+      if (password) {
+        const wrap = password.closest('.field,.form-group,.input-group') || password.parentElement;
+        (wrap || form).insertAdjacentElement('afterend', link);
+      } else if (submitButton) {
+        submitButton.insertAdjacentElement('beforebegin', link);
+      } else {
+        form.appendChild(link);
+      }
+    }
     link.id = 'hwcForgotPasswordLink';
-    link.textContent = 'Forgot Password?';
-    link.addEventListener('click', open);
-    const submitButton = form.querySelector('button[type="submit"],input[type="submit"]');
-    if (password) {
-      const wrap = password.closest('.field,.form-group,.input-group') || password.parentElement;
-      (wrap || form).insertAdjacentElement('afterend', link);
-    } else if (submitButton) {
-      submitButton.insertAdjacentElement('beforebegin', link);
-    } else {
-      form.appendChild(link);
+    if (link.tagName === 'BUTTON') link.type = 'button';
+    if (!link.dataset.hwcRecoveryBound) {
+      link.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        open();
+      }, true);
+      link.dataset.hwcRecoveryBound = '1';
     }
   }
-
   addForgotLink();
   const observer = new MutationObserver(addForgotLink);
   observer.observe(document.body, { childList: true, subtree: true });
