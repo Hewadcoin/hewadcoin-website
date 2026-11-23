@@ -139,7 +139,7 @@
     if (!screen) return;
     const form = screen.querySelector('form') || screen;
     const controls = Array.from(screen.querySelectorAll('a,button,[role="button"],input[type="button"],input[type="submit"]'));
-    const isForgot = el => /forgot\\s+password\\s*\\??/i.test(
+    const isForgot = el => /forgot\s+password\s*\??/i.test(
       ((el.textContent || '') + ' ' + (el.value || '') + ' ' + (el.getAttribute('aria-label') || '')).trim()
     );
     const matches = controls.filter(isForgot);
