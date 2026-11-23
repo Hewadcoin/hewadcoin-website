@@ -22,8 +22,18 @@ if(typeof originalLoad==='function'){
   put('memberName',[profile.first_name,profile.last_name].filter(Boolean).join(' ')||user.email||'MEMBER');
   put('memberCountry',status==='approved'?(profile.kyc_country||profile.country||'—'):'—');
   const cardDate=profile.card_created_at||null;
-  const cardDateEl=$('memberCardCreatedAt')||$('cardCreatedAt');
-  if(cardDateEl)cardDateEl.textContent=status==='approved'&&cardDate?new Date(cardDate).toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'}):'—';
+  const cardDateText=status==='approved'&&cardDate?new Date(cardDate).toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'}):'—';
+  const cardDateEl=$('memberCardCreatedAt')||$('cardCreatedAt')||document.querySelector('[data-card-created-at]');
+  if(cardDateEl)cardDateEl.textContent=cardDateText;
+  const cardRoot=$('memberCard');
+  if(cardRoot){
+    for(const el of cardRoot.querySelectorAll('*')){
+      if(el.children.length===0&&/CARD CREATED/i.test(el.textContent||'')){
+        el.textContent='CARD CREATED: '+cardDateText;
+        break;
+      }
+    }
+  }
   put('memberCardNumber',profile.card_number||'—');
   put('profileKycStatus',status==='approved'?'Verified':status==='pending'?'Pending':status==='rejected'?'Rejected':'Unverified');
   put('cardKycStatus',status==='approved'?'ACTIVE':status==='pending'?'KYC PENDING':status==='rejected'?'KYC REJECTED':'KYC NOT VERIFIED');
