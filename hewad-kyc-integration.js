@@ -4,7 +4,7 @@
 const $=id=>document.getElementById(id);
 const notify=m=>{if(typeof window.showNotice==='function')window.showNotice(m);else alert(m);};
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const adminStyle=document.createElement('style');adminStyle.textContent='#memberCard{box-sizing:border-box!important;width:calc(100% - 24px)!important;max-width:560px!important;margin:10px auto!important;padding:14px!important}#memberCard h1,#memberCard h2,#memberCard h3{font-size:clamp(14px,3.5vw,20px)!important;line-height:1.2!important}#memberCard .hwc-card-title{font-size:clamp(14px,3.6vw,19px)!important}#memberDialCode{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;min-width:44px!important;min-height:28px!important;padding:3px 8px!important;box-sizing:border-box!important;font-size:14px!important;line-height:1!important;white-space:nowrap!important}#addCardBtn[hidden]{display:none!important}.hwc-kyc-admin-card{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin:12px 0;padding:14px;border:1px solid #8d6d2b;border-radius:15px;background:linear-gradient(145deg,#1b1a17,#101216);color:#f4f1e9}.hwc-kyc-admin-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.hwc-kyc-admin-heading strong{font-size:15px;color:#f3d477}.hwc-kyc-admin-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.hwc-kyc-admin-field{min-width:0;padding:9px;border:1px solid #393b40;border-radius:9px;background:#11151a}.hwc-kyc-admin-field small{display:block;margin-bottom:4px;color:#c2a45d;font-size:10px}.hwc-kyc-admin-field b{display:block;overflow-wrap:anywhere;font-size:12px;font-weight:700}.hwc-kyc-admin-docs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.hwc-kyc-admin-doc{min-width:0;padding:6px;border:1px solid #6f5829;border-radius:10px;background:#11151a;color:#f3d477;font-size:10px;text-align:center}.hwc-kyc-admin-doc img{display:block;width:100%;height:100px;object-fit:cover;border-radius:6px;margin-bottom:6px;background:#090b0f}.hwc-kyc-admin-actions{display:flex;gap:8px}.hwc-kyc-admin-actions button{flex:1;min-height:40px;border:0;border-radius:9px;font-weight:800}.hwc-kyc-admin-actions [data-kyc-review=approved]{background:#218653;color:#fff}.hwc-kyc-admin-actions [data-kyc-review=rejected]{background:#a83a3a;color:#fff}.hwc-kyc-admin-meta{color:#aeb3bc;font-size:10px;overflow-wrap:anywhere}@media(max-width:380px){.hwc-kyc-admin-fields{grid-template-columns:1fr}.hwc-kyc-admin-doc img{height:82px}}';document.head.appendChild(adminStyle);
+const adminStyle=document.createElement('style');adminStyle.textContent="#memberCard{box-sizing:border-box!important;width:calc(100% - 28px)!important;max-width:520px!important;margin:-8px auto 8px!important;padding:12px!important;border-radius:22px!important}#memberCard h1,#memberCard h2,#memberCard h3{font-size:clamp(13px,3.2vw,18px)!important;line-height:1.16!important;margin-top:4px!important;margin-bottom:6px!important}#memberCard p{line-height:1.2!important;margin-top:4px!important;margin-bottom:5px!important}#memberCard .hwc-card-title{font-size:clamp(13px,3.3vw,18px)!important}#memberDialCode{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:0!important;width:48px!important;min-width:48px!important;height:32px!important;min-height:32px!important;padding:0!important;box-sizing:border-box!important;border:1px solid #d7b65a!important;border-radius:9px!important;background:linear-gradient(145deg,#34230a,#17120a)!important;color:#ffe08a!important;font-size:21px!important;line-height:1!important;white-space:nowrap!important;visibility:visible!important;opacity:1!important}#addCardBtn[hidden]{display:none!important}.hwc-kyc-admin-card{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:12px 0;padding:14px;border:1px solid #8d6d2b;border-radius:15px;background:linear-gradient(145deg,#1b1a17,#101216);color:#f4f1e9}.hwc-kyc-admin-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.hwc-kyc-admin-heading strong{font-size:15px;color:#f3d477}.hwc-kyc-admin-table{width:100%;border-collapse:collapse;border:1px solid #383a3f;border-radius:10px;overflow:hidden}.hwc-kyc-admin-table tr{border-bottom:1px solid #34363b}.hwc-kyc-admin-table tr:last-child{border-bottom:0}.hwc-kyc-admin-table th,.hwc-kyc-admin-table td{padding:9px 10px;text-align:start;vertical-align:top;font-size:12px;line-height:1.5}.hwc-kyc-admin-table th{width:34%;color:#d7b65a;font-weight:700;background:#17191d}.hwc-kyc-admin-table td{color:#f5f2e9;overflow-wrap:anywhere;background:#111419}.hwc-kyc-admin-docs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hwc-kyc-admin-doc{display:block;min-width:0;padding:7px;border:1px solid #6f5829;border-radius:10px;background:#11151a;color:#f3d477;font-size:11px;text-align:center}.hwc-kyc-admin-doc img{display:block;width:100%;height:135px;object-fit:contain;border-radius:6px;margin-bottom:6px;background:#090b0f}.hwc-kyc-admin-actions{display:flex;gap:8px}.hwc-kyc-admin-actions button{flex:1;min-height:42px;border:0;border-radius:9px;font-weight:800}.hwc-kyc-admin-actions [data-kyc-review=approved]{background:#218653;color:#fff}.hwc-kyc-admin-actions [data-kyc-review=rejected]{background:#a83a3a;color:#fff}.hwc-kyc-admin-meta{color:#aeb3bc;font-size:10px;overflow-wrap:anywhere}.hwc-kyc-duplicate{padding:12px;border:1px solid #ed4d59;border-radius:12px;background:#38171b;color:#ffe8e9}.hwc-kyc-duplicate h4{margin:0 0 8px;color:#ff737d;font-size:14px}.hwc-kyc-duplicate p{margin:5px 0;font-size:11px;line-height:1.5}.hwc-kyc-image-modal{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:18px;background:#000e}.hwc-kyc-image-modal[hidden]{display:none}.hwc-kyc-image-modal img{max-width:96vw;max-height:84vh;object-fit:contain;border:1px solid #d3b45d;border-radius:12px}.hwc-kyc-image-modal button{position:absolute;top:18px;right:18px;width:42px;height:42px;border:1px solid #d3b45d;border-radius:50%;background:#171717;color:#fff;font-size:22px}@media(max-width:380px){.hwc-kyc-admin-table th,.hwc-kyc-admin-table td{padding:8px 7px;font-size:11px}.hwc-kyc-admin-doc img{height:105px}}";document.head.appendChild(adminStyle);
 const originalLoad=window.loadHwcProfile;
 if(typeof originalLoad==='function'){
  window.loadHwcProfile=async function(user){
@@ -46,7 +46,7 @@ if(typeof originalLoad==='function'){
   const codes='AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL JM JP JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TW TJ TZ TH TL TG TO TT TN TR TM TV UG UA AE GB US UY UZ VU VA VE VN YE ZM ZW'.split(' ');
   const region=verifiedCountry?codes.find(code=>{try{return iso.of(code).toLowerCase()===verifiedCountry.toLowerCase();}catch(e){return false;}}):null;
   const flag=region?String.fromCodePoint(...[...region].map(ch=>127397+ch.charCodeAt(0))):'';
-  put('memberDialCode',status==='approved'?(flag||'🌐')+' '+(dial[verifiedCountry]||''):'');
+  put('memberDialCode',status==='approved'?(flag||'🌐'):'');
   const addCard=$('addCardBtn');if(addCard)addCard.hidden=status==='approved';
   const admin=$('.admin-nav-btn');if(admin)admin.hidden=window.HEWAD_USER_ROLE!=='admin';
   const card=$('memberCardNumber'),copy=$('copyCardNumber');
@@ -60,6 +60,15 @@ if(typeof originalLoad==='function'){
 const adminList=$('adminKycList');
 function statusBadge(s){return '<strong class="hwc-kyc-status-badge">'+(s==='approved'?'Approved':s==='rejected'?'Rejected':'Pending')+'</strong>';}
 function ensureHost(){if(!adminList)return null;let h=$('adminKycRecords');if(!h){h=document.createElement('div');h.id='adminKycRecords';h.className='admin-empty';adminList.appendChild(h);}return h;}
+async function signedKycImage(path,label){
+ if(!path)return '';
+ try{const {data,error}=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(path,600);if(error||!data?.signedUrl)return '';return '<button type="button" class="hwc-kyc-admin-doc" data-kyc-file="'+esc(path)+'"><img src="'+esc(data.signedUrl)+'" alt="'+esc(label)+'">'+esc(label)+'</button>';}catch(_){return '';}
+}
+async function loadDuplicateDetails(documentId,excludeUserId){
+ const {data,error}=await hwcSupabase.rpc('hwc_find_duplicate_kyc_document',{p_document_id:documentId,p_exclude_user_id:excludeUserId});
+ if(error)throw error;
+ return Array.isArray(data)?data:[];
+}
 async function loadKyc(category){
  const host=ensureHost();if(!host)return;
  const status=category==='requests'?'pending':category;window.currentAdminKycCategory=category;
@@ -69,25 +78,48 @@ async function loadKyc(category){
  if(!data||!data.length){host.classList.add('hwc-kyc-admin-card');host.innerHTML='<strong>No KYC applications</strong>';return;}
  host.classList.remove('admin-empty','hwc-kyc-admin-card');adminList.querySelectorAll('.admin-empty').forEach(el=>{if(el!==host)el.remove();});
  const cards=await Promise.all(data.map(async x=>{
-  const docs=[['front_document_path',x.document_type==='Passport'?'د پاسپورټ پاڼه':'د تذکرې مخ'],['back_document_path','د تذکرې شا'],['selfie_document_path','سلفي']].filter(([key])=>x[key]);
-  const previews=await Promise.all(docs.map(async ([key,label])=>{
-   const path=x[key];let url='';
-   try{const signed=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(path,600);if(!signed.error)url=signed.data.signedUrl;}catch(_){}
-   return '<button type="button" class="hwc-kyc-admin-doc" data-kyc-file="'+esc(path)+'">'+(url?'<img src="'+esc(url)+'" alt="'+esc(label)+'">':'<span style="display:block;padding:25px 0">📄</span>')+esc(label)+'</button>';
-  }));
-  const field=(label,value)=>'<div class="hwc-kyc-admin-field"><small>'+label+'</small><b>'+esc(value||'—')+'</b></div>';
-  return '<article class="hwc-kyc-admin-card"><div class="hwc-kyc-admin-heading"><strong>'+esc([x.first_name,x.last_name].filter(Boolean).join(' ')||'غړی')+'</strong>'+statusBadge(x.status)+'</div><div class="hwc-kyc-admin-fields">'+field('د سند ډول',x.document_type)+field('ID / د سند شمېره',x.national_id_number)+field('نوم',x.first_name)+field('تخلص',x.last_name)+field('د زېږېدو نېټه',x.date_of_birth)+field('هېواد',x.country)+field('ولایت',x.province)+field('ولسوالۍ',x.district)+field('د اړیکې شمېره',x.mobile_number)+'</div><div class="hwc-kyc-admin-docs">'+previews.join('')+'</div><div class="hwc-kyc-admin-meta">د غوښتنې نېټه: '+esc(new Date(x.created_at).toLocaleString())+' · د غړي ID: '+esc(x.user_id)+'</div>'+(x.rejection_reason?'<div class="hwc-kyc-admin-meta">د رد دلیل: '+esc(x.rejection_reason)+'</div>':'')+(x.status==='pending'?'<div class="hwc-kyc-admin-actions"><button type="button" data-kyc-review="approved" data-kyc-id="'+esc(x.id)+'">تایید</button><button type="button" data-kyc-review="rejected" data-kyc-id="'+esc(x.id)+'">رد</button></div>':'')+'</article>';
+  const [front,back,selfie,duplicates]=await Promise.all([
+   signedKycImage(x.front_document_path,x.document_type==='Passport'?'د پاسپورټ عکس':'د تذکرې مخ عکس'),
+   signedKycImage(x.back_document_path,'د تذکرې شاه عکس'),
+   signedKycImage(x.selfie_document_path,'د مالک سلفي عکس'),
+   loadDuplicateDetails(x.national_id_number,x.user_id).catch(err=>{console.error('Duplicate KYC lookup:',err);return null;})
+  ]);
+  const field=(label,value)=>'<tr><th>'+label+'</th><td>'+esc(value||'—')+'</td></tr>';
+  let duplicateHtml='';
+  if(duplicates===null){
+   duplicateHtml='<div class="hwc-kyc-duplicate"><h4>د تکراري سند پلټنه ناکامه شوه</h4><p>د ډیټابېس د تکراري سند نتیجه ترلاسه نه شوه. تر بیاکتنې پورې دا غوښتنه مه تاییدوئ.</p></div>';
+  }else if(duplicates.length){
+   const duplicateCards=await Promise.all(duplicates.map(async d=>{
+    const [df,db,ds]=await Promise.all([
+     signedKycImage(d.front_document_path,'د بل حساب د سند مخ'),
+     signedKycImage(d.back_document_path,'د بل حساب د سند شا'),
+     signedKycImage(d.selfie_document_path,'د بل حساب سلفي')
+    ]);
+    return '<section class="hwc-kyc-duplicate"><h4>⚠️ دا سند له بل حساب سره هم ثبت دی</h4><p><b>حساب:</b> '+esc([d.first_name,d.last_name].filter(Boolean).join(' ')||'—')+'</p><p><b>برېښنالیک:</b> '+esc(d.email||'—')+'</p><p><b>د سند ډول:</b> '+esc(d.document_type||'—')+' · <b>حالت:</b> '+esc(d.status||'—')+'</p><p><b>ID:</b> '+esc(d.national_id_number||'—')+'</p><p><b>د زېږېدو نېټه:</b> '+esc(d.date_of_birth||'—')+' · <b>هېواد:</b> '+esc(d.country||'—')+'</p><p><b>ولایت:</b> '+esc(d.province||'—')+' · <b>ولسوالۍ:</b> '+esc(d.district||'—')+'</p><p><b>موبایل:</b> '+esc(d.mobile_number||'—')+' · <b>کارت نمبر:</b> '+esc(d.card_number||'—')+'</p><p><b>د حساب ID:</b> '+esc(d.user_id)+'</p><div class="hwc-kyc-admin-docs">'+df+db+ds+'</div></section>';
+   }));
+   duplicateHtml=duplicateCards.join('');
+  }
+  const docs='<div class="hwc-kyc-admin-docs">'+front+back+'</div><div class="hwc-kyc-admin-docs">'+selfie+'<div class="hwc-kyc-admin-field"><small>د اسنادو معلومات</small><b>'+esc(x.document_type||'—')+'</b><p style="font-size:11px;line-height:1.5;margin:7px 0 0">د سند شمېره: '+esc(x.national_id_number||'—')+'<br>د زېږېدو نېټه: '+esc(x.date_of_birth||'—')+'</p></div></div>';
+  const duplicateBlocks=duplicateHtml;
+  const allowApprove=x.status==='pending'&&duplicates!==null&&duplicates.length===0;
+  return '<article class="hwc-kyc-admin-card"><div class="hwc-kyc-admin-heading"><strong>'+esc([x.first_name,x.last_name].filter(Boolean).join(' ')||'غړی')+'</strong>'+statusBadge(x.status)+'</div>'+duplicateBlocks+'<table class="hwc-kyc-admin-table"><tbody>'+field('ای ډي / د سند شمېره',x.national_id_number)+field('نوم',x.first_name)+field('تخلص',x.last_name)+field('د زېږېدو نېټه',x.date_of_birth)+field('هېواد',x.country)+field('ولایت',x.province)+field('ولسوالۍ',x.district)+field('د اړیکې شمېره',x.mobile_number)+field('د اسنادو ډول',x.document_type==='Passport'?'پاسپورټ':'تذکره')+'</tbody></table>'+docs+'<div class="hwc-kyc-admin-meta">د غوښتنې نېټه: '+esc(new Date(x.created_at).toLocaleString())+' · د غړي ID: '+esc(x.user_id)+'</div>'+(x.rejection_reason?'<div class="hwc-kyc-admin-meta">د رد دلیل: '+esc(x.rejection_reason)+'</div>':'')+(x.status==='pending'?'<div class="hwc-kyc-admin-actions">'+(allowApprove?'<button type="button" data-kyc-review="approved" data-kyc-id="'+esc(x.id)+'">تایید</button>':'<button type="button" disabled title="لومړی د تکراري سند پلټنه بشپړه کړئ">تایید بند دی</button>')+'<button type="button" data-kyc-review="rejected" data-kyc-id="'+esc(x.id)+'">رد</button></div>':'')+'</article>';
  }));
  host.innerHTML=cards.join('');
 }
 document.querySelectorAll('[data-kyc-category]').forEach(b=>b.addEventListener('click',()=>loadKyc(b.dataset.kycCategory).catch(e=>notify(e.message))));
 adminList?.addEventListener('click',async e=>{
- const file=e.target.closest('[data-kyc-file]');if(file){try{const {data,error}=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(file.dataset.kycFile,120);if(error)throw error;window.open(data.signedUrl,'_blank','noopener');}catch(err){notify(err.message);}return;}
+ const file=e.target.closest('[data-kyc-file]');if(file){const img=file.querySelector('img');if(img){let modal=document.getElementById('hwcKycImageModal');if(!modal){modal=document.createElement('div');modal.id='hwcKycImageModal';modal.className='hwc-kyc-image-modal';modal.hidden=true;modal.innerHTML='<button type="button" aria-label="Close">×</button><img alt="KYC document preview">';document.body.appendChild(modal);modal.addEventListener('click',ev=>{if(ev.target===modal||ev.target.tagName==='BUTTON')modal.hidden=true;});}modal.querySelector('img').src=img.src;modal.querySelector('img').alt=img.alt;modal.hidden=false;}return;}
  const review=e.target.closest('[data-kyc-review]');if(review){
   let reason=null;
   if(review.dataset.kycReview==='rejected'){reason=prompt('Write the rejection reason. This message will be sent to the member:')||'';if(!reason.trim())return notify('A rejection reason is required.');}
   review.disabled=true;
   try{
+   if(review.dataset.kycReview==='approved'){
+    const {data:current,error:readError}=await hwcSupabase.from('kyc_applications').select('national_id_number,user_id').eq('id',review.dataset.kycId).single();
+    if(readError)throw readError;
+    const matches=await loadDuplicateDetails(current.national_id_number,current.user_id);
+    if(matches.length){notify('دا تذکره/پاسپورټ د بل حساب سره هم ثبت دی. د تکراري حساب بشپړ معلومات په همدې KYC کارت کې وګورئ؛ تایید بند شو.');await loadKyc(window.currentAdminKycCategory||'requests');review.disabled=false;return;}
+   }
    const {data,error}=await hwcSupabase.from('kyc_applications')
     .update({status:review.dataset.kycReview,rejection_reason:reason})
     .eq('id',review.dataset.kycId).select('id,status').single();
