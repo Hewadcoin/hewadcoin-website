@@ -8,7 +8,6 @@
     const client = typeof hwcSupabase !== 'undefined' ? hwcSupabase : window.hwcSupabase;
     return client && client.auth ? client : null;
   }
-  let db = getAuthClient();
 
   const style = document.createElement('style');
   style.id = 'hwc-password-recovery-style';
@@ -31,10 +30,11 @@
 
   const modal = document.createElement('div');
   modal.id = 'hwcRecoveryModal';
-  modal.innerHTML = '<section class="hwc-recovery-card" role="dialog" aria-modal="true" aria-labelledby="hwcRecoveryTitle"><button type="button" class="hwc-recovery-close" aria-label="Close">×</button><h2 id="hwcRecoveryTitle">Reset Password</h2><p id="hwcRecoveryDescription">Enter the email address linked to your HEWAD COIN account.</p><form id="hwcRecoveryForm" novalidate><div id="hwcRecoveryFields"></div><button class="hwc-recovery-submit" id="hwcRecoverySubmit" type="submit">SEND RESET LINK</button></form><div id="hwcRecoveryMessage" role="status" aria-live="polite"></div></section>';
+  modal.innerHTML = '<section class="hwc-recovery-card" role="dialog" aria-modal="true" aria-labelledby="hwcRecoveryTitle"><button type="button" class="hwc-recovery-close" aria-label="Close">×</button><h2 id="hwcRecoveryTitle">Reset Password</h2><p id="hwcRecoveryDescription">Enter the email address linked to your HEWAD COIN account.</p><form id="hwcRecoveryForm" novalidate><div id="hwcRecoveryFields"></div><button class="hwc-recovery-submit" id="hwcRecoverySubmit" type="submit">CONTINUE</button></form><div id="hwcRecoveryMessage" role="status" aria-live="polite"></div></section>';
   document.body.appendChild(modal);
 
   let stage = 'email';
+  let accountEmail = '';
   const fields = $('hwcRecoveryFields');
   const submit = $('hwcRecoverySubmit');
   const message = $('hwcRecoveryMessage');
@@ -50,19 +50,19 @@
     setMessage('');
     if (stage === 'email') {
       title.textContent = 'Reset Password';
-      description.textContent = 'Enter the email address linked to your HEWAD COIN account. We will send you a secure password-reset link.';
+      description.textContent = 'Enter the email address linked to your HEWAD COIN account.';
       fields.innerHTML = '<label for="hwcRecoveryEmail">Email Address</label><input id="hwcRecoveryEmail" type="email" autocomplete="email" required maxlength="254" placeholder="Enter your email address">';
-      submit.textContent = 'SEND RESET LINK';
-      submit.disabled = false;
+      submit.textContent = 'CONTINUE';
     } else {
       title.textContent = 'Create New Password';
-      description.textContent = 'Choose a new password for your HEWAD COIN account.';
+      description.textContent = 'Enter and confirm your new password.';
       fields.innerHTML = '<label for="hwcRecoveryPassword">New Password</label><input id="hwcRecoveryPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters"><label for="hwcRecoveryConfirm">Confirm New Password</label><input id="hwcRecoveryConfirm" type="password" autocomplete="new-password" minlength="8" required placeholder="Enter the password again">';
       submit.textContent = 'UPDATE PASSWORD';
-      submit.disabled = false;
     }
+    submit.disabled = false;
   }
   function open() {
+    accountEmail = '';
     render('email');
     modal.classList.add('open');
     setTimeout(() => $('hwcRecoveryEmail')?.focus(), 30);
@@ -70,64 +70,57 @@
   function close() {
     modal.classList.remove('open');
     $('hwcRecoveryForm').reset();
+    accountEmail = '';
     render('email');
   }
   modal.querySelector('.hwc-recovery-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) close(); });
 
-  // Supabase sends a secure recovery link. Opening it establishes a recovery
-  // session and emits PASSWORD_RECOVERY; no six-digit OTP is requested.
-  function bindAuthListener() {
-    db = getAuthClient();
-    if (!db || !db.auth || window.__hwcRecoveryAuthListenerBound) return;
-    window.__hwcRecoveryAuthListenerBound = true;
-    db.auth.onAuthStateChange((event) => {
-      if (event !== 'PASSWORD_RECOVERY') return;
-      render('password');
-      modal.classList.add('open');
-      setMessage('Your email is verified. Set your new password below.');
-      setTimeout(() => $('hwcRecoveryPassword')?.focus(), 30);
-    });
-  }
-  bindAuthListener();
-
   $('hwcRecoveryForm').addEventListener('submit', async function (event) {
     event.preventDefault();
     if (submit.disabled) return;
     setMessage('');
+    if (stage === 'email') {
+      const email = $('hwcRecoveryEmail').value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setMessage('Please enter a valid email address.', true);
+        return;
+      }
+      accountEmail = email;
+      render('password');
+      setTimeout(() => $('hwcRecoveryPassword')?.focus(), 30);
+      return;
+    }
+
+    const password = $('hwcRecoveryPassword').value;
+    const confirm = $('hwcRecoveryConfirm').value;
+    if (password.length < 8) {
+      setMessage('Password must be at least 8 characters.', true);
+      return;
+    }
+    if (password !== confirm) {
+      setMessage('The passwords do not match.', true);
+      return;
+    }
+
     submit.disabled = true;
     try {
-      db = getAuthClient();
+      const db = getAuthClient();
       if (!db) throw new Error('Account service is not ready. Please refresh the page and try again.');
-      bindAuthListener();
-      if (stage === 'email') {
-        const email = $('hwcRecoveryEmail').value.trim().toLowerCase();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Please enter a valid email address.');
-        const redirectTo = window.location.origin + window.location.pathname;
-        const result = await db.auth.resetPasswordForEmail(email, { redirectTo });
-        if (result.error) throw result.error;
-        setMessage('If this email belongs to a HEWAD COIN account, a secure reset link has been sent. Check your inbox and spam folder.');
-        submit.textContent = 'EMAIL REQUEST SENT';
-        submit.disabled = true;
-      } else {
-        const password = $('hwcRecoveryPassword').value;
-        const confirm = $('hwcRecoveryConfirm').value;
-        if (password.length < 8) throw new Error('Password must be at least 8 characters.');
-        if (password !== confirm) throw new Error('The passwords do not match.');
-        const result = await db.auth.updateUser({ password });
-        if (result.error) throw result.error;
-        setMessage('Your password has been updated successfully. You can now sign in.');
-        submit.textContent = 'DONE';
-        submit.disabled = true;
-        setTimeout(async function () {
-          await db.auth.signOut();
-          close();
-          if (typeof window.showScreen === 'function') window.showScreen('login');
-          else $('login')?.scrollIntoView();
-          if (typeof window.showNotice === 'function') window.showNotice('Password updated. Please sign in with your new password.');
-        }, 1300);
-      }
+      const { data, error } = await db.functions.invoke('hewad-user-password-reset', {
+        body: { email: accountEmail, password }
+      });
+      if (error) throw error;
+      if (!data || data.success !== true) throw new Error((data && data.error) || 'Password could not be updated. Please try again.');
+      setMessage('Your password has been updated successfully. You can now sign in.');
+      submit.textContent = 'DONE';
+      setTimeout(() => {
+        close();
+        if (typeof window.showScreen === 'function') window.showScreen('login');
+        else $('login')?.scrollIntoView();
+        if (typeof window.showNotice === 'function') window.showNotice('Password updated. Please sign in with your new password.');
+      }, 1300);
     } catch (error) {
       console.error('HEWAD password recovery error:', error);
       setMessage(error && error.message ? error.message : 'Something went wrong. Please try again.', true);
