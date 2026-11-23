@@ -22,7 +22,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261123-dashboard-kyc-14';
+        script.id=id;script.src=src+'?v=20261123-dashboard-kyc-15';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
@@ -50,7 +50,7 @@
                   loadScript('hewad-compact-menus','preview/hewad-compact-menus.js',function(){
                     loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js',function(){
                       loadScript('hewad-kyc-four-step','hewad-kyc-four-step.js',function(){
-                        loadScript('hewad-kyc-integration-refresh-20261123-3','hewad-kyc-integration.js',function(){frame.style.visibility='visible';});
+                        loadScript('hewad-kyc-integration-refresh-20261123-4','hewad-kyc-integration.js',function(){frame.style.visibility='visible';});
                       });
                     });
                   });
