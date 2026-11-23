@@ -12,6 +12,7 @@
   const countryFlags = {'Afghanistan':'🇦🇫','Pakistan':'🇵🇰','India':'🇮🇳','Iran':'🇮🇷','United Arab Emirates':'🇦🇪','Saudi Arabia':'🇸🇦','Turkey':'🇹🇷','United States':'🇺🇸','United Kingdom':'🇬🇧','Canada':'🇨🇦','Australia':'🇦🇺','Germany':'🇩🇪','France':'🇫🇷','China':'🇨🇳','Russia':'🇷🇺','Qatar':'🇶🇦','Kuwait':'🇰🇼','Oman':'🇴🇲','Bahrain':'🇧🇭','Malaysia':'🇲🇾','Indonesia':'🇮🇩','Bangladesh':'🇧🇩','Nepal':'🇳🇵'};
   const provinces = ['Badakhshan','Badghis','Baghlan','Balkh','Bamyan','Daykundi','Farah','Faryab','Ghazni','Ghor','Helmand','Herat','Jowzjan','Kabul','Kandahar','Kapisa','Khost','Kunar','Kunduz','Laghman','Logar','Nangarhar','Nimroz','Nuristan','Paktia','Paktika','Panjshir','Parwan','Samangan','Sar-e Pol','Takhar','Uruzgan','Wardak','Zabul'];
   const state = {type:'',step:1,values:{},files:{},previewUrls:{},submitting:false,editing:false};
+  function clearKycFiles(){Object.values(state.previewUrls).forEach(url=>URL.revokeObjectURL(url));state.files={};state.previewUrls={};}
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const status = () => String(window.HEWAD_KYC_STATUS || 'not_verified');
   const isApproved = () => status() === 'approved';
@@ -50,7 +51,7 @@
       window.HEWAD_KYC_STATUS=current;
       if(current==='approved'||current==='pending'){renderStatus(current,latest&&latest.rejection_reason);return;}
       if(current==='rejected'){renderStatus('rejected',latest&&latest.rejection_reason);return;}
-      state.type='';state.step=1;state.values={};state.files={};state.editing=false;renderChoice();
+      state.type='';state.step=1;state.values={};clearKycFiles();state.editing=false;renderChoice();
     } catch(error) { if(typeof showNotice==='function')showNotice(error.message||'Could not load KYC status.'); }
   }
   function renderChoice() {
@@ -141,8 +142,8 @@
   }
   overlay.addEventListener('click',function(event){
     const home=event.target.closest('[data-kyc-home]');if(home){closeKyc(true);return;}
-    const restart=event.target.closest('[data-kyc-restart]');if(restart){state.type='';state.step=1;state.values={};state.files={};state.editing=false;renderChoice();return;}
-    const choice=event.target.closest('[data-kyc-doc]');if(choice){state.type=choice.dataset.kycDoc;state.step=1;state.values={};state.files={};state.editing=false;renderStep();return;}
+    const restart=event.target.closest('[data-kyc-restart]');if(restart){state.type='';state.step=1;state.values={};clearKycFiles();state.editing=false;renderChoice();return;}
+    const choice=event.target.closest('[data-kyc-doc]');if(choice){state.type=choice.dataset.kycDoc;state.step=1;state.values={};clearKycFiles();state.editing=false;renderStep();return;}
     const next=event.target.closest('[data-kyc-next]');if(next){readStep();if(!validateStep())return;if(state.step===3&&!validateFiles())return;state.step=Math.min(4,state.step+1);renderStep();return;}
     const back=event.target.closest('[data-kyc-back]');if(back){readStep();state.step=Math.max(1,state.step-1);renderStep();return;}
     const edit=event.target.closest('[data-kyc-edit]');if(edit){state.editing=!state.editing;renderStep();return;}
@@ -167,7 +168,7 @@
   });
   overlay.addEventListener('change',function(event){
     const input=event.target;
-    if(input&&input.type==='file'&&input.files&&input.files[0]){const key=input.name||input.dataset.fileKey;const file=input.files[0];if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>10*1024*1024){input.value='';if(typeof showNotice==='function')showNotice('عکس باید JPG، PNG یا WebP وي او تر ۱۰ MB زیات نه وي.');return;}state.files[key]=file;renderStep();}
+    if(input&&input.type==='file'&&input.files&&input.files[0]){const key=input.name||input.dataset.fileKey;const file=input.files[0];if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>10*1024*1024){input.value='';if(typeof showNotice==='function')showNotice('عکس باید JPG، PNG یا WebP وي او تر ۱۰ MB زیات نه وي.');return;}if(state.previewUrls[key])URL.revokeObjectURL(state.previewUrls[key]);state.files[key]=file;state.previewUrls[key]=URL.createObjectURL(file);renderStep();}
     if(input&&input.name==='country'){state.values.country=input.value;state.values.province='';renderStep();}
   });
   window.renderHwcKycFlow=openKyc;
