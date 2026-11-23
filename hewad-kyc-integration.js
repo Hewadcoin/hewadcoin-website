@@ -24,7 +24,7 @@ if(typeof originalLoad==='function'){
   put('memberCardNumber',profile.card_number||'—');
   put('profileKycStatus',status==='approved'?'Verified':status==='pending'?'Pending':status==='rejected'?'Rejected':'Unverified');
   put('cardKycStatus',status==='approved'?'ACTIVE':status==='pending'?'KYC PENDING':status==='rejected'?'KYC REJECTED':'KYC NOT VERIFIED');
-  const addCardButton=$('addCardBtn');if(addCardButton)addCardButton.hidden=status==='approved';
+  const addCardButton=$('addCardBtn');if(addCardButton){addCardButton.hidden=status==='approved';if(status==='approved')addCardButton.style.setProperty('display','none','important');else addCardButton.style.removeProperty('display');}
   const dial={Afghanistan:'+93',Pakistan:'+92',India:'+91',Iran:'+98','United Arab Emirates':'+971','Saudi Arabia':'+966',Turkey:'+90','United States':'+1','United Kingdom':'+44',Canada:'+1',Australia:'+61',Germany:'+49',France:'+33',China:'+86'};
   const flags={Afghanistan:'🇦🇫',Pakistan:'🇵🇰',India:'🇮🇳',Iran:'🇮🇷','United Arab Emirates':'🇦🇪','Saudi Arabia':'🇸🇦',Turkey:'🇹🇷','United States':'🇺🇸','United Kingdom':'🇬🇧',Canada:'🇨🇦',Australia:'🇦🇺',Germany:'🇩🇪',France:'🇫🇷',China:'🇨🇳'};
   put('memberDialCode',(flags[profile.kyc_country||profile.country]||'🌐')+' '+(dial[profile.kyc_country||profile.country]||''));
