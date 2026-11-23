@@ -32,6 +32,7 @@ if(typeof originalLoad==='function'){
   put('memberCountry',verifiedCountry);
   put('memberCardNumber',approved?(profile.card_number||'CARD NUMBER PENDING'):'KYC REQUIRED');
   put('cardCreatedDate',approved?formatCardDate(latest.reviewed_at):'—');
+  const cardDateWrap=$('cardCreatedWrap');if(cardDateWrap)cardDateWrap.hidden=!approved;
   put('profileKycStatus',status==='approved'?'Verified':status==='pending'?'Pending':status==='rejected'?'Rejected':'Unverified');
   put('cardKycStatus',status==='approved'?'ACTIVE':status==='pending'?'KYC PENDING':status==='rejected'?'KYC REJECTED':'KYC NOT VERIFIED');
   const addCardButton=$('addCardBtn');if(addCardButton){addCardButton.hidden=approved;if(approved)addCardButton.style.setProperty('display','none','important');else addCardButton.style.removeProperty('display');}
@@ -75,9 +76,10 @@ adminList?.addEventListener('click',async e=>{
 const nav=$('.admin-nav-btn');if(nav)nav.addEventListener('click',()=>{if(window.HEWAD_USER_ROLE==='admin')setTimeout(()=>{const v=$('adminKyc');if(v&&!v.hidden)loadKyc('requests');},0);});
 function enforceCardIdentity(){
  const approved=window.HEWAD_KYC_STATUS==='approved';
- const country=$('memberCountry'),date=$('cardCreatedDate'),flag=$('memberCountryFlag');
+ const country=$('memberCountry'),date=$('cardCreatedDate'),flag=$('memberCountryFlag'),dateWrap=$('cardCreatedWrap');
  if(country)country.textContent=approved?(window.__HWC_VERIFIED_COUNTRY||'—'):'—';
  if(date)date.textContent=approved?(window.__HWC_APPROVED_CARD_DATE||'—'):'—';
+ if(dateWrap)dateWrap.hidden=!approved;
  if(flag){flag.textContent=approved?countryFlag(window.__HWC_VERIFIED_COUNTRY):'';flag.hidden=!approved;}
 }
 const identityObserver=new MutationObserver(enforceCardIdentity);
