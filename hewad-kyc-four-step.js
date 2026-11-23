@@ -46,7 +46,7 @@
       window.HEWAD_KYC_STATUS=current;
       if(current==='approved'||current==='pending'){renderStatus(current,latest&&latest.rejection_reason);return;}
       if(current==='rejected'){renderStatus('rejected',latest&&latest.rejection_reason);return;}
-      state.type='';state.step=1;state.values={};state.files={};renderChoice();
+      state.type='';state.step=1;state.values={};state.files={};state.editing=false;renderChoice();
     } catch(error) { if(typeof showNotice==='function')showNotice(error.message||'Could not load KYC status.'); }
   }
   function renderChoice() {
@@ -137,8 +137,8 @@
   }
   overlay.addEventListener('click',function(event){
     const home=event.target.closest('[data-kyc-home]');if(home){closeKyc(true);return;}
-    const restart=event.target.closest('[data-kyc-restart]');if(restart){state.type='';state.step=1;state.values={};state.files={};renderChoice();return;}
-    const choice=event.target.closest('[data-kyc-doc]');if(choice){state.type=choice.dataset.kycDoc;state.step=1;state.values={};state.files={};renderStep();return;}
+    const restart=event.target.closest('[data-kyc-restart]');if(restart){state.type='';state.step=1;state.values={};state.files={};state.editing=false;renderChoice();return;}
+    const choice=event.target.closest('[data-kyc-doc]');if(choice){state.type=choice.dataset.kycDoc;state.step=1;state.values={};state.files={};state.editing=false;renderStep();return;}
     const next=event.target.closest('[data-kyc-next]');if(next){readStep();if(!validateStep())return;if(state.step===3&&!validateFiles())return;state.step=Math.min(4,state.step+1);renderStep();return;}
     const back=event.target.closest('[data-kyc-back]');if(back){readStep();state.step=Math.max(1,state.step-1);renderStep();return;}
     const edit=event.target.closest('[data-kyc-edit]');if(edit){state.editing=!state.editing;renderStep();return;}
