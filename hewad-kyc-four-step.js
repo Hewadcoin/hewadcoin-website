@@ -118,7 +118,7 @@
         back_document_path:state.type==='tazkira'?paths.back:null,selfie_document_path:paths.selfie
       });
       if(insert.error)throw insert.error;
-      const update=await hwcSupabase.from('profiles').update({first_name:state.values.first_name,last_name:state.values.last_name,country:state.values.country,province:state.values.province}).eq('id',hwcCurrentUser.id);
+      const update=await hwcSupabase.from('profiles').update({first_name:state.values.first_name,last_name:state.values.last_name,kyc_country:state.values.country,province:state.values.province}).eq('id',hwcCurrentUser.id);
       if(update.error)console.warn('KYC profile details:',update.error.message);
       window.HEWAD_KYC_STATUS='pending';
       if(typeof loadHwcProfile==='function')await loadHwcProfile(hwcCurrentUser);
@@ -179,8 +179,4 @@
   refreshCard();
   const profileStatus=document.getElementById('profileKycStatus');
   if(profileStatus){const obs=new MutationObserver(()=>{if(profileStatus.textContent.trim()==='Not Verified')profileStatus.textContent='Unverified';});obs.observe(profileStatus,{childList:true,characterData:true,subtree:true});if(profileStatus.textContent.trim()==='Not Verified')profileStatus.textContent='Unverified';}
-  const addCard=document.getElementById('addCardBtn');
-  if(addCard&&!addCard.dataset.kycFlowBound){addCard.dataset.kycFlowBound='1';addCard.addEventListener('click',openKyc);}
-  const profileKyc=document.getElementById('kycProfileRow');
-  if(profileKyc&&!profileKyc.dataset.kycFlowBound){profileKyc.dataset.kycFlowBound='1';profileKyc.addEventListener('click',openKyc);}
 })();
