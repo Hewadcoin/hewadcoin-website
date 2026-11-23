@@ -17,7 +17,7 @@ function applyAddCardVisibility(status){
   const target=el.closest('button,a,[role="button"],.add-card,.add-card-btn,[id*="addCard"]')||el;
   if(approved){target.classList.add('hwc-add-card-hidden');target.setAttribute('aria-hidden','true');target.setAttribute('tabindex','-1');}
   else{target.classList.remove('hwc-add-card-hidden');target.removeAttribute('aria-hidden');target.removeAttribute('tabindex');}
- });;
+ });
 }
 document.documentElement.style.setProperty('overflow-x','hidden','important');
 if(document.body)document.body.style.setProperty('overflow-x','hidden','important');
