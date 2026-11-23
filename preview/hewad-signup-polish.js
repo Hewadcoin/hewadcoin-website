@@ -278,9 +278,8 @@
         const ticket = ++phoneCheckVersion;
         const full = normalizedPhone();
         const localDigits = (mobile.value || '').replace(/\D/g, '').replace(/^0+/, '');
-        const rawDigits = (mobile.value || '').replace(/\D/g, '');
-        if (!rawDigits || /^0+$/.test(rawDigits)) {
-          paintPhone(false, rawDigits ? '✕ Zero is not a valid mobile number.' : '✕ Mobile number is required.', false);
+        if (!localDigits) {
+          paintPhone(false, '✕ Mobile number is required.', false);
           return false;
         }
         if (window.__HWC_STRICT_PHONE_VALIDATOR) {
@@ -349,7 +348,7 @@
             return { data: { user: null, session: null }, error: { message: 'This mobile number is already registered.' } };
           }
           if (result && result.error && /profiles_mobile_not_zero_chk/i.test(authError)) {
-            paintPhone(false, '✕ Zero is not a valid mobile number.', false);
+            paintPhone(false, '✕ Enter a valid mobile number.', false);
             return { data: { user: null, session: null }, error: { message: 'Enter a valid mobile number.' } };
           }
           return result;
