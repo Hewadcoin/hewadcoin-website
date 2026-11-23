@@ -96,8 +96,8 @@
       let message = 'Enter a complete valid mobile number.';
       if (!result.codeValid) {
         message = 'Enter a valid country calling code.';
-      } else if (!digits) {
-        message = 'Enter your mobile number.';
+      } else if (!digits || /^0+$/.test(digits)) {
+        message = digits ? 'Zero is not a valid mobile number.' : 'Enter your mobile number.';
       } else if (result.country && result.country.iso === 'AF') {
         valid = digits.length === 9 && !digits.startsWith('0');
         message = valid ? 'Mobile number is valid.' : 'Enter exactly 9 digits for Afghanistan (' + digits.length + '/9).';
