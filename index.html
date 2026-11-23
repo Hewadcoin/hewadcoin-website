@@ -21,7 +21,7 @@
       if(!doc||doc.getElementById('hewad-live-enhancements'))return;
       function loadScript(id,src,next){
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261122-1649';
+        script.id=id;script.src=src+'?v=20261123-signup-guards-1';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
