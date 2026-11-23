@@ -148,3 +148,12 @@ create unique index if not exists kyc_one_approved_document_per_id_uidx
   )
   where status = 'approved'
     and nullif(btrim(national_id_number), '') is not null;
+
+-- Enforce one active identity document across all accounts.
+-- Rejected applications may be resubmitted; pending/approved documents are unique globally.
+create unique index if not exists kyc_one_active_document_per_id_uidx
+  on public.kyc_applications (
+    lower(regexp_replace(btrim(national_id_number), '[[:space:]]+', '', 'g'))
+  )
+  where status in ('pending', 'approved')
+    and nullif(btrim(national_id_number), '') is not null;
