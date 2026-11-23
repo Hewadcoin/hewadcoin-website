@@ -126,17 +126,22 @@
         passport_expiry_date:state.type==='passport'?state.values.passport_expiry_date:null,
         front_document_path:state.type==='tazkira'?paths.front:paths.passport_page,
         back_document_path:state.type==='tazkira'?paths.back:null,selfie_document_path:paths.selfie
-      });
+      }).select('id,status,created_at').single();
       if(insert.error)throw insert.error;
-      const update=await hwcSupabase.from('profiles').update({first_name:state.values.first_name,last_name:state.values.last_name,kyc_country:state.values.country,province:state.values.province}).eq('id',hwcCurrentUser.id);
-      if(update.error)console.warn('KYC profile details:',update.error.message);
+      if(!insert.data||insert.data.status!=='pending')throw new Error('KYC request was not saved as pending. Please try again.');
+      // Do not publish country/name to the member card before admin approval.
+      // The database review trigger copies the verified identity details only on approval.
       window.HEWAD_KYC_STATUS='pending';
       if(typeof loadHwcProfile==='function')await loadHwcProfile(hwcCurrentUser);
       renderStatus('pending','');
       if(typeof showNotice==='function')showNotice('د KYC غوښتنه په بریالیتوب ولېږل شوه.');
     }catch(error){
       for(const path of uploaded){try{await hwcSupabase.storage.from('kyc-documents').remove([path]);}catch(_){}}
-      if(typeof showNotice==='function')showNotice(error.message||'KYC submission failed.');
+      const message=error&&error.message?error.message:'KYC submission failed.';
+      console.error('HEWAD KYC submission failed:',error);
+      if(typeof showNotice==='function')showNotice('د KYC غوښتنه ونه لېږل شوه: '+message);
+      const form=overlay.querySelector('#hwcKycStepForm');
+      if(form){let alertBox=form.querySelector('[data-kyc-submit-error]');if(!alertBox){alertBox=document.createElement('p');alertBox.dataset.kycSubmitError='1';alertBox.style.cssText='color:#ff8d8d;font-size:11px;line-height:1.6;padding:10px;border:1px solid #a94442;border-radius:9px';form.insertBefore(alertBox,form.querySelector('.hwc-kyc-actions'));}alertBox.textContent='د غوښتنې لېږلو کې ستونزه: '+message;}
       if(button){button.disabled=false;button.textContent='🟢 د KYC غوښتنه وسپارئ';}
     }finally{state.submitting=false;}
   }
@@ -159,11 +164,15 @@
     const matches=q?countries.filter(name=>name.toLowerCase().includes(q)).slice(0,8):[];
     box.innerHTML=matches.map(name=>'<button type="button" data-country-suggest="'+esc(name)+'"><span class="hwc-country-flag">'+flagForCountry(name)+'</span><span>'+esc(name)+'</span></button>').join('');
     box.hidden=!matches.length;
+    const preview=overlay.querySelector('#hwcCountryFlagPreview'),match=countryCodeFor(input.value);
+    if(preview){preview.style.display=match?'flex':'none';if(match)preview.innerHTML='<span style="font-size:24px">'+flagForCountry(input.value)+'</span><b>'+esc(input.value)+'</b>';}
+
   });
   overlay.addEventListener('click',function(event){
     const suggestion=event.target.closest('[data-country-suggest]');if(!suggestion)return;
     const input=overlay.querySelector('[name="country"]');if(!input)return;
     input.value=suggestion.dataset.countrySuggest;state.values.country=input.value;
+    const preview=overlay.querySelector('#hwcCountryFlagPreview');if(preview){preview.style.display='flex';preview.innerHTML='<span style="font-size:24px">'+flagForCountry(input.value)+'</span><b>'+esc(input.value)+'</b>';}
     const box=overlay.querySelector('#hwcCountrySuggestions');if(box){box.hidden=true;box.innerHTML='';}
   });
   overlay.addEventListener('change',function(event){
