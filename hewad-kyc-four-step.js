@@ -72,7 +72,7 @@
     }
     const back=state.step>1?'<button type="button" class="hwc-kyc-back" data-kyc-back>مخکینۍ صفحه</button>':'';
     const action=state.step<4?'<button type="button" class="hwc-kyc-yellow" data-kyc-next>بلې صفحې ته</button>':'<button type="button" class="hwc-kyc-yellow" data-kyc-edit>اصلاح</button><button type="button" class="hwc-kyc-yellow" data-kyc-submit>تأیید او لېږل</button>';
-    panel(greenCard()+'<div class="hwc-kyc-body" dir="rtl">'+body+'<div class="hwc-kyc-actions">'+back+action+'</div></div>');
+    panel(greenCard()+'<div class="hwc-kyc-body" dir="rtl"><form id="hwcKycStepForm" novalidate>'+body+'<div class="hwc-kyc-actions">'+back+action+'</div></form></div>');
   }
   function readStep(){
     const form=overlay.querySelector('form'); if(!form)return;
