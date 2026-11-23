@@ -87,7 +87,7 @@
         if (!available) {
           return {
             data: { user: null, session: null },
-            error: new Error((hint.textContent || 'Please enter a valid mobile number.').replace(/^✕\\s*/, ''))
+            error: new Error((hint.textContent || 'Please enter a valid mobile number.').replace(/^✕\s*/, ''))
           };
         }
 
