@@ -3,8 +3,9 @@
   'use strict';
   const overlay = document.getElementById('kycScreen');
   if (!overlay) return;
-  const countries = ['Afghanistan','Pakistan','India','Iran','United Arab Emirates','Saudi Arabia','Turkey','United States','United Kingdom','Other'];
-  const dialCodes = {'Afghanistan':'+93','Pakistan':'+92','India':'+91','Iran':'+98','United Arab Emirates':'+971','Saudi Arabia':'+966','Turkey':'+90','United States':'+1','United Kingdom':'+44'};
+  const countries = ['Afghanistan','Pakistan','India','Iran','United Arab Emirates','Saudi Arabia','Turkey','United States','United Kingdom','Canada','Australia','Germany','France','China','Russia','Qatar','Kuwait','Oman','Bahrain','Malaysia','Indonesia','Bangladesh','Nepal','Other'];
+  const dialCodes = {'Afghanistan':'+93','Pakistan':'+92','India':'+91','Iran':'+98','United Arab Emirates':'+971','Saudi Arabia':'+966','Turkey':'+90','United States':'+1','United Kingdom':'+44','Canada':'+1','Australia':'+61','Germany':'+49','France':'+33','China':'+86','Russia':'+7','Qatar':'+974','Kuwait':'+965','Oman':'+968','Bahrain':'+973','Malaysia':'+60','Indonesia':'+62','Bangladesh':'+880','Nepal':'+977'};
+  const countryFlags = {'Afghanistan':'🇦🇫','Pakistan':'🇵🇰','India':'🇮🇳','Iran':'🇮🇷','United Arab Emirates':'🇦🇪','Saudi Arabia':'🇸🇦','Turkey':'🇹🇷','United States':'🇺🇸','United Kingdom':'🇬🇧','Canada':'🇨🇦','Australia':'🇦🇺','Germany':'🇩🇪','France':'🇫🇷','China':'🇨🇳','Russia':'🇷🇺','Qatar':'🇶🇦','Kuwait':'🇰🇼','Oman':'🇴🇲','Bahrain':'🇧🇭','Malaysia':'🇲🇾','Indonesia':'🇮🇩','Bangladesh':'🇧🇩','Nepal':'🇳🇵'};
   const provinces = ['Badakhshan','Badghis','Baghlan','Balkh','Bamyan','Daykundi','Farah','Faryab','Ghazni','Ghor','Helmand','Herat','Jowzjan','Kabul','Kandahar','Kapisa','Khost','Kunar','Kunduz','Laghman','Logar','Nangarhar','Nimroz','Nuristan','Paktia','Paktika','Panjshir','Parwan','Samangan','Sar-e Pol','Takhar','Uruzgan','Wardak','Zabul'];
   const state = {type:'',step:1,values:{},files:{},submitting:false};
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -146,7 +147,7 @@
   window.renderHwcKycFlow=openKyc;
   window.openHwcKyc=openKyc;
 
-  const lockedActions=['Deposit','Withdraw','Mining','Gift','Wallet','AFN Wallet','Send Hewad'];
+  const lockedActions=['Deposit','Withdraw','Mining','Gift','Gift Code','Wallet','AFN Wallet','Send Hewad'];
   const locked=action=>!isApproved()&&lockedActions.includes(action);
   const originalOpen=window.openHwcModule;
   if(typeof originalOpen==='function')window.openHwcModule=async function(action){if(locked(action))return openKyc();return originalOpen.apply(this,arguments);};
@@ -157,7 +158,8 @@
     const action=target.closest&&target.closest('[data-action]');
     const walletAction=target.closest&&target.closest('#walletUsdtDeposit,#walletUsdtWithdraw,#walletSendHewad');
     const cardCopy=target.closest&&target.closest('#copyCardNumber');
-    if((nav||walletAction||cardCopy||(action&&locked(action.dataset.action)))&&!isApproved()){
+    const cardNumber=target.closest&&target.closest('#memberCardNumber');
+    if((nav||walletAction||cardCopy||cardNumber||(action&&locked(action.dataset.action)))&&!isApproved()){
       event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation();openKyc();
     }
   },true);
@@ -165,7 +167,7 @@
   function refreshCard(){
     const country=document.getElementById('memberCountry'),dial=document.getElementById('memberDialCode');
     const statusEl=document.getElementById('cardKycStatus'),number=document.getElementById('memberCardNumber'),copy=document.getElementById('copyCardNumber');
-    if(dial&&country)dial.textContent=dialCodes[country.textContent.trim()]||'—';
+    if(dial&&country){const selected=country.textContent.trim();const flag=countryFlags[selected]||'🌐';const code=dialCodes[selected]||'';dial.textContent=code?flag+' '+code:flag;dial.setAttribute('aria-label',selected+' country flag and calling code');}
     if(!number||!statusEl)return;
     if(number.textContent.trim()!=='KYC REQUIRED'&&number.textContent.trim()!=='—')number.dataset.memberNumber=number.textContent.trim();
     const approved=window.HEWAD_KYC_STATUS==='approved'||statusEl.textContent.trim()==='ACTIVE';
@@ -177,4 +179,8 @@
   refreshCard();
   const profileStatus=document.getElementById('profileKycStatus');
   if(profileStatus){const obs=new MutationObserver(()=>{if(profileStatus.textContent.trim()==='Not Verified')profileStatus.textContent='Unverified';});obs.observe(profileStatus,{childList:true,characterData:true,subtree:true});if(profileStatus.textContent.trim()==='Not Verified')profileStatus.textContent='Unverified';}
+  const addCard=document.getElementById('addCardBtn');
+  if(addCard&&!addCard.dataset.kycFlowBound){addCard.dataset.kycFlowBound='1';addCard.addEventListener('click',openKyc);}
+  const profileKyc=document.getElementById('kycProfileRow');
+  if(profileKyc&&!profileKyc.dataset.kycFlowBound){profileKyc.dataset.kycFlowBound='1';profileKyc.addEventListener('click',openKyc);}
 })();
