@@ -23,6 +23,8 @@ if(typeof originalLoad==='function'){
   if(k.error)console.warn('KYC card metadata:',k.error.message);
   const profile=p.data||{},wallet=w.data||{},latest=k.data||{},status=profile.kyc_status||latest.status||'not_verified',approved=status==='approved';
   window.HEWAD_KYC_STATUS=status;
+  window.__HWC_VERIFIED_COUNTRY=approved?(latest.country||profile.kyc_country||'—'):'—';
+  window.__HWC_APPROVED_CARD_DATE=approved?formatCardDate(latest.reviewed_at):'—';
   window.HEWAD_USER_ROLE=(r.data||[]).some(x=>x.role==='admin')?'admin':'member';
   const put=(id,v)=>{const el=$(id);if(el)el.textContent=v==null?'':String(v);};
   put('memberName',[profile.first_name,profile.last_name].filter(Boolean).join(' ')||user.email||'MEMBER');
@@ -71,6 +73,15 @@ adminList?.addEventListener('click',async e=>{
  const review=e.target.closest('[data-kyc-review]');if(review){let reason=null;if(review.dataset.kycReview==='rejected'){reason=prompt('Reason for rejection (required):')||'';if(!reason.trim())return notify('A rejection reason is required.');}review.disabled=true;const {error}=await hwcSupabase.from('kyc_applications').update({status:review.dataset.kycReview,rejection_reason:reason}).eq('id',review.dataset.kycId);if(error){notify(error.message);review.disabled=false;}else{notify('KYC application reviewed.');await loadKyc(window.currentAdminKycCategory||'requests');if(window.__HWC_USER)await window.loadHwcProfile(window.__HWC_USER);}}
 });
 const nav=$('.admin-nav-btn');if(nav)nav.addEventListener('click',()=>{if(window.HEWAD_USER_ROLE==='admin')setTimeout(()=>{const v=$('adminKyc');if(v&&!v.hidden)loadKyc('requests');},0);});
+function enforceCardIdentity(){
+ const approved=window.HEWAD_KYC_STATUS==='approved';
+ const country=$('memberCountry'),date=$('cardCreatedDate'),flag=$('memberCountryFlag');
+ if(country)country.textContent=approved?(window.__HWC_VERIFIED_COUNTRY||'—'):'—';
+ if(date)date.textContent=approved?(window.__HWC_APPROVED_CARD_DATE||'—'):'—';
+ if(flag){flag.textContent=approved?countryFlag(window.__HWC_VERIFIED_COUNTRY):'';flag.hidden=!approved;}
+}
+const identityObserver=new MutationObserver(enforceCardIdentity);
+['memberCountry','cardCreatedDate'].forEach(id=>{const el=$(id);if(el)identityObserver.observe(el,{childList:true,characterData:true,subtree:true});});
 window.hwcLoadAdminKyc=loadKyc;
 if(window.hwcSessionRestorePromise)window.hwcSessionRestorePromise.then(()=>{if(window.__HWC_USER&&window.loadHwcProfile)window.loadHwcProfile(window.__HWC_USER).catch(e=>console.warn(e));});
 })();
