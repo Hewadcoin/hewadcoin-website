@@ -31,11 +31,10 @@
 
   const modal = document.createElement('div');
   modal.id = 'hwcRecoveryModal';
-  modal.innerHTML = '<section class="hwc-recovery-card" role="dialog" aria-modal="true" aria-labelledby="hwcRecoveryTitle"><button type="button" class="hwc-recovery-close" aria-label="Close">×</button><h2 id="hwcRecoveryTitle">Reset Password</h2><p id="hwcRecoveryDescription">Enter the email address linked to your HEWAD COIN account.</p><form id="hwcRecoveryForm" novalidate><div id="hwcRecoveryFields"></div><button class="hwc-recovery-submit" id="hwcRecoverySubmit" type="submit">SEND VERIFICATION CODE</button></form><div id="hwcRecoveryMessage" role="status" aria-live="polite"></div></section>';
+  modal.innerHTML = '<section class="hwc-recovery-card" role="dialog" aria-modal="true" aria-labelledby="hwcRecoveryTitle"><button type="button" class="hwc-recovery-close" aria-label="Close">×</button><h2 id="hwcRecoveryTitle">Reset Password</h2><p id="hwcRecoveryDescription">Enter the email address linked to your HEWAD COIN account.</p><form id="hwcRecoveryForm" novalidate><div id="hwcRecoveryFields"></div><button class="hwc-recovery-submit" id="hwcRecoverySubmit" type="submit">SEND RESET LINK</button></form><div id="hwcRecoveryMessage" role="status" aria-live="polite"></div></section>';
   document.body.appendChild(modal);
 
   let stage = 'email';
-  let recoveryEmail = '';
   const fields = $('hwcRecoveryFields');
   const submit = $('hwcRecoverySubmit');
   const message = $('hwcRecoveryMessage');
@@ -51,23 +50,19 @@
     setMessage('');
     if (stage === 'email') {
       title.textContent = 'Reset Password';
-      description.textContent = 'Enter the email address linked to your HEWAD COIN account. We will send a 6-digit verification code.';
+      description.textContent = 'Enter the email address linked to your HEWAD COIN account. We will send you a secure password-reset link.';
       fields.innerHTML = '<label for="hwcRecoveryEmail">Email Address</label><input id="hwcRecoveryEmail" type="email" autocomplete="email" required maxlength="254" placeholder="Enter your email address">';
-      submit.textContent = 'SEND VERIFICATION CODE';
-    } else if (stage === 'otp') {
-      title.textContent = 'Verify Your Email';
-      description.textContent = 'Enter the 6-digit code sent to your email address.';
-      fields.innerHTML = '<label for="hwcRecoveryOtp">6-Digit Verification Code</label><input id="hwcRecoveryOtp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="000000">';
-      submit.textContent = 'VERIFY CODE';
+      submit.textContent = 'SEND RESET LINK';
+      submit.disabled = false;
     } else {
       title.textContent = 'Create New Password';
-      description.textContent = 'Choose a new password for your existing HEWAD COIN account.';
+      description.textContent = 'Choose a new password for your HEWAD COIN account.';
       fields.innerHTML = '<label for="hwcRecoveryPassword">New Password</label><input id="hwcRecoveryPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters"><label for="hwcRecoveryConfirm">Confirm New Password</label><input id="hwcRecoveryConfirm" type="password" autocomplete="new-password" minlength="8" required placeholder="Enter the password again">';
       submit.textContent = 'UPDATE PASSWORD';
+      submit.disabled = false;
     }
   }
   function open() {
-    recoveryEmail = '';
     render('email');
     modal.classList.add('open');
     setTimeout(() => $('hwcRecoveryEmail')?.focus(), 30);
@@ -81,6 +76,16 @@
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) close(); });
 
+  // Supabase sends a secure recovery link. Opening it establishes a recovery
+  // session and emits PASSWORD_RECOVERY; no six-digit OTP is requested.
+  db.auth.onAuthStateChange((event) => {
+    if (event !== 'PASSWORD_RECOVERY') return;
+    render('password');
+    modal.classList.add('open');
+    setMessage('Your email is verified. Set your new password below.');
+    setTimeout(() => $('hwcRecoveryPassword')?.focus(), 30);
+  });
+
   $('hwcRecoveryForm').addEventListener('submit', async function (event) {
     event.preventDefault();
     if (submit.disabled) return;
@@ -90,27 +95,18 @@
       if (stage === 'email') {
         const email = $('hwcRecoveryEmail').value.trim().toLowerCase();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Please enter a valid email address.');
-        const result = await db.auth.resetPasswordForEmail(email);
+        const redirectTo = window.location.origin + window.location.pathname;
+        const result = await db.auth.resetPasswordForEmail(email, { redirectTo });
         if (result.error) throw result.error;
-        recoveryEmail = email;
-        render('otp');
-        setMessage('If this email belongs to an account, a verification code has been sent. Check your inbox and spam folder.');
-        $('hwcRecoveryOtp').focus();
-      } else if (stage === 'otp') {
-        const token = $('hwcRecoveryOtp').value.replace(/\D/g, '');
-        if (!/^\d{6}$/.test(token)) throw new Error('Enter the complete 6-digit code.');
-        const result = await db.auth.verifyOtp({ email: recoveryEmail, token: token, type: 'recovery' });
-        if (result.error) throw result.error;
-        if (!result.data || !result.data.session) throw new Error('Code verification did not create a recovery session. Please request a new code.');
-        render('password');
-        $('hwcRecoveryPassword').focus();
-        setMessage('Email verified. You can now set your new password.');
+        setMessage('If this email belongs to a HEWAD COIN account, a secure reset link has been sent. Check your inbox and spam folder.');
+        submit.textContent = 'EMAIL REQUEST SENT';
+        submit.disabled = true;
       } else {
         const password = $('hwcRecoveryPassword').value;
         const confirm = $('hwcRecoveryConfirm').value;
         if (password.length < 8) throw new Error('Password must be at least 8 characters.');
         if (password !== confirm) throw new Error('The passwords do not match.');
-        const result = await db.auth.updateUser({ password: password });
+        const result = await db.auth.updateUser({ password });
         if (result.error) throw result.error;
         setMessage('Your password has been updated successfully. You can now sign in.');
         submit.textContent = 'DONE';
@@ -119,40 +115,44 @@
           await db.auth.signOut();
           close();
           if (typeof window.showScreen === 'function') window.showScreen('login');
-          else document.getElementById('login')?.scrollIntoView();
+          else $('login')?.scrollIntoView();
           if (typeof window.showNotice === 'function') window.showNotice('Password updated. Please sign in with your new password.');
         }, 1300);
       }
     } catch (error) {
       console.error('HEWAD password recovery error:', error);
       setMessage(error && error.message ? error.message : 'Something went wrong. Please try again.', true);
-    } finally {
-      if (submit.textContent !== 'DONE') submit.disabled = false;
+      submit.disabled = false;
     }
   });
 
-  function findLoginForm() {
-    const screen = $('login') || document.querySelector('[id*="login" i]');
-    if (!screen) return null;
-    return screen.querySelector('form') || screen;
+  function findLoginScreen() {
+    return $('login') || document.querySelector('[id*="login" i]');
   }
   function addForgotLink() {
-    const form = findLoginForm();
-    if (!form || $('hwcForgotPasswordLink')) return;
-    const password = form.querySelector('input[type="password"],input[autocomplete="current-password"],input[name*="password" i],input[id*="password" i]');
-    const link = document.createElement('button');
-    link.type = 'button';
+    const screen = findLoginScreen();
+    if (!screen) return;
+    const candidates = Array.from(screen.querySelectorAll('a,button,[role="button"]'))
+      .filter(node => /^forgot password\??$/i.test((node.textContent || '').trim()));
+    let link = $('hwcForgotPasswordLink') || candidates[0];
+    if (!link) {
+      const form = screen.querySelector('form') || screen;
+      link = document.createElement('button');
+      link.type = 'button';
+      const password = form.querySelector('input[type="password"],input[autocomplete="current-password"],input[name*="password" i],input[id*="password" i]');
+      const submitButton = form.querySelector('button[type="submit"],input[type="submit"]');
+      const wrap = password && (password.closest('.field,.form-group,.input-group') || password.parentElement);
+      if (wrap) wrap.insertAdjacentElement('afterend', link);
+      else if (submitButton) submitButton.insertAdjacentElement('beforebegin', link);
+      else form.appendChild(link);
+    }
     link.id = 'hwcForgotPasswordLink';
     link.textContent = 'Forgot Password?';
-    link.addEventListener('click', open);
-    const submitButton = form.querySelector('button[type="submit"],input[type="submit"]');
-    if (password) {
-      const wrap = password.closest('.field,.form-group,.input-group') || password.parentElement;
-      (wrap || form).insertAdjacentElement('afterend', link);
-    } else if (submitButton) {
-      submitButton.insertAdjacentElement('beforebegin', link);
-    } else {
-      form.appendChild(link);
+    link.setAttribute('type', 'button');
+    candidates.forEach(node => { if (node !== link) node.remove(); });
+    if (link.dataset.hwcRecoveryBound !== '1') {
+      link.addEventListener('click', open);
+      link.dataset.hwcRecoveryBound = '1';
     }
   }
 
