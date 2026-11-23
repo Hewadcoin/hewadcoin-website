@@ -39,11 +39,8 @@ dashboardPolish.textContent=`
 #memberCard .hwc-card-country-flag[hidden]{display:none!important}
 #memberCard .hwc-card-date{font-size:8px!important;letter-spacing:.7px!important}
 #memberCard .add-card-btn{width:100%!important;margin-top:6px!important;padding:7px 8px!important;font-size:12px!important;border-radius:9px!important}
-#dashboard .dash-section-title{margin:7px 8px 6px!important;font-size:13px!important;letter-spacing:1px!important}
-#dashboard .dash-grid{margin:0 8px!important;gap:8px!important}
-#dashboard .dash-tile{min-height:94px!important;padding:8px 4px!important;border-radius:14px!important;gap:7px!important}
-#dashboard .dash-tile-icon{width:40px!important;height:40px!important;font-size:19px!important}
-#dashboard .dash-tile-name{font-size:10px!important}
+#dashboard .dash-section-title{margin:12px 8px 10px!important;font-size:14px!important;letter-spacing:1.4px!important}
+#dashboard .dash-grid{margin:0 8px!important;gap:11px!important}
 #dashboard .dash-bottom-nav{left:0!important;transform:none!important;width:100%!important;max-width:none!important}
 .hwc-kyc-admin-card{display:block;margin:12px 0;padding:13px;border:1px solid #8d6d2b;border-radius:15px;background:linear-gradient(145deg,#1b1a17,#101216);color:#f4f1e9}
 .hwc-kyc-admin-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:9px}
