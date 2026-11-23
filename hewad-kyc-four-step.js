@@ -75,7 +75,7 @@
       const photo=(name,title,help)=>'<div class="hwc-kyc-photo"><b>'+title+'</b><div class="hwc-kyc-photo-preview">'+(state.previewUrls[name]?'<img src="'+state.previewUrls[name]+'" alt="'+title+'">':'<span>📷 '+help+'</span>')+'</div><small class="'+(state.files[name]?'hwc-uploaded':'')+'">'+(state.files[name]?'عکس چمتو دی: '+esc(state.files[name].name):'تر اوسه عکس نه دی ټاکل شوی')+'</small><div class="hwc-kyc-photo-actions"><button type="button" data-kyc-camera="'+name+'">📷 د کمرې له لارې عکس</button><button type="button" data-kyc-gallery="'+name+'">🖼 له ګالرۍ عکس</button></div><input class="hwc-kyc-file-camera" type="file" name="'+name+'" accept="image/jpeg,image/png,image/webp" capture="'+(name==='selfie'?'user':'environment')+'" hidden><input class="hwc-kyc-file-gallery" type="file" data-file-key="'+name+'" accept="image/jpeg,image/png,image/webp" hidden></div>';
       body='<h4>د اسنادو عکسونه</h4><p class="hwc-kyc-help">یوازې JPG، PNG یا WebP عکسونه؛ هر عکس تر ۱۰ MB پورې.</p><div class="hwc-kyc-photo-grid">'+(state.type==='tazkira'?photo('front','مخکینی عکس','د تذکرې مخ')+photo('back','شاتنی عکس','د تذکرې شا'):photo('passport_page','د معلوماتو لرونکې پاڼې عکس','یوازې هغه پاڼه چې نوم او عکس پکې وي'))+photo('selfie','شخصي سلفي','مخ باید روښانه ښکاره وي')+'</div>';
     } else {
-      const rows=[['د سند ډول',state.type==='tazkira'?'برېښنايي تذکره':'پاسپورټ'],[(state.type==='tazkira'?'د تذکرې ID':'د پاسپورټ شمېره'),v.document_number],['نوم',v.first_name],['تخلص',v.last_name],['د زېږېدو نېټه',v.date_of_birth],['هېواد',v.country],['ولایت',v.province]];
+      const rows=[['د سند ډول',state.type==='tazkira'?'برېښنايي تذکره':'پاسپورټ'],[(state.type==='tazkira'?'د تذکرې ID':'د پاسپورټ شمېره'),v.document_number],['نوم',v.first_name],['تخلص',v.last_name],['د زېږېدو نېټه',v.date_of_birth],['هېواد',v.country],['ولایت',v.province],['ولسوالۍ',v.district]];
       if(state.type==='passport')rows.push(['د ختمېدو نېټه',v.passport_expiry_date]);
       const names=state.type==='tazkira'?[['مخکینی عکس',state.files.front],['شاتنی عکس',state.files.back],['سلفي عکس',state.files.selfie]]:[['د معلوماتو لرونکې پاڼې عکس',state.files.passport_page],['سلفي عکس',state.files.selfie]];
       body='<h4>وروستۍ بیاکتنه</h4><div class="hwc-kyc-review">'+rows.map(r=>'<div class="hwc-kyc-review-row"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>').join('')+names.map(r=>'<div class="hwc-kyc-review-photo"><img src="'+(state.previewUrls[(state.type==='tazkira'?({'مخکینی عکس':'front','شاتنی عکس':'back','سلفي عکس':'selfie'}[r[0]]):({'د معلوماتو لرونکې پاڼې عکس':'passport_page','سلفي عکس':'selfie'}[r[0]]))]||'')+'" alt="'+esc(r[0])+'"><b>'+esc(r[0])+' · '+esc(r[1]&&r[1].name)+'</b></div>').join('')+'</div><p class="hwc-kyc-help" style="margin-top:10px">د لېږلو وروسته به اډمین ستاسو غوښتنه وارزوي. تر تأیید مخکې حساب تصدیق شوی نه وي.</p>'+(state.editing?'<div class="hwc-kyc-edit-options"><b>د اصلاح لپاره برخه وټاکئ:</b><button type="button" data-kyc-edit-step="1">✏️ شخصي معلومات اصلاح کړئ</button><button type="button" data-kyc-edit-step="2">✏️ د استوګنې معلومات اصلاح کړئ</button><button type="button" data-kyc-edit-step="3">✏️ د اسنادو عکسونه اصلاح کړئ</button></div>':'')+'<label class="hwc-kyc-confirm"><input type="checkbox" name="kyc_confirm" required>زه تاییدوم چې پورته معلومات او اسناد زما خپل دي او ټول صحیح دي.</label>';
@@ -87,7 +87,7 @@
   function readStep(){
     const form=overlay.querySelector('form'); if(!form)return;
     const data=new FormData(form);
-    ['document_number','first_name','last_name','date_of_birth','passport_expiry_date','country','province'].forEach(k=>{if(data.has(k))state.values[k]=String(data.get(k)||'').trim();});
+    ['document_number','first_name','last_name','date_of_birth','passport_expiry_date','country','province','district'].forEach(k=>{if(data.has(k))state.values[k]=String(data.get(k)||'').trim();});
   }
   function validateStep(){
     const fields=Array.from(overlay.querySelectorAll('.hwc-kyc-body input:not([type=file]),.hwc-kyc-body select'));
@@ -118,7 +118,7 @@
       }
       const insert=await hwcSupabase.from('kyc_applications').insert({
         user_id:hwcCurrentUser.id,first_name:state.values.first_name,last_name:state.values.last_name,
-        country:state.values.country,province:state.values.province,
+        country:state.values.country,province:state.values.province,district:state.values.district,
         mobile_number:profileResult.data&&profileResult.data.mobile_number||null,
         document_type:state.type==='tazkira'?'National ID / Tazkira':'Passport',
         national_id_number:state.values.document_number,date_of_birth:state.values.date_of_birth,
