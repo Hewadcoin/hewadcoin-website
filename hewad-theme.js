@@ -33,16 +33,17 @@
     document.documentElement.setAttribute('data-hwc-theme', mode);
     try { localStorage.setItem(KEY, mode); } catch (e) {}
     var label = document.getElementById('themeLabel');
-    if (label) label.textContent = mode === 'light' ? 'Light Mode' : 'Dark Mode';
+    if (label) { var nextLabel = mode === 'light' ? 'Light Mode' : 'Dark Mode'; if (label.textContent !== nextLabel) label.textContent = nextLabel; }
     var profileRow = document.getElementById('themeToggle');
     if (profileRow) {
       profileRow.setAttribute('aria-label', 'Switch theme. Current mode: ' + (mode === 'light' ? 'Light' : 'Dark'));
       var title = profileRow.querySelector('span');
-      if (title) title.textContent = 'Theme (' + (mode === 'light' ? 'Light' : 'Dark') + ')';
+      if (title) { var nextTitle = 'Theme (' + (mode === 'light' ? 'Light' : 'Dark') + ')'; if (title.textContent !== nextTitle) title.textContent = nextTitle; }
     }
     var headBtn = document.getElementById('hewadHeaderThemeToggle');
     if (headBtn) {
-      headBtn.textContent = mode === 'light' ? '☀' : '☾';
+      var nextIcon = mode === 'light' ? '☀' : '☾';
+      if (headBtn.textContent !== nextIcon) headBtn.textContent = nextIcon;
       headBtn.setAttribute('aria-label', mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
       headBtn.title = mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
     }
