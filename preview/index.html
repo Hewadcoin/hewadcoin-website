@@ -22,7 +22,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261123-signup-guards-1';
+        script.id=id;script.src=src+'?v=20261123-signup-guards-2';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
