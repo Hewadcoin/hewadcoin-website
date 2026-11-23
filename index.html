@@ -4,17 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090c">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="description" content="Official HEWAD COIN member platform">
 <title>HEWAD COIN</title>
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090c}#hewad-app{display:block;width:100%;height:100%;border:0;background:#08090c}</style>
 </head>
 <body>
-<iframe id="hewad-app" title="HEWAD COIN" src="hewad_coin_homepage_fullscreen.html"></iframe>
+<iframe id="hewad-app" title="HEWAD COIN" src="hewad_coin_homepage_fullscreen.html?hwc_release=20261123-final-17"></iframe>
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var params=window.location.search+window.location.hash;
-  if(params)frame.src='hewad_coin_homepage_fullscreen.html'+params;
+  var release='20261123-final-17';
+  var params=window.location.search.replace(/^\\?/,'');
+  var hash=window.location.hash||'';
+  frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
   frame.addEventListener('load',function(){
     try{
       var doc=frame.contentDocument;
@@ -22,7 +27,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261123-kyc-admin-checkbox-16';
+        script.id=id;script.src=src+'?v=20261123-final-17';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
