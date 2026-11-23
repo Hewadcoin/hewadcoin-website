@@ -946,7 +946,7 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
 async function loadHwcProfile(user){
  if(!user)return;
  const [profileResult,walletResult,roleResult,ambassadorResult]=await Promise.all([
-  hwcSupabase.from("profiles").select("first_name,last_name,mobile_number,referral_code,card_number,country,kyc_status,account_status,created_at,avatar_url,referred_by").eq("id",user.id).maybeSingle(),
+  hwcSupabase.from("profiles").select("first_name,last_name,mobile_number,referral_code,card_number,country,kyc_country,kyc_status,account_status,created_at,avatar_url,referred_by").eq("id",user.id).maybeSingle(),
   hwcSupabase.from("wallets").select("balance_hwc,balance_usd,balance_afn,reserved_hwc,reserved_usd,reserved_afn,staked_hwc,staked_usd,staked_afn").eq("user_id",user.id).maybeSingle(),
   hwcSupabase.from("user_roles").select("role").eq("user_id",user.id),
   hwcSupabase.from("ambassador_accounts").select("user_id").eq("user_id",user.id).maybeSingle()
@@ -957,7 +957,7 @@ async function loadHwcProfile(user){
  const fullName=[profile.first_name??meta.first_name,profile.last_name??meta.last_name].filter(Boolean).join(" ").trim()||user.email||"MEMBER";
  try{const linked=await hwcSupabase.rpc('hwc_get_telegram_link_status');const status=linked.data||{};const el=document.getElementById('telegramStatus');if(el)el.textContent=status.linked?`Linked${status.telegram_username?' · @'+status.telegram_username:''}`:'Not Linked';}catch(_){const el=document.getElementById('telegramStatus');if(el)el.textContent='Not Linked';}
  const put=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
- put("memberName",fullName);put("profileMemberName",fullName);put("profileDisplayName",fullName);put("profileEmail",user.email||"");put("memberCountry",profile.country||"—");
+ put("memberName",fullName);put("profileMemberName",fullName);put("profileDisplayName",fullName);put("profileEmail",user.email||"");put("memberCountry",profile.kyc_country||profile.country||"—");
  put("memberCardNumber",profile.card_number||"—");
  const created=profile.created_at?new Date(profile.created_at):null;put("cardCreatedDate",created&&!isNaN(created)?created.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}).toUpperCase():"—");
  const fmt=(v,asset)=>`${Number(v||0).toLocaleString(undefined,{maximumFractionDigits:8})} ${asset}`;
