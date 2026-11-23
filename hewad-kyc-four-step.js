@@ -40,7 +40,9 @@
     try {
       const result=await hwcSupabase.from('kyc_applications').select('status,rejection_reason').eq('user_id',hwcCurrentUser.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
       if(result.error)throw result.error;
-      const latest=result.data, current=latest?latest.status:(window.HEWAD_KYC_STATUS||'not_verified');
+      const latest=result.data;
+      let current=latest&&latest.status;
+      if(!current){const profileStatus=await hwcSupabase.from('profiles').select('kyc_status').eq('id',hwcCurrentUser.id).maybeSingle();if(profileStatus.error)throw profileStatus.error;current=profileStatus.data&&profileStatus.data.kyc_status||window.HEWAD_KYC_STATUS||'not_verified';}
       window.HEWAD_KYC_STATUS=current;
       if(current==='approved'||current==='pending'){renderStatus(current,latest&&latest.rejection_reason);return;}
       if(current==='rejected'){renderStatus('rejected',latest&&latest.rejection_reason);return;}
