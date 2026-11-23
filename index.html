@@ -2122,5 +2122,34 @@ body.theme-light .hwc-tx-hero{color:#fff}body.theme-light .hwc-tx-row{background
 })();
 </script>
 
+
+<script id="hwc-signup-integration-loader">
+(function () {
+  if (window.__HWC_SIGNUP_INTEGRATION_LOADING) return;
+  window.__HWC_SIGNUP_INTEGRATION_LOADING = true;
+  var assets = [
+    { id: 'hwc-phone-metadata', src: 'https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/libphonenumber-max.js' },
+    { id: 'hewad-signup-final-layout', src: 'hewad-signup-final.js?v=20261123-signup-integration-1' },
+    { id: 'hewad-phone-validation', src: 'hewad-phone-validation.js?v=20261123-signup-integration-1' },
+    { id: 'hewad-signup-mobile-check', src: 'hewad-signup-mobile-check.js?v=20261123-signup-integration-1' }
+  ];
+  function load(index) {
+    if (index >= assets.length) return;
+    var asset = assets[index];
+    if (document.getElementById(asset.id)) { load(index + 1); return; }
+    var script = document.createElement('script');
+    script.id = asset.id;
+    script.src = asset.src;
+    script.onload = function () { load(index + 1); };
+    script.onerror = function () {
+      console.error('HEWAD signup asset could not load:', asset.src);
+      load(index + 1);
+    };
+    document.head.appendChild(script);
+  }
+  load(0);
+})();
+</script>
+
 </body>
 </html>
