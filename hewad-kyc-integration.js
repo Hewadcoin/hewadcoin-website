@@ -66,7 +66,8 @@ async function loadKyc(category){
  host.innerHTML='<p>Loading…</p>';
  const {data,error}=await hwcSupabase.from('kyc_applications').select('id,user_id,first_name,last_name,country,province,district,mobile_number,document_type,national_id_number,date_of_birth,passport_expiry_date,status,rejection_reason,created_at,front_document_path,back_document_path,selfie_document_path').eq('status',status).order('created_at',{ascending:false}).limit(40);
  if(error){host.textContent=error.message;return;}
- if(!data||!data.length){host.innerHTML='<div class="hwc-kyc-admin-card"><strong>No KYC applications</strong></div>';return;}
+ if(!data||!data.length){host.classList.add('hwc-kyc-admin-card');host.innerHTML='<strong>No KYC applications</strong>';return;}
+ host.classList.remove('admin-empty','hwc-kyc-admin-card');adminList.querySelectorAll('.admin-empty').forEach(el=>{if(el!==host)el.remove();});
  const cards=await Promise.all(data.map(async x=>{
   const docs=[['front_document_path',x.document_type==='Passport'?'د پاسپورټ پاڼه':'د تذکرې مخ'],['back_document_path','د تذکرې شا'],['selfie_document_path','سلفي']].filter(([key])=>x[key]);
   const previews=await Promise.all(docs.map(async ([key,label])=>{
