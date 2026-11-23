@@ -49,7 +49,11 @@
                 loadScript('hewad-password-recovery','hewad-password-recovery.js',function(){
                   loadScript('hewad-compact-menus','preview/hewad-compact-menus.js',function(){
                     loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js',function(){
-                      frame.style.visibility='visible';
+                      loadScript('hewad-kyc-four-step','hewad-kyc-four-step.js',function(){
+                        loadScript('hewad-kyc-integration','hewad-kyc-integration.js',function(){
+                          frame.style.visibility='visible';
+                        });
+                      });
                     });
                   });
                 });
