@@ -50,7 +50,8 @@
     document.head.appendChild(style);
 
     function nationalDigits() {
-      return (phone.value || '').replace(/\D/g, '');
+      // A leading trunk zero is optional; normalize it away before validation.
+      return (phone.value || '').replace(/\D/g, '').replace(/^0+/, '');
     }
     function resolveNumber() {
       const calling = (code.value || '').trim().replace(/[^+0-9]/g, '');
@@ -96,10 +97,10 @@
       let message = 'Enter a complete valid mobile number.';
       if (!result.codeValid) {
         message = 'Enter a valid country calling code.';
-      } else if (!digits || /^0+$/.test(digits)) {
-        message = digits ? 'Zero is not a valid mobile number.' : 'Enter your mobile number.';
+      } else if (!digits) {
+        message = 'Enter your mobile number.';
       } else if (result.country && result.country.iso === 'AF') {
-        valid = digits.length === 9 && !digits.startsWith('0');
+        valid = digits.length === 9;
         message = valid ? 'Mobile number is valid.' : 'Enter exactly 9 digits for Afghanistan (' + digits.length + '/9).';
         if (valid) {
           try {
