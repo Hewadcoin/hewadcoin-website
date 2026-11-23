@@ -278,6 +278,11 @@
         const ticket = ++phoneCheckVersion;
         const full = normalizedPhone();
         const localDigits = (mobile.value || '').replace(/\D/g, '').replace(/^0+/, '');
+        const rawDigits = (mobile.value || '').replace(/\D/g, '');
+        if (!rawDigits || /^0+$/.test(rawDigits)) {
+          paintPhone(false, rawDigits ? '✕ Zero is not a valid mobile number.' : '✕ Mobile number is required.', false);
+          return false;
+        }
         if (window.__HWC_STRICT_PHONE_VALIDATOR) {
           const strictResult = window.__HWC_STRICT_PHONE_VALIDATOR();
           if (!strictResult.valid) {
@@ -324,8 +329,28 @@
           args.options = Object.assign({}, args.options || {});
           args.options.data = Object.assign({}, args.options.data || {}, { mobile_number: full, phone: full });
           const result = await previousSignUp(args);
-          if (result && result.error && /mobile number is already registered/i.test(result.error.message || '')) {
+          const authError = result && result.error && result.error.message ? result.error.message : '';
+          const returnedUser = result && result.data && result.data.user;
+          const duplicateEmail = /already registered|already exists|email.*taken|user exists/i.test(authError) ||
+            !!(returnedUser && Array.isArray(returnedUser.identities) && returnedUser.identities.length === 0);
+          if (duplicateEmail) {
+            const hint = $('hwcEmailValidationHint');
+            const lang = ['en', 'ps', 'fa'].includes(document.documentElement.lang) ? document.documentElement.lang : 'en';
+            const messages = {en:'✕ This email address is already registered.',ps:'✕ دا ایمیل مخکې ثبت شوی دی.',fa:'✕ این ایمیل قبلاً ثبت شده است.'};
+            if (hint) {
+              hint.textContent = messages[lang];
+              hint.dataset.hwcMessageKey = 'emailDuplicate';
+              hint.style.color = '#ff6262';
+            }
+            return { data: { user: null, session: null }, error: { message: messages[lang].replace(/^✕\\s*/, '') } };
+          }
+          if (result && result.error && /mobile number is already registered|profiles_mobile_normalized_unique_idx/i.test(authError)) {
             paintPhone(false, '✕ This mobile number is already registered.', false);
+            return { data: { user: null, session: null }, error: { message: 'This mobile number is already registered.' } };
+          }
+          if (result && result.error && /profiles_mobile_not_zero_chk/i.test(authError)) {
+            paintPhone(false, '✕ Zero is not a valid mobile number.', false);
+            return { data: { user: null, session: null }, error: { message: 'Enter a valid mobile number.' } };
           }
           return result;
         };
