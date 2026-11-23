@@ -11,8 +11,9 @@ function applyAddCardVisibility(status){
  const approved=__hwcLatestKycStatus==='approved';
  const direct=$('addCardBtn');
  if(direct){direct.hidden=approved;direct.style.setProperty('display',approved?'none':'','important');}
- const root=$('memberCard')||document;\n root.querySelectorAll('*').forEach(el=>{
-  const label=(el.innerText||el.textContent||'').replace(/[+＋]/g,'').replace(/\\s+/g,' ').trim().toLowerCase();
+ const root=$('memberCard')||document;
+ root.querySelectorAll('*').forEach(el=>{
+  const label=(el.innerText||el.textContent||'').replace(/[+＋]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
   if(label!=='add card')return;
   const target=el.closest('button,a,[role="button"],.add-card,.add-card-btn,[id*="addCard"]')||el;
   if(approved){target.classList.add('hwc-add-card-hidden');target.setAttribute('aria-hidden','true');target.setAttribute('tabindex','-1');}
