@@ -35,7 +35,7 @@ dashboardPolish.textContent=`
 #memberCard .hwc-card-foot{margin-top:5px!important;padding-top:5px!important;gap:6px!important}
 #memberCard .hwc-card-chip{width:29px!important;height:20px!important;border-radius:5px!important}
 #memberCard .hwc-card-chip-group{display:inline-flex!important;align-items:center!important;gap:6px!important;flex:0 0 auto!important}
-#memberCard .hwc-card-country-flag{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:19px!important;height:13px!important;min-width:19px!important;padding:0!important;border:1px solid #d7b65a!important;border-radius:1px!important;background:#fff!important;font-size:12px!important;line-height:1!important;overflow:hidden!important;box-sizing:border-box!important}
+#memberCard .hwc-card-country-flag{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:29px!important;height:20px!important;min-width:29px!important;padding:0!important;border:1px solid #d7b65a!important;border-radius:0!important;background:#fff!important;font-size:17px!important;line-height:1!important;overflow:hidden!important;box-sizing:border-box!important}
 #memberCard .hwc-card-country-flag[hidden]{display:none!important}
 #memberCard .hwc-card-date{font-size:8px!important;letter-spacing:.7px!important}
 #memberCard .add-card-btn{width:100%!important;margin-top:6px!important;padding:7px 8px!important;font-size:12px!important;border-radius:9px!important}
