@@ -137,7 +137,7 @@
       if(typeof showNotice==='function')showNotice('د KYC غوښتنه په بریالیتوب ولېږل شوه.');
     }catch(error){
       for(const path of uploaded){try{await hwcSupabase.storage.from('kyc-documents').remove([path]);}catch(_){}}
-      const message=error&&error.message?error.message:'KYC submission failed.';
+      const duplicateIdentity=error&&error.code==='23505'&&String(error.message||'').includes('kyc_one_active_document_per_id_uidx');const message=duplicateIdentity?'دا تذکره یا پاسپورټ له بل حساب سره مخکې ثبت شوی دی. هر سند یوازې د یوه حساب د KYC لپاره کارېدلی شي.':'KYC submission failed: '+(error&&error.message?error.message:'Please try again.');
       console.error('HEWAD KYC submission failed:',error);
       if(typeof showNotice==='function')showNotice('د KYC غوښتنه ونه لېږل شوه: '+message);
       const form=overlay.querySelector('#hwcKycStepForm');
