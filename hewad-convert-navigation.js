@@ -34,6 +34,8 @@
       /^convert$/i.test(dataPage);
   }
 
+  window.openHwcConvertPanel = openConvertPanel;
+
   function openConvertPanel() {
     /* Refresh the authenticated client bridge every time Convert is opened. */
     try {
