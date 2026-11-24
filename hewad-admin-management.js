@@ -44,6 +44,7 @@ function ensureDetailHost(){
 function decorateUserCards(){
  if(!isAdmin())return;
  var host=$('hwcAdminUsersList');if(!host)return;
+ var detail=$('hwcAdminUserDetails');if(detail)detail.hidden=true;
  host.querySelectorAll('article.admin-status-card').forEach(function(article){
   var select=article.querySelector('[data-user-status]');if(!select||article.querySelector('[data-hwc-user-details]'))return;
   var b=document.createElement('button');b.type='button';b.className='hwc-admin-btn';b.textContent='View Details';b.dataset.hwcUserDetails=select.getAttribute('data-user-status');
