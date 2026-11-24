@@ -23,7 +23,12 @@
     var aria = (node.getAttribute('aria-label') || '').trim();
     var title = (node.getAttribute('title') || '').trim();
     var dataPage = (node.getAttribute('data-page') || '').trim();
-    return /^convert$/i.test(text) ||
+    var dataAction = (node.getAttribute('data-action') || '').trim();
+    /* Dashboard tiles include a decorative ⇅ icon, so their visible text is
+       not exactly "Convert". Match the semantic action before the generic
+       dashboard handler can show its disabled-feature notice. */
+    return /^convert$/i.test(dataAction) ||
+      /^convert$/i.test(text) ||
       /^convert$/i.test(aria) ||
       /^convert$/i.test(title) ||
       /^convert$/i.test(dataPage);
