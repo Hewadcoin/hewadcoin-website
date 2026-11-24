@@ -130,11 +130,9 @@ async function loadAdminNotifications(){
 }
 function watchAdminViews(){
  var users=$('adminUsers');
- if(users){var mo=new MutationObserver(function(){if(!users.hidden)decorateUserCards()});mo.observe(users,{attributes:true,attributeFilter:['hidden'],childList:true,subtree:true});}
+ if(users){var mo=new MutationObserver(function(mutations){if(!users.hidden&&mutations.some(function(m){return m.target.closest&&m.target.closest('#hwcAdminUsersList')}))decorateUserCards()});mo.observe(users,{childList:true,subtree:true});}
  var notes=$('adminNotifications');
  if(notes){var no=new MutationObserver(function(){if(!notes.hidden&&Date.now()-lastNotificationLoad>1200)loadAdminNotifications()});no.observe(notes,{attributes:true,attributeFilter:['hidden']});}
- var userHost=$('adminUsers');
- if(userHost){var listObserver=new MutationObserver(function(){if(!userHost.hidden)decorateUserCards()});listObserver.observe(userHost,{childList:true,subtree:true});}
 }
 function start(){
  if(!isAdmin())return;
