@@ -88,7 +88,20 @@ async function openUserDetails(id,article){
  card('KYC Information',k?'<div class="hwc-admin-grid">'+field('Document type',k.document_type)+field('Document / Passport ID',k.national_id_number)+field('Date of birth',k.date_of_birth)+field('Country',k.country)+field('Province',k.province)+field('District',k.district)+field('Mobile',k.mobile_number)+field('Passport expiry',k.passport_expiry_date)+field('KYC status',k.status)+field('Submitted',date(k.created_at))+field('Reviewed',date(k.reviewed_at))+field('Rejection reason',k.rejection_reason)+'</div>'+kycPhotos:'<p class="hwc-admin-muted">No KYC application found.</p>')+
  card('Invited Users ('+refs.length+')',refs.length?refs.map(function(x){return '<div class="hwc-admin-row"><span>'+esc([x.first_name,x.last_name].filter(Boolean).join(' ')||'Member')+'</span><span>'+esc(x.kyc_status)+' · '+date(x.created_at)+'</span></div>'}).join(''):'<p class="hwc-admin-muted">No invited users.</p>')+
  card('Transaction History',tx.length?tx.map(function(t){return '<div class="hwc-admin-row"><span><b>'+esc(t.description||t.transaction_type)+'</b><br><span class="hwc-admin-muted">'+esc(t.transaction_type)+' · '+esc(t.status)+' · '+date(t.created_at)+'</span></span><b>'+(Number(t.amount)>0?'+':'')+fmt(t.amount,4)+' '+esc(t.asset)+'</b></div>'}).join(''):'<p class="hwc-admin-muted">No transactions found.</p>')+
- card('Balance Adjustment History',hist.length?hist.map(function(h){return '<div class="hwc-admin-row"><span>'+esc(h.direction)+' '+fmt(h.amount,4)+' '+esc(h.asset)+'<br><span class="hwc-admin-muted">'+esc(h.note)+' · '+date(h.created_at)+'</span></span><b>'+fmt(h.balance_before,4)+' → '+fmt(h.balance_after,4)+'</b></div>'}).join(''):'<p class="hwc-admin-muted">No balance adjustments yet.</p>');
+ card('Balance Adjustment History',hist.length?hist.map(function(h){return '<div class="hwc-admin-row"><span>'+esc(h.direction)+' '+fmt(h.amount,4)+' '+esc(h.asset)+'<br><span class="hwc-admin-muted">'+esc(h.note)+' · '+date(h.created_at)+'</span></span><b>'+fmt(h.balance_before,4)+' → '+fmt(h.balance_after,4)+'</b></div>'}).join(''):'<p class="hwc-admin-muted">No balance adjustments yet.</p>')+
+ card('Admin Notes','<div id="hwcAdminNotesList"><p class="hwc-admin-muted">Loading notes…</p></div><textarea id="hwcAdminNoteInput" rows="3" maxlength="2000" placeholder="Internal note for administrators only"></textarea><button class="hwc-admin-btn primary" id="hwcAddAdminNote">Add note</button>');
+ async function refreshAdminNotes(){
+  var noteHost=host.querySelector('#hwcAdminNotesList');if(!noteHost)return;
+  var nr=await db.rpc('admin_get_user_notes',{p_user_id:id});
+  noteHost.innerHTML=nr.error?'<p class="hwc-admin-muted">Notes unavailable until the admin-notes database migration is applied.</p>':(nr.data||[]).length?nr.data.map(function(n){return '<div class="hwc-admin-row"><span>'+esc(n.note)+'<br><span class="hwc-admin-muted">'+esc(n.admin_id)+' · '+date(n.created_at)+'</span></span></div>'}).join(''):'<p class="hwc-admin-muted">No admin notes yet.</p>';
+ }
+ host.querySelector('#hwcAddAdminNote').onclick=async function(){
+  var input=host.querySelector('#hwcAdminNoteInput'),note=input.value.trim();if(!note){window.showNotice?.('Write a note first.');return}
+  var b=this;b.disabled=true;var nr=await db.rpc('admin_add_user_note',{p_user_id:id,p_note:note});b.disabled=false;
+  if(nr.error){window.showNotice?.(nr.error.message);return}
+  input.value='';refreshAdminNotes();
+ };
+ refreshAdminNotes();
  host.querySelector('#hwcUserBack').onclick=function(){host.hidden=true;if(list)list.hidden=false;activeDetail=null};
  host.querySelector('#hwcSaveStatus').onclick=async function(){
   var b=this;b.disabled=true;var q=await db.rpc('admin_set_account_status',{p_user_id:id,p_status:host.querySelector('#hwcDetailStatus').value});
