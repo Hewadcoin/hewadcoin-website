@@ -30,11 +30,19 @@
   }
 
   function openConvertPanel() {
-    var existing = document.getElementById(overlayId);
-    if (existing) {
-      existing.style.display = 'block';
-      return;
+    /* Refresh the authenticated client bridge every time Convert is opened. */
+    try {
+      var activeClient = (typeof hwcSupabase !== 'undefined' && hwcSupabase) ||
+        window.hwcSupabase || window.__HWC_CONVERT_DB__;
+      if (activeClient && activeClient.auth) window.__HWC_CONVERT_DB__ = activeClient;
+    } catch (error) {
+      console.warn('Convert wallet bridge is unavailable:', error);
     }
+
+    /* Always create a fresh iframe/session view. A hidden stale iframe can
+       retain an expired auth state after returning to the Dashboard. */
+    var existing = document.getElementById(overlayId);
+    if (existing) existing.remove();
 
     var overlay = document.createElement('div');
     overlay.id = overlayId;
@@ -58,8 +66,8 @@
       'box-shadow:0 4px 18px #0008'
     ].join(';');
     close.addEventListener('click', function () {
-      overlay.style.display = 'none';
       overlay.setAttribute('aria-hidden', 'true');
+      overlay.remove();
     });
 
     var frame = document.createElement('iframe');
