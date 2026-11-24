@@ -7,6 +7,14 @@
   window.__HWC_CONVERT_NAV_BOUND__ = true;
 
   var convertUrl = new URL('preview/convert-preview.html', document.baseURI).href;
+  /* Expose the already-authenticated client to the same-origin Convert iframe. */
+  try {
+    if (typeof hwcSupabase !== 'undefined' && hwcSupabase && hwcSupabase.auth) {
+      window.__HWC_CONVERT_DB__ = hwcSupabase;
+    }
+  } catch (error) {
+    console.warn('Convert wallet bridge is unavailable:', error);
+  }
   var overlayId = 'hwc-convert-overlay';
 
   function isConvertControl(node) {
