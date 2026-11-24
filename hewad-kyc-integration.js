@@ -139,10 +139,11 @@ if(typeof originalLoad==='function'){
   await originalLoad.apply(this,arguments);
   if(!user)return;
   window.__HWC_USER=user;
-  const [p,w,r]=await Promise.all([
+  const [p,w,r,rateResult]=await Promise.all([
    hwcSupabase.from('profiles').select('first_name,last_name,mobile_number,referral_code,card_number,country,kyc_country,kyc_status,account_status,created_at,card_created_at,avatar_url').eq('id',user.id).maybeSingle(),
    hwcSupabase.from('wallets').select('balance_hwc,balance_usd,balance_afn').eq('user_id',user.id).maybeSingle(),
-   hwcSupabase.from('user_roles').select('role').eq('user_id',user.id)
+   hwcSupabase.from('user_roles').select('role').eq('user_id',user.id),
+   hwcSupabase.from('exchange_rates').select('quote_asset,rate').eq('base_asset','HDC').eq('active',true).in('quote_asset',['USD','AFN'])
   ]);
   if(p.error)console.warn('KYC profile:',p.error.message);
   const profile=p.data||{},wallet=w.data||{},rawStatus=String(profile.kyc_status||'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_'),status=['approved','verified','active','kyc_verified'].includes(rawStatus)?'approved':rawStatus;
@@ -181,9 +182,71 @@ if(typeof originalLoad==='function'){
   const card=$('memberCardNumber'),copy=$('copyCardNumber');
   if(status!=='approved'){if(card)card.textContent='KYC REQUIRED';if(copy)copy.hidden=true;}
   else if(copy)copy.hidden=false;
-  const fmt=(v,a)=>Number(v||0).toLocaleString(undefined,{maximumFractionDigits:8})+' '+a;
-  put('hwcBalance',fmt(wallet.balance_hwc,'HDC'));put('usdBalance',fmt(wallet.balance_usd,'USDT'));put('afnBalance',fmt(wallet.balance_afn,'AFN'));
-  put('walletHwcBalance',fmt(wallet.balance_hwc,'HDC'));put('walletUsdBalance',fmt(wallet.balance_usd,'USDT'));put('walletAfnBalance',fmt(wallet.balance_afn,'AFN'));
+  const fmt=(v,d)=>Number(v||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+  const rateMap={};(rateResult.data||[]).forEach(function(x){rateMap[x.quote_asset]=Number(x.rate)||0;});
+  const hwcAmount=Number(wallet.balance_hwc||0);
+  /* Card USD/AFN show the current HDC value, not the separate USDT/AFN wallet balances. */
+  put('hwcBalance',fmt(hwcAmount,4)+' HDC');
+  put('usdBalance','
+ };
+}
+const adminList=$('adminKycList');
+function statusBadge(s){return '<strong class="hwc-kyc-status-badge">'+(s==='approved'?'Approved':s==='rejected'?'Rejected':'Pending')+'</strong>';}
+function ensureHost(){if(!adminList)return null;let h=$('adminKycRecords');if(!h){h=document.createElement('div');h.id='adminKycRecords';h.className='admin-empty';adminList.appendChild(h);}return h;}
+async function loadKyc(category){
+ const host=ensureHost();if(!host)return;
+ const status=category==='requests'?'pending':category;window.currentAdminKycCategory=category;
+ host.innerHTML='<p>Loading…</p>';
+ const {data,error}=await hwcSupabase.from('kyc_applications').select('id,user_id,first_name,last_name,country,province,district,mobile_number,document_type,national_id_number,date_of_birth,passport_expiry_date,status,rejection_reason,created_at,front_document_path,back_document_path,selfie_document_path').eq('status',status).order('created_at',{ascending:false}).limit(40);
+ if(error){host.textContent=error.message;return;}
+ if(!data||!data.length){host.textContent='No KYC applications';return;}
+ const allRecords=[];let scanOffset=0;while(true){const page=await hwcSupabase.from('kyc_applications').select('id,user_id,first_name,last_name,country,province,district,mobile_number,document_type,national_id_number,date_of_birth,passport_expiry_date,status,created_at,front_document_path,back_document_path,selfie_document_path').range(scanOffset,scanOffset+999);if(page.error){host.textContent='د ورته اسنادو د پلټنې ستونزه: '+page.error.message;return;}allRecords.push(...(page.data||[]));if(!page.data||page.data.length<1000)break;scanOffset+=1000;}
+ const normalizeId=v=>String(v||'').normalize('NFKC').toLowerCase().replace(/[^a-z0-9\u0600-\u06ff]/g,'');
+ const records=await Promise.all(data.map(async x=>{
+  const paths=[{label:x.document_type==='Passport'?'Passport information page':'Tazkira front',path:x.front_document_path},{label:'Tazkira back',path:x.back_document_path},{label:'Selfie',path:x.selfie_document_path}].filter(p=>p.path);
+  const photos=await Promise.all(paths.map(async p=>{try{const r=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(p.path,600);return {label:p.label,url:r.error?'':r.data.signedUrl};}catch(e){return {label:p.label,url:''};}}));
+  const normalized=normalizeId(x.national_id_number);
+  const docType=String(x.document_type||'').toLowerCase().includes('passport')?'passport':'tazkira';
+  const duplicates=normalized?allRecords.filter(y=>y.user_id!==x.user_id&&normalizeId(y.national_id_number)===normalized&&(String(y.document_type||'').toLowerCase().includes('passport')?'passport':'tazkira')===docType):[];
+  const duplicateDetails=await Promise.all(duplicates.map(async d=>{const duplicatePaths=[{label:d.document_type==='Passport'?'Passport information page':'Tazkira front',path:d.front_document_path},{label:'Tazkira back',path:d.back_document_path},{label:'Selfie',path:d.selfie_document_path}].filter(p=>p.path);const duplicatePhotos=await Promise.all(duplicatePaths.map(async p=>{try{const signed=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(p.path,600);return {label:p.label,url:signed.error?'':signed.data.signedUrl};}catch(e){return {label:p.label,url:''};}}));return {...d,photos:duplicatePhotos};}));
+  return {record:x,photos,duplicates:duplicateDetails};
+ }));
+ host.innerHTML=records.map(({record:x,photos,duplicates})=>'<article class="hwc-kyc-admin-card"><strong>'+esc([x.first_name,x.last_name].filter(Boolean).join(' '))+'</strong> '+statusBadge(x.status)+(duplicates.length?'<div class="hwc-kyc-duplicate-alert" style="margin:12px 0;padding:12px;border:1px solid #ef4444;border-radius:10px;background:#3b111522;color:#ff7777"><b>⚠ ورته تذکره/پاسپورټ په بل حساب کې هم ثبت دی</b><p>د سند شمېره: '+esc(x.national_id_number)+'</p><b>موندل شوي حسابونه: '+duplicates.length+'</b>'+duplicates.map(d=>'<div style="padding:9px;margin-top:7px;border-top:1px solid #ef444455;color:var(--hwc-text,#fff)"><b>'+esc([d.first_name,d.last_name].filter(Boolean).join(' '))+'</b><br>د کاروونکي حساب ID: '+esc(d.user_id)+'<br>د غوښتنلیک ID: '+esc(d.id)+'<br>د سند ډول: '+esc(d.document_type)+'<br>د تذکرې ID / پاسپورټ نمبر: '+esc(d.national_id_number)+'<br>د زېږېدو نېټه: '+esc(d.date_of_birth||'—')+'<br>هېواد: '+esc(d.country||'—')+'<br>ولایت: '+esc(d.province||'—')+'<br>ولسوالۍ: '+esc(d.district||'—')+'<br>موبایل: '+esc(d.mobile_number||'—')+'<br>د پاسپورټ د ختمېدو نېټه: '+esc(d.passport_expiry_date||'—')+'<br>حالت: '+esc(d.status)+'<br>نېټه: '+esc(new Date(d.created_at).toLocaleString())+(d.photos&&d.photos.length?'<div class="hwc-kyc-admin-photos" style="margin-top:8px">'+d.photos.map(p=>'<div class="hwc-kyc-admin-photo"><b>'+esc(p.label)+'</b>'+(p.url?'<img src="'+esc(p.url)+'" alt="'+esc(p.label)+'" style="width:100%;max-height:160px;object-fit:contain">':'<div class="hwc-kyc-admin-photo-empty">انځور نه شو پرانیستل کېدای</div>')+'</div>').join('')+'</div>':'')+'</div>').join('')+'</div>':'<div style="margin:10px 0;padding:8px;border:1px solid #25a66b;border-radius:8px;color:#39b979">✓ د بل حساب سره د سند شمېره تکرار ونه موندل شو</div>')+'<table class="hwc-kyc-admin-table"><tbody>'+
+  [['د غوښتنلیک ID',x.id],['نوم',x.first_name],['تخلص',x.last_name],['د زېږېدو نېټه',x.date_of_birth||'—'],['هېواد',x.country],['ولایت',x.province],['ولسوالۍ',x.district||'—'],['اسناد ډول',x.document_type],[(x.document_type==='Passport'?'د پاسپورټ نمبر':'د تذکرې ID'),x.national_id_number],['موبایل',x.mobile_number||'—'],['د کاروونکي حساب ID',x.user_id],['د غوښتنې نېټه',new Date(x.created_at).toLocaleString()]].map(r=>'<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>').join('')+
+  '</tbody></table><div class="hwc-kyc-admin-photos" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">'+photos.map(p=>'<div class="hwc-kyc-admin-photo"><b>'+esc(p.label)+'</b>'+(p.url?'<img src="'+esc(p.url)+'" alt="'+esc(p.label)+'" style="width:100%;max-height:230px;object-fit:contain">':'<div class="hwc-kyc-admin-photo-empty">انځور نه شو پرانیستل کېدای</div>')+'</div>').join('')+'</div>'+
+  (x.status==='pending'?'<div class="hwc-kyc-admin-actions"><button data-kyc-review="approved" data-kyc-id="'+esc(x.id)+'" '+(duplicates.length?'disabled title="تکراري سند؛ لومړی یې وڅېړئ"':'')+'>تایید</button><button data-kyc-review="rejected" data-kyc-id="'+esc(x.id)+'">رد</button></div>':'')+'</article>').join('');
+}
+document.querySelectorAll('[data-kyc-category]').forEach(b=>b.addEventListener('click',()=>loadKyc(b.dataset.kycCategory).catch(e=>notify(e.message))));
+adminList?.addEventListener('click',async e=>{
+ const file=e.target.closest('[data-kyc-file]');if(file){try{const {data,error}=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(file.dataset.kycFile,120);if(error)throw error;window.open(data.signedUrl,'_blank','noopener');}catch(err){notify(err.message);}return;}
+ const review=e.target.closest('[data-kyc-review]');if(review){
+  let reason=null;
+  if(review.dataset.kycReview==='rejected'){reason=prompt('Write the rejection reason. This message will be sent to the member:')||'';if(!reason.trim())return notify('A rejection reason is required.');}
+  review.disabled=true;
+  try{
+   const {data,error}=await hwcSupabase.from('kyc_applications')
+    .update({status:review.dataset.kycReview,rejection_reason:reason})
+    .eq('id',review.dataset.kycId).select('id,status').single();
+   if(error)throw error;
+   if(!data)throw new Error('The review could not be confirmed.');
+   notify(review.dataset.kycReview==='approved'?'KYC approved. The member card is now activated.':'KYC rejected. The reason was sent to the member.');
+   await loadKyc(window.currentAdminKycCategory||'requests');
+   if(window.__HWC_USER)await window.loadHwcProfile(window.__HWC_USER);
+  }catch(err){console.error('HEWAD admin KYC review:',err);notify(err.message||'KYC review failed.');review.disabled=false;}
+ }
+});
+const nav=$('.admin-nav-btn');if(nav)nav.addEventListener('click',()=>{if(window.HEWAD_USER_ROLE==='admin')setTimeout(()=>{const v=$('adminKyc');if(v&&!v.hidden)loadKyc('requests');},0);});
+window.hwcLoadAdminKyc=loadKyc;
+if(window.hwcSessionRestorePromise)window.hwcSessionRestorePromise.then(()=>{if(window.__HWC_USER&&window.loadHwcProfile)window.loadHwcProfile(window.__HWC_USER).catch(e=>console.warn(e));});
+const cardChromeObserver=new MutationObserver(()=>{syncMemberCardChrome();applyAddCardVisibility();});
+['memberCountry','cardKycStatus'].forEach(id=>{const el=$(id);if(el)cardChromeObserver.observe(el,{childList:true,characterData:true,subtree:true});});
+syncMemberCardChrome();applyAddCardVisibility();
+})();
++fmt(hwcAmount*(rateMap.USD||0),2));
+  put('afnBalance',fmt(hwcAmount*(rateMap.AFN||0),2)+' AFN');
+  put('walletHwcBalance',fmt(wallet.balance_hwc,4)+' HDC');
+  put('walletUsdBalance',fmt(wallet.balance_usd,2)+' USDT');
+  put('walletAfnBalance',fmt(wallet.balance_afn,2)+' AFN');
  };
 }
 const adminList=$('adminKycList');
