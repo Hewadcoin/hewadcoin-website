@@ -239,9 +239,10 @@ function renderKycRecords(){
  if(selectedKycId&&!filtered.some(x=>String(x.record.id)===String(selectedKycId)))selectedKycId=null;
  if(!filtered.length){host.innerHTML='<div class="admin-empty"><strong>No matching KYC applications</strong><p>Try another name or Tazkira ID number.</p></div>';return;}
  if(!selectedKycId){
-  host.innerHTML='<div class="hwc-kyc-result-count">'+filtered.length+' application(s) found</div>'+filtered.map(({record:x})=>{
+  host.innerHTML='<div class="hwc-kyc-result-count">'+filtered.length+' application(s) found</div>'+filtered.map(({record:x,member})=>{
    const name=[x.first_name,x.last_name].filter(Boolean).join(' ')||'KYC Applicant';
-   return '<button type="button" class="hwc-kyc-result" data-kyc-open="'+esc(x.id)+'"><span class="hwc-kyc-result-copy"><strong>'+esc(name)+'</strong><small>ID: '+esc(x.national_id_number||'—')+' · '+esc(x.country||'—')+' · '+esc(x.province||'—')+'</small></span>'+statusBadge(x.status)+'<span class="hwc-kyc-result-arrow">›</span></button>';
+   const extra=member?[member.card_number,member.referral_code,member.email].filter(Boolean).join(' · '):'';
+   return '<button type="button" class="hwc-kyc-result" data-kyc-open="'+esc(x.id)+'"><span class="hwc-kyc-result-copy"><strong>'+esc(name)+'</strong><small>ID: '+esc(x.national_id_number||'—')+' · '+esc(x.country||'—')+' · '+esc(x.province||'—')+(extra?' · '+esc(extra):'')+'</small></span>'+statusBadge(x.status)+'<span class="hwc-kyc-result-arrow">›</span></button>';
   }).join('');
   return;
  }
