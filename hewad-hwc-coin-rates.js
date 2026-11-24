@@ -131,5 +131,7 @@ function start(){
 document.addEventListener('visibilitychange',function(){if(!document.hidden){loadRates().then(loadOwnBalance)}});
 window.addEventListener('focus',function(){loadRates().then(loadOwnBalance)});
 window.addEventListener('hwc:wallet-updated',loadOwnBalance);
+if(db.auth&&db.auth.onAuthStateChange){db.auth.onAuthStateChange(function(_event,session){if(session){loadRates().then(loadOwnBalance);setTimeout(addAdminEntry,300)}})}
+try{db.channel('hwc-coin-rate-live').on('postgres_changes',{event:'*',schema:'public',table:'hwc_coin_rates'},function(){loadRates().then(loadOwnBalance)}).subscribe()}catch(e){console.warn('HWC rate live updates unavailable:',e)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
