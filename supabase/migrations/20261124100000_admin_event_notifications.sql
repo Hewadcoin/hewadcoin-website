@@ -187,3 +187,86 @@ revoke all on function private.hwc_notify_kyc_status() from public, anon, authen
 revoke all on function private.hwc_notify_financial_request() from public, anon, authenticated;
 revoke all on function private.hwc_notify_wallet_activity() from public, anon, authenticated;
 revoke all on function private.hwc_notify_support_ticket() from public, anon, authenticated;
+
+
+-- Private, append-only notes attached to a member account.
+create table if not exists private.admin_user_notes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  admin_id uuid not null references auth.users(id),
+  note text not null check (char_length(btrim(note)) between 1 and 2000),
+  created_at timestamptz not null default now()
+);
+create index if not exists admin_user_notes_user_created_idx
+  on private.admin_user_notes(user_id, created_at desc);
+revoke all on private.admin_user_notes from public, anon, authenticated;
+
+create or replace function private.hwc_admin_get_user_notes(p_user_id uuid)
+returns table(id uuid, note text, admin_id uuid, created_at timestamptz)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null or not public.is_hewad_admin() then
+    raise exception 'Administrator access required.' using errcode='42501';
+  end if;
+  return query
+    select n.id, n.note, n.admin_id, n.created_at
+    from private.admin_user_notes n
+    where n.user_id = p_user_id
+    order by n.created_at desc
+    limit 100;
+end;
+$$;
+
+create or replace function private.hwc_admin_add_user_note(p_user_id uuid, p_note text)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_note text := nullif(btrim(coalesce(p_note, '')), '');
+  v_id uuid;
+begin
+  if auth.uid() is null or not public.is_hewad_admin() then
+    raise exception 'Administrator access required.' using errcode='42501';
+  end if;
+  if p_user_id is null or not exists(select 1 from public.profiles p where p.id=p_user_id) then
+    raise exception 'User not found.';
+  end if;
+  if v_note is null or char_length(v_note)>2000 then
+    raise exception 'Enter a note between 1 and 2000 characters.';
+  end if;
+  insert into private.admin_user_notes(user_id,admin_id,note)
+  values(p_user_id,auth.uid(),v_note)
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+create or replace function public.admin_get_user_notes(p_user_id uuid)
+returns table(id uuid, note text, admin_id uuid, created_at timestamptz)
+language sql
+set search_path = ''
+as $$
+  select * from private.hwc_admin_get_user_notes(p_user_id);
+$$;
+
+create or replace function public.admin_add_user_note(p_user_id uuid, p_note text)
+returns uuid
+language sql
+set search_path = ''
+as $$
+  select private.hwc_admin_add_user_note(p_user_id,p_note);
+$$;
+
+revoke all on function private.hwc_admin_get_user_notes(uuid) from public, anon;
+revoke all on function private.hwc_admin_add_user_note(uuid,text) from public, anon;
+grant execute on function private.hwc_admin_get_user_notes(uuid) to authenticated;
+grant execute on function private.hwc_admin_add_user_note(uuid,text) to authenticated;
+revoke all on function public.admin_get_user_notes(uuid) from public, anon;
+revoke all on function public.admin_add_user_note(uuid,text) from public, anon;
+grant execute on function public.admin_get_user_notes(uuid) to authenticated;
+grant execute on function public.admin_add_user_note(uuid,text) to authenticated;
