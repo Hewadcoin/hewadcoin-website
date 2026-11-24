@@ -1,15 +1,12 @@
-/* HEWAD COIN — four-section admin control panel preview.
-   This script is loaded only by the isolated preview branch.
-   Writes are blocked while hwc_preview=1 because the preview still uses the live DB. */
+/* HEWAD COIN — four-section production admin control panel. */
 (function(){
 'use strict';
-var $=function(id){return document.getElementById(id)},db=window.hwcSupabase;
-if(!db){console.error('HEWAD admin preview: Supabase client unavailable.');return;}
-var PREVIEW_MODE=false;
+var $=function(id){return document.getElementById(id)},db=hwcSupabase;
+if(!db){console.error('HEWAD admin panel: Supabase client unavailable.');return;}
 var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
 var fmt=function(v,d){d=d==null?2:d;return Number(v||0).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});};
 var say=function(m){if(typeof window.showNotice==='function')window.showNotice(m);else alert(m);};
-var me=function(){return window.hwcCurrentUser||null;};
+var me=function(){return hwcCurrentUser||null;};
 var isAdmin=function(){return window.HEWAD_USER_ROLE==='admin';};
 var panel=$('adminPanel');if(!panel){console.warn('HEWAD admin preview: adminPanel not found.');return;}
 var css=document.createElement('style');css.id='hwc-admin-four-style';
@@ -17,7 +14,6 @@ css.textContent='#adminHome .hwc-admin-grid{display:grid;grid-template-columns:1
 document.head.appendChild(css);
 function ensureView(id){var el=$(id);if(!el){el=document.createElement('section');el.id=id;el.className='admin-view hwc-admin-page';panel.appendChild(el);}el.classList.add('hwc-admin-page');return el;}
 var ratesView=ensureView('hwcAdminRates'),requestsView=ensureView('hwcAdminRequests');
-function previewNote(){return '';}
 function showView(id){['adminHome','adminUsers','adminKyc','adminKycList','adminNotifications','hwcAdminRates','hwcAdminRequests'].forEach(function(k){var el=$(k);if(el){el.hidden=k!==id;el.style.display=k===id?'block':'none';}});}
 function back(){return '<button type="button" class="hwc-admin-back" data-hwc-page="home">‹ Control Panel</button>';}
 function home(){if(!isAdmin())return;var el=$('adminHome');if(!el)return;el.innerHTML='<h2>Control Panel</h2><p class="hwc-muted">Manage members, verification, platform notices and exchange rates.</p>'+previewNote()+'<div class="hwc-admin-grid"><button class="hwc-admin-option" type="button" data-hwc-page="users"><span class="ico">♙</span><span><strong>User Management</strong><small>Member accounts, balances, KYC details and activity</small></span><span class="arrow">›</span></button><button class="hwc-admin-option" type="button" data-hwc-page="kyc"><span class="ico">▣</span><span><strong>KYC Status</strong><small>Open the existing KYC review system</small></span><span class="arrow">›</span></button><button class="hwc-admin-option" type="button" data-hwc-page="requests"><span class="ico">♧</span><span><strong>Notifications</strong><small>Deposit, withdrawal, KYC and support requests</small></span><span class="arrow">›</span></button><button class="hwc-admin-option" type="button" data-hwc-page="rates"><span class="ico">⇄</span><span><strong>Rate Control</strong><small>Set separate HDC rates for USD and AFN</small></span><span class="arrow">›</span></button></div>';showView('adminHome');}
