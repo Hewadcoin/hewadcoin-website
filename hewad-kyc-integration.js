@@ -270,7 +270,7 @@ async function loadKyc(category,searchTerm,searchType){
  const host=ensureHost();if(!host)return;
  selectedKycId=null;
  const status=category==='requests'?null:category;window.currentAdminKycCategory=category;
- const applyCategory=q=>status?q.eq('status',status):q.in('status',['pending','approved','rejected']);
+ const applyCategory=q=>q.eq('status',status||'pending');
  const title=$('adminKycListTitle');if(title)title.textContent=category==='requests'?'KYC Requests':category==='approved'?'KYC Approved':'KYC Rejected';
  host.innerHTML='<p>Loading KYC applications…</p>';
  const allStatusRows=[];let offset=0;
