@@ -194,9 +194,8 @@ if(typeof originalLoad==='function'){
   put('walletAfnBalance',fmt(wallet.balance_afn,2)+' AFN');
  };
 }
-const adminList=$('adminKycList');
 function statusBadge(s){return '<strong class="hwc-kyc-status-badge">'+(s==='approved'?'Approved':s==='rejected'?'Rejected':'Pending')+'</strong>';}
-function ensureHost(){if(!adminList)return null;let h=$('adminKycRecords');if(!h){h=document.createElement('div');h.id='adminKycRecords';h.className='admin-empty';adminList.appendChild(h);}return h;}
+function ensureHost(){const list=$('adminKycList');if(!list)return null;let h=$('adminKycRecords');if(!h){h=document.createElement('div');h.id='adminKycRecords';h.className='admin-empty';list.appendChild(h);}return h;}
 async function loadKyc(category){
  const host=ensureHost();if(!host)return;
  const status=category==='requests'?'pending':category;window.currentAdminKycCategory=category;
@@ -220,8 +219,10 @@ async function loadKyc(category){
   '</tbody></table><div class="hwc-kyc-admin-photos" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">'+photos.map(p=>'<div class="hwc-kyc-admin-photo"><b>'+esc(p.label)+'</b>'+(p.url?'<img src="'+esc(p.url)+'" alt="'+esc(p.label)+'" style="width:100%;max-height:230px;object-fit:contain">':'<div class="hwc-kyc-admin-photo-empty">انځور نه شو پرانیستل کېدای</div>')+'</div>').join('')+'</div>'+
   (x.status==='pending'?'<div class="hwc-kyc-admin-actions"><button data-kyc-review="approved" data-kyc-id="'+esc(x.id)+'" '+(duplicates.length?'disabled title="تکراري سند؛ لومړی یې وڅېړئ"':'')+'>تایید</button><button data-kyc-review="rejected" data-kyc-id="'+esc(x.id)+'">رد</button></div>':'')+'</article>').join('');
 }
-document.querySelectorAll('[data-kyc-category]').forEach(b=>b.addEventListener('click',()=>loadKyc(b.dataset.kycCategory).catch(e=>notify(e.message))));
-adminList?.addEventListener('click',async e=>{
+/* Delegated KYC tabs: also works when the admin panel is inserted after this script loads. */
+document.addEventListener('click',function(e){const b=e.target.closest('[data-kyc-category]');if(!b)return;e.preventDefault();e.stopPropagation();loadKyc(b.dataset.kycCategory).catch(err=>notify(err.message||'Could not load KYC applications.'));},true);
+document.addEventListener('click',async e=>{
+ if(!e.target.closest('#adminKycList'))return;
  const file=e.target.closest('[data-kyc-file]');if(file){try{const {data,error}=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(file.dataset.kycFile,120);if(error)throw error;window.open(data.signedUrl,'_blank','noopener');}catch(err){notify(err.message);}return;}
  const review=e.target.closest('[data-kyc-review]');if(review){
   let reason=null;
