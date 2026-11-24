@@ -12,11 +12,11 @@
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090c}#hewad-app{display:block;width:100%;height:100%;border:0;background:#08090c}</style>
 </head>
 <body>
-<iframe id="hewad-app" title="HEWAD COIN" src="hewad_coin_homepage_fullscreen.html?hwc_release=20261124-kyc-search-fields-2"></iframe>
+<iframe id="hewad-app" title="HEWAD COIN" src="hewad_coin_homepage_fullscreen.html?hwc_release=20261124-kyc-search-fields-3"></iframe>
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261124-kyc-search-fields-2';
+  var release='20261124-kyc-search-fields-3';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -27,7 +27,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261124-kyc-search-fields-2';
+        script.id=id;script.src=src+'?v=20261124-kyc-search-fields-3';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
