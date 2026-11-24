@@ -101,3 +101,18 @@ $$;
 
 revoke all on function public.admin_set_hwc_coin_rate(text,numeric) from public, anon;
 grant execute on function public.admin_set_hwc_coin_rate(text,numeric) to authenticated;
+
+-- Publish rate changes to connected clients so every open session refreshes its valuation.
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1 from pg_publication_tables
+       where pubname = 'supabase_realtime'
+         and schemaname = 'public'
+         and tablename = 'hwc_coin_rates'
+     ) then
+    alter publication supabase_realtime add table public.hwc_coin_rates;
+  end if;
+end;
+$$;
