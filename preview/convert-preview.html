@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08090c">
+<meta name="description" content="HEWAD COIN Convert page preview">
+<title>HEWAD COIN — Convert Preview</title>
+<style>
+:root{color-scheme:dark;--bg:#08090c;--panel:#111318;--panel2:#171a20;--line:#282c34;--muted:#8d95a3;--text:#f4f6f8;--gold:#e4b83f;--red:#ef626b;--green:#25c58a}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% -12%,#20232a 0,#0b0d11 48%,var(--bg) 78%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{padding:env(safe-area-inset-top) 16px calc(28px + env(safe-area-inset-bottom))}
+button,input{font:inherit}
+button{cursor:pointer}
+.shell{width:min(100%,920px);margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 0 22px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand-name{font-size:14px;font-weight:850;letter-spacing:2px;white-space:nowrap}
+.brand-sub{display:block;margin-top:3px;color:#9299a5;font-size:9px;letter-spacing:2.1px;font-weight:650}
+.back{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--line);border-radius:11px;background:#12151a;color:#cbd0d8;text-decoration:none;font-size:12px;font-weight:650}
+.preview-pill{padding:7px 10px;border:1px solid #675325;border-radius:999px;color:#e8c86f;background:#211b0e;font-size:10px;font-weight:750;letter-spacing:.6px;white-space:nowrap}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:8px 0 17px}
+.eyebrow{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+h1{margin:7px 0 4px;font-size:clamp(26px,5vw,35px);line-height:1.08;letter-spacing:-1.1px}
+.subtitle{margin:0;color:var(--muted);font-size:13px}
+.wallet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 16px}
+.wallet-card{position:relative;overflow:hidden;padding:17px 18px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#171a20,#101216 70%);box-shadow:0 12px 32px #0003}
+.wallet-card:after{content:"";position:absolute;width:120px;height:120px;right:-54px;top:-62px;border-radius:50%;background:#e4b83f0b;pointer-events:none}
+.wallet-head{display:flex;align-items:center;gap:9px;color:#aeb5c0;font-size:11px;font-weight:700}
+.asset-icon{display:grid;place-items:center;width:29px;height:29px;border-radius:50%;font-weight:900}
+.asset-icon.hdc{background:linear-gradient(145deg,#f6d77c,#a97714);color:#18130a;box-shadow:inset 1px 1px 2px #fff9,inset -2px -3px 5px #62420c}
+.asset-icon.usdt{background:#143c33;color:#3fe0ad;border:1px solid #1c705b}
+.balance{margin-top:12px;font-size:clamp(23px,4vw,29px);font-weight:780;letter-spacing:-.7px;font-variant-numeric:tabular-nums}
+.asset-code{margin-left:5px;color:#9ca4b0;font-size:11px;font-weight:700;letter-spacing:.3px}
+.card-caption{margin-top:5px;color:#78818e;font-size:10px}
+.convert-card{padding:clamp(16px,3vw,25px);border:1px solid #30343c;border-radius:21px;background:linear-gradient(155deg,#171a20,#101216 72%);box-shadow:0 20px 55px #0005}
+.convert-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.convert-head h2{margin:0;font-size:19px;letter-spacing:-.35px}
+.convert-head p{margin:5px 0 0;color:var(--muted);font-size:11px}
+.live-indicator{display:inline-flex;align-items:center;gap:6px;color:#aab3bf;font-size:10px;white-space:nowrap}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #25c58a88}
+.field-label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 8px;color:#aeb5c0;font-size:11px;font-weight:700}
+.available{color:#7e8794;font-size:10px;font-weight:550}
+.amount-panel{padding:14px 15px;border:1px solid #303640;border-radius:15px;background:#0c0f13;transition:border-color .18s,box-shadow .18s}
+.amount-panel:focus-within{border-color:#92742e;box-shadow:0 0 0 3px #d8ac3520}
+.asset-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.asset-select{display:flex;align-items:center;gap:9px;min-width:0}
+.asset-symbol{display:grid;place-items:center;width:31px;height:31px;border-radius:50%;font-size:13px;font-weight:900}
+.asset-symbol.hdc{color:#211908;background:linear-gradient(145deg,#f6d77c,#b07d1b);box-shadow:inset 1px 1px 2px #fff9,inset -2px -3px 5px #62420c}
+.asset-symbol.usdt{color:#5ae2b5;background:#153c33;border:1px solid #236a56}
+.asset-name{font-size:13px;font-weight:800;letter-spacing:.2px}
+.asset-full{display:block;margin-top:2px;color:#707987;font-size:9px;font-weight:550}
+.amount-line{display:flex;align-items:center;gap:10px;margin-top:13px}
+.amount-input{width:100%;min-width:0;padding:0;border:0;outline:0;background:transparent;color:#f4f6f8;font-size:clamp(25px,5vw,31px);font-weight:700;letter-spacing:-.8px;font-variant-numeric:tabular-nums}
+.amount-input::placeholder{color:#59616d}
+.max-btn{padding:7px 10px;border:1px solid #5b4b25;border-radius:8px;background:#211b0f;color:#e8c86f;font-size:10px;font-weight:850;letter-spacing:.7px}
+.switch-row{display:flex;justify-content:center;position:relative;height:42px;align-items:center}
+.switch-row:before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:#2a2e35}
+.switch-btn{z-index:1;display:grid;place-items:center;width:34px;height:34px;border:1px solid #4a4028;border-radius:11px;background:#1b1a16;color:#edc85f;font-size:19px;box-shadow:0 5px 14px #0006;transition:transform .2s}
+.switch-btn:hover{transform:rotate(180deg)}
+.output-amount{color:#e8edf3;font-size:clamp(25px,5vw,31px);font-weight:700;letter-spacing:-.8px;font-variant-numeric:tabular-nums}
+.details{margin-top:18px;padding:14px 2px 4px;border-top:1px solid #292e36}
+.detail-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:11px 0;font-size:11px}
+.detail-label{color:#9ca5b1}
+.detail-value{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.detail-value.red{color:var(--red)}
+.receive-box{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:15px 0 16px;padding:14px 15px;border:1px solid #1d4a3d;border-radius:13px;background:linear-gradient(100deg,#10231d,#111a18)}
+.receive-label{color:#9fb8ad;font-size:11px;font-weight:700}
+.receive-value{color:var(--green);font-size:clamp(19px,4vw,24px);font-weight:850;letter-spacing:-.4px;text-align:right;font-variant-numeric:tabular-nums}
+.convert-btn{width:100%;padding:15px 18px;border:0;border-radius:12px;background:linear-gradient(105deg,#e8c65f,#d9a92e);color:#18140a;font-size:13px;font-weight:900;letter-spacing:.3px;box-shadow:0 8px 20px #d6a92b22;transition:transform .18s,filter .18s}
+.convert-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.convert-btn:disabled{cursor:not-allowed;filter:grayscale(.5);opacity:.55;transform:none}
+.safe-note{display:flex;justify-content:center;align-items:center;gap:6px;margin:12px 0 0;color:#737d8b;font-size:9px;text-align:center}
+.history-card{margin-top:15px;padding:18px;border:1px solid var(--line);border-radius:17px;background:#111318}
+.history-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.history-head h3{margin:0;font-size:13px}
+.history-head span{color:#7e8794;font-size:10px}
+.history-empty{padding:23px 8px 10px;color:#77818e;font-size:11px;text-align:center}
+.history-icon{display:grid;place-items:center;width:34px;height:34px;margin:0 auto 9px;border:1px solid #343944;border-radius:50%;color:#9da5b0;font-size:16px}
+.history-item{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid #252a32;font-size:11px}
+.history-item small{display:block;margin-top:4px;color:#78818e;font-size:9px}
+.history-item strong{font-variant-numeric:tabular-nums}
+.notice{margin-top:14px;padding:11px 13px;border:1px solid #5b4b25;border-radius:11px;background:#211b0f;color:#d8c58d;font-size:10px;line-height:1.5}
+.status{margin:0 0 14px;padding:10px 12px;border:1px solid #303640;border-radius:11px;background:#11151a;color:#aab3bf;font-size:10px;line-height:1.5}
+.status.error{border-color:#6c3438;background:#251416;color:#f1a5a8}
+.status.good{border-color:#1d5944;background:#10221b;color:#8fe0bd}
+.modal-backdrop{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:18px;background:#000b;backdrop-filter:blur(7px)}
+.modal-backdrop.open{display:flex}
+.modal{width:min(100%,420px);padding:22px;border:1px solid #3b414c;border-radius:19px;background:linear-gradient(155deg,#1b1f26,#101318);box-shadow:0 25px 80px #000a}
+.modal h3{margin:0 0 6px;font-size:18px}
+.modal p{margin:0 0 17px;color:#929ba8;font-size:11px;line-height:1.5}
+.modal-line{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #2a3039;font-size:11px}
+.modal-line span{color:#9ba4b0}
+.modal-line strong{text-align:right;font-variant-numeric:tabular-nums}
+.modal-actions{display:flex;gap:9px;margin-top:19px}
+.modal-actions button{flex:1;padding:12px;border-radius:10px;font-size:11px;font-weight:800}
+.cancel-btn{border:1px solid #3a414c;background:#171b21;color:#c7cdd6}
+.confirm-btn{border:0;background:var(--gold);color:#191408}
+.coin-stage{display:grid;place-items:center;width:50px;height:50px;margin:0 auto 13px;perspective:600px}
+.coin-3d{position:relative;display:grid;place-items:center;width:48px;height:48px;border:2px solid #ffe69a;border-radius:50%;background:radial-gradient(circle at 30% 22%,#fff0ad 0,#e8bd50 25%,#a36c12 67%,#68420a 100%);color:#171108;font-size:28px;font-weight:950;text-shadow:0 1px 0 #fff8;box-shadow:inset 2px 2px 5px #fff9,inset -4px -5px 8px #3e270c,0 5px 12px #0008;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+.coin-3d:after{content:"";position:absolute;inset:4px;border:1px solid #fff7;border-radius:50%;transform:translateZ(3px)}
+.is-converting .coin-3d{transform:rotateY(720deg) rotateX(18deg) scale(1.06)}
+@media(max-width:560px){body{padding-left:12px;padding-right:12px}.topbar{padding-top:13px}.hero{align-items:flex-start}.wallet-grid{gap:9px}.wallet-card{padding:14px 13px;border-radius:14px}.convert-card{border-radius:17px}.preview-pill{font-size:9px;padding:6px 8px}.brand-name{font-size:12px}.back{font-size:10px;padding:8px 9px}}
+@media(max-width:360px){.wallet-grid{grid-template-columns:1fr}.hero{display:block}.preview-pill{display:inline-block;margin-top:12px}.detail-row{font-size:10px}}
+</style>
+</head>
+<body>
+<div class="shell" id="convertApp">
+  <header class="topbar">
+    <a class="back" href="../index.html" aria-label="Back to HEWAD COIN dashboard">← <span>Dashboard</span></a>
+    <div class="brand">
+      <div class="coin-stage" style="width:38px;height:38px;margin:0"><div class="coin-3d" style="width:36px;height:36px;font-size:21px">H</div></div>
+      <div><div class="brand-name">HEWAD COIN</div><span class="brand-sub">DIGITAL ASSET PLATFORM</span></div>
+    </div>
+    <span class="preview-pill">PREVIEW</span>
+  </header>
+
+  <section class="hero">
+    <div><div class="eyebrow">Wallet exchange</div><h1>Convert</h1><p class="subtitle">Convert your assets instantly</p></div>
+  </section>
+
+  <div id="connectionStatus" class="status">Connecting securely to your HEWAD COIN wallet…</div>
+
+  <section aria-label="Wallet overview">
+    <div class="wallet-grid">
+      <article class="wallet-card">
+        <div class="wallet-head"><span class="asset-icon hdc">H</span> HDC Balance</div>
+        <div class="balance"><span id="walletHdc">—</span><span class="asset-code">HDC</span></div>
+        <div class="card-caption">HEWAD COIN</div>
+      </article>
+      <article class="wallet-card">
+        <div class="wallet-head"><span class="asset-icon usdt">₮</span> USDT Balance</div>
+        <div class="balance"><span id="walletUsdt">—</span><span class="asset-code">USDT</span></div>
+        <div class="card-caption">Tether USD</div>
+      </article>
+    </div>
+  </section>
+
+  <main class="convert-card">
+    <div class="convert-head">
+      <div><h2>Convert assets</h2><p>Review the rate and fee before confirming</p></div>
+      <span class="live-indicator"><i class="live-dot"></i> Wallet-linked</span>
+    </div>
+
+    <div class="field-label"><span>From</span><span class="available">Available: <b id="fromAvailable">—</b> <b id="fromAvailableCode">HDC</b></span></div>
+    <div class="amount-panel">
+      <div class="asset-row"><div class="asset-select"><span class="asset-symbol hdc" id="fromSymbol">H</span><div><div class="asset-name" id="fromAsset">HDC</div><span class="asset-full" id="fromFull">HEWAD COIN</span></div></div></div>
+      <div class="amount-line"><input id="amountInput" class="amount-input" type="number" inputmode="decimal" min="0" step="0.00000001" placeholder="0.00" autocomplete="off" aria-label="Amount to convert"><button class="max-btn" id="maxBtn" type="button">MAX</button></div>
+    </div>
+
+    <div class="switch-row"><button class="switch-btn" id="switchBtn" type="button" aria-label="Switch conversion direction" title="Switch direction">↕</button></div>
+
+    <div class="field-label"><span>To</span><span class="available">Available: <b id="toAvailable">—</b> <b id="toAvailableCode">USDT</b></span></div>
+    <div class="amount-panel">
+      <div class="asset-row"><div class="asset-select"><span class="asset-symbol usdt" id="toSymbol">₮</span><div><div class="asset-name" id="toAsset">USDT</div><span class="asset-full" id="toFull">Tether USD</span></div></div></div>
+      <div class="amount-line"><div class="output-amount" id="outputAmount">0.000000</div></div>
+    </div>
+
+    <div class="details">
+      <div class="detail-row"><span class="detail-label">Exchange Rate</span><strong class="detail-value red" id="exchangeRate">1 HDC = 0.000583 USDT</strong></div>
+      <div class="detail-row"><span class="detail-label">Fee (1%)</span><strong class="detail-value red" id="feeValue">0.00 HDC</strong></div>
+    </div>
+
+    <div class="receive-box"><span class="receive-label">You Receive</span><strong class="receive-value" id="receiveValue">0.000000 USDT</strong></div>
+    <button class="convert-btn" id="convertBtn" type="button">Convert Now</button>
+    <div class="safe-note">⌑ <span>Review the details carefully before confirming</span></div>
+  </main>
+
+  <section class="history-card" aria-label="Conversion history">
+    <div class="history-head"><h3>Conversion History</h3><span>Recent activity</span></div>
+    <div id="historyList" class="history-empty"><div class="history-icon">↔</div>No conversion records yet</div>
+  </section>
+
+  <div class="notice">Preview environment: this page displays your wallet balances and demonstrates the conversion interface. No funds are moved and no transaction is submitted from this preview.</div>
+</div>
+
+<div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="coin-stage"><div class="coin-3d">H</div></div>
+    <h3 id="modalTitle" style="text-align:center">Confirm conversion</h3>
+    <p style="text-align:center">Please review your conversion details. This is a preview only.</p>
+    <div class="modal-line"><span>You Convert</span><strong id="modalFrom">—</strong></div>
+    <div class="modal-line"><span>Fee (1%)</span><strong id="modalFee">—</strong></div>
+    <div class="modal-line"><span>Exchange Rate</span><strong id="modalRate">—</strong></div>
+    <div class="modal-line"><span>You Receive</span><strong id="modalReceive" style="color:var(--green)">—</strong></div>
+    <div class="modal-actions"><button class="cancel-btn" id="cancelModal" type="button">Cancel</button><button class="confirm-btn" id="confirmPreview" type="button">Confirm Preview</button></div>
+  </div>
+</div>
+
+<iframe id="hwc-auth-bridge" title="HEWAD wallet session bridge" aria-hidden="true" tabindex="-1" src="../index.html" style="position:fixed;left:-5px;bottom:-5px;width:2px;height:2px;opacity:0;pointer-events:none;border:0"></iframe>
+
+<script>
+(function(){
+  'use strict';
+  var rate=0.000583, direction='HDC', available={HDC:0,USDT:0}, total={HDC:0,USDT:0}, walletLoaded=false;
+  var $=function(id){return document.getElementById(id);};
+  var fmt=function(value,decimals){return Number(value||0).toLocaleString(undefined,{minimumFractionDigits:decimals,maximumFractionDigits:decimals});};
+  var clean=function(value){return Number.isFinite(Number(value))?Number(value):0;};
+  var fromCode=function(){return direction;};
+  var toCode=function(){return direction==='HDC'?'USDT':'HDC';};
+  var fromAmount=function(){return Math.max(0,clean($('amountInput').value));};
+  var currentFee=function(){return fromAmount()*0.01;};
+  var currentReceive=function(){var net=Math.max(0,fromAmount()-currentFee());return direction==='HDC'?net*rate:net/rate;};
+  function setStatus(message,type){var el=$('connectionStatus');el.textContent=message;el.className='status'+(type?' '+type:'');}
+  function assetMeta(code){return code==='HDC'?{symbol:'H',full:'HEWAD COIN'}:{symbol:'₮',full:'Tether USD'};}
+  function updateDirection(){
+    var from=fromCode(),to=toCode(),fm=assetMeta(from),tm=assetMeta(to);
+    $('fromAsset').textContent=from;$('fromFull').textContent=fm.full;$('fromSymbol').textContent=fm.symbol;$('fromSymbol').className='asset-symbol '+from.toLowerCase();
+    $('toAsset').textContent=to;$('toFull').textContent=tm.full;$('toSymbol').textContent=tm.symbol;$('toSymbol').className='asset-symbol '+to.toLowerCase();
+    $('fromAvailableCode').textContent=from;$('toAvailableCode').textContent=to;
+    $('fromAvailable').textContent=walletLoaded?fmt(available[from],from==='HDC'?4:2):'—';
+    $('toAvailable').textContent=walletLoaded?fmt(available[to],to==='HDC'?4:2):'—';
+    $('exchangeRate').textContent=from==='HDC'?'1 HDC = '+rate.toFixed(6)+' USDT':'1 USDT = '+(1/rate).toFixed(4)+' HDC';
+    $('feeValue').textContent=fmt(currentFee(),from==='HDC'?4:6)+' '+from;
+    $('outputAmount').textContent=fmt(currentReceive(),to==='HDC'?4:6);
+    $('receiveValue').textContent=fmt(currentReceive(),to==='HDC'?4:6)+' '+to;
+    $('maxBtn').disabled=!walletLoaded||available[from]<=0;
+    $('convertBtn').disabled=!walletLoaded;
+  }
+  function render(){
+    $('walletHdc').textContent=walletLoaded?fmt(total.HDC,4):'—';
+    $('walletUsdt').textContent=walletLoaded?fmt(total.USDT,2):'—';
+    updateDirection();
+  }
+  function refreshCalculations(){updateDirection();}
+  $('amountInput').addEventListener('input',refreshCalculations);
+  $('maxBtn').addEventListener('click',function(){$('amountInput').value=available[fromCode()]||'';refreshCalculations();});
+  $('switchBtn').addEventListener('click',function(){direction=direction==='HDC'?'USDT':'HDC';$('amountInput').value='';updateDirection();});
+  function startLogoMotion(){document.body.classList.add('is-converting');window.setTimeout(function(){document.body.classList.remove('is-converting');},1250);}
+  $('convertBtn').addEventListener('click',function(){
+    var amount=fromAmount(),from=fromCode(),to=toCode();
+    if(!walletLoaded){setStatus('Sign in to the main HEWAD COIN website to load your wallet balance.','error');return;}
+    if(!(amount>0)){setStatus('Enter an amount greater than zero.','error');return;}
+    if(amount>available[from]){setStatus('The entered amount is greater than your available '+from+' balance.','error');return;}
+    if(!(currentReceive()>0)){setStatus('The amount is too small after the 1% fee.','error');return;}
+    $('modalFrom').textContent=fmt(amount,from==='HDC'?4:6)+' '+from;
+    $('modalFee').textContent=fmt(currentFee(),from==='HDC'?4:6)+' '+from;
+    $('modalRate').textContent=$('exchangeRate').textContent;
+    $('modalReceive').textContent=$('receiveValue').textContent;
+    $('confirmModal').classList.add('open');startLogoMotion();
+  });
+  function closeModal(){$('confirmModal').classList.remove('open');}
+  $('cancelModal').addEventListener('click',closeModal);
+  $('confirmModal').addEventListener('click',function(event){if(event.target===$('confirmModal'))closeModal();});
+  $('confirmPreview').addEventListener('click',function(){
+    closeModal();startLogoMotion();setStatus('Preview confirmed. No funds were moved and no transaction was submitted.','good');
+  });
+  function showHistory(rows){
+    var root=$('historyList');
+    if(!rows||!rows.length){root.innerHTML='<div class="history-icon">↔</div>No conversion records yet';return;}
+    root.className='';root.innerHTML='';
+    rows.forEach(function(row){
+      var item=document.createElement('div');item.className='history-item';
+      var left=document.createElement('div'),right=document.createElement('strong');
+      left.textContent=(row.description||'Asset conversion');
+      var small=document.createElement('small');small.textContent=new Date(row.created_at).toLocaleString();left.appendChild(small);
+      right.textContent=fmt(Math.abs(clean(row.amount)),6)+' '+(row.asset||'');
+      item.appendChild(left);item.appendChild(right);root.appendChild(item);
+    });
+  }
+  async function connectWallet(){
+    var frame=$('hwc-auth-bridge');
+    try{
+      await new Promise(function(resolve,reject){
+        if(frame.contentDocument&&frame.contentDocument.readyState==='complete'){resolve();return;}
+        frame.addEventListener('load',resolve,{once:true});
+        frame.addEventListener('error',reject,{once:true});
+        window.setTimeout(function(){reject(new Error('Wallet bridge timed out'));},18000);
+      });
+      var win=frame.contentWindow,db=null;
+      try{db=win.eval('typeof hwcSupabase !== "undefined" ? hwcSupabase : window.hwcSupabase');}catch(e){}
+      if(!db||!db.auth){throw new Error('Wallet session could not be accessed.');}
+      var auth=await db.auth.getUser();
+      if(auth.error||!auth.data||!auth.data.user){throw new Error('Please sign in to the main HEWAD COIN website first, then reopen this preview.');}
+      var user=auth.data.user;
+      var walletResult=await db.from('wallets').select('balance_hwc,balance_usd,reserved_hwc,staked_hwc,reserved_usd,staked_usd').eq('user_id',user.id).maybeSingle();
+      if(walletResult.error){
+        walletResult=await db.from('wallets').select('balance_hwc,balance_usd').eq('user_id',user.id).maybeSingle();
+      }
+      if(walletResult.error)throw walletResult.error;
+      var w=walletResult.data||{};
+      total.HDC=clean(w.balance_hwc);total.USDT=clean(w.balance_usd);
+      available.HDC=Math.max(0,total.HDC-clean(w.reserved_hwc)-clean(w.staked_hwc));
+      available.USDT=Math.max(0,total.USDT-clean(w.reserved_usd)-clean(w.staked_usd));
+      var rateResult=await db.from('exchange_rates').select('rate').eq('base_asset','HDC').eq('quote_asset','USD').eq('active',true).maybeSingle();
+      if(!rateResult.error&&rateResult.data&&clean(rateResult.data.rate)>0)rate=clean(rateResult.data.rate);
+      walletLoaded=true;render();
+      setStatus('Your wallet balances are connected securely. Conversion is in preview mode only.','good');
+      try{
+        var history=await db.from('wallet_transactions').select('asset,amount,description,created_at').eq('user_id',user.id).ilike('description','%convert%').order('created_at',{ascending:false}).limit(8);
+        if(!history.error&&history.data&&history.data.length)showHistory(history.data);
+      }catch(e){}
+    }catch(error){
+      walletLoaded=false;render();
+      setStatus(error&&error.message?error.message:'Unable to load your wallet. Open the main website and sign in first.','error');
+    }
+  }
+  render();
+  connectWallet();
+})();
+</script>
+</body>
+</html>
