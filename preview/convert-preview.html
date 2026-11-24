@@ -286,8 +286,10 @@ $('confirmPreview').addEventListener('click',async function(){
   closeModal();motion();
   setStatus('Conversion completed. '+fmt(receipt.net_input,f==='HDC'?4:2)+' '+f+' converted; '+fmt(receipt.received,t==='HDC'?4:2)+' '+t+' credited. Fee: '+fmt(receipt.fee,f==='HDC'?4:2)+' '+f+'.','good');
   $('amountInput').value='';
-  await refreshWallet();await loadHistory();
-  try{if(host&&typeof host.loadHwcProfile==='function')await host.loadHwcProfile(currentUser);}catch(e){console.warn('Dashboard card refresh:',e);}
+  var refreshFailed=false;
+  try{await refreshWallet();await loadHistory();}catch(refreshError){refreshFailed=true;console.warn('Wallet refresh after completed conversion:',refreshError);}
+  try{if(host&&typeof host.loadHwcProfile==='function')await host.loadHwcProfile(currentUser);}catch(cardError){refreshFailed=true;console.warn('Dashboard card refresh:',cardError);}
+  if(refreshFailed)setStatus('Conversion completed successfully, but the displayed balances could not refresh. Reopen Dashboard to load the updated balances.','good');
  }catch(e){setStatus(e&&e.message?e.message:'Conversion failed. No success was reported by the wallet service.','error');}
  finally{converting=false;$('confirmPreview').disabled=false;$('confirmPreview').textContent='Confirm Conversion';render();}
 });
