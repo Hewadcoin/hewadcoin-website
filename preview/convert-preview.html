@@ -153,7 +153,7 @@ h1{margin:7px 0 4px;font-size:clamp(26px,5vw,35px);line-height:1.08;letter-spaci
 
     <div class="field-label"><span>To</span><span class="available">Available: <b id="toAvailable">—</b> <b id="toAvailableCode">USD</b></span></div>
     <div class="amount-panel">
-      <div class="asset-row"><div class="asset-select"><span class="asset-symbol usd" id="toSymbol">$</span><div><div class="asset-name" id="toAsset">USD</div><span class="asset-full" id="toFull">US Dollar</span></div></div></div>
+      <div class="asset-row"><div class="asset-select"><span class="asset-symbol usd" id="toSymbol">$</span><div><div class="asset-name" id="toAsset">USD</div><span class="asset-full" id="toFull">Tether USD</span></div></div></div>
       <div class="amount-line"><div class="output-amount" id="outputAmount">0.000000</div></div>
     </div>
 
@@ -203,112 +203,7 @@ var fromAmount=function(){return Math.max(0,clean($('amountInput').value));};
 var currentFee=function(){return round8(fromAmount()*0.01);};
 var currentReceive=function(){var net=round8(fromAmount()-currentFee());return net>0&&rateHdcUsd>0?round8(direction==='HDC'?net*rateHdcUsd:net/rateHdcUsd):0;};
 function setStatus(m,t){var e=$('connectionStatus');e.textContent=m;e.className='status'+(t?' '+t:'');}
-function meta(c){return c==='HDC'?{symbol:'H',full:'HEWAD COIN'}:{symbol:',full:'US Dollar wallet balance'};}
-function updateDirection(){
- var f=fromCode(),t=toCode(),fm=meta(f),tm=meta(t);
- $('fromAsset').textContent=f;$('fromFull').textContent=fm.full;$('fromSymbol').textContent=fm.symbol;$('fromSymbol').className='asset-symbol '+f.toLowerCase();
- $('toAsset').textContent=t;$('toFull').textContent=tm.full;$('toSymbol').textContent=tm.symbol;$('toSymbol').className='asset-symbol '+t.toLowerCase();
- $('fromAvailableCode').textContent=f;$('toAvailableCode').textContent=t;
- $('fromAvailable').textContent=walletLoaded?fmt(available[f],f==='HDC'?4:2):'—';
- $('toAvailable').textContent=walletLoaded?fmt(available[t],t==='HDC'?4:2):'—';
- $('exchangeRate').textContent=rateHdcUsd>0?(f==='HDC'?'1 HDC = $'+rateHdcUsd.toFixed(6):'1 USD = '+(1/rateHdcUsd).toFixed(4)+' HDC'):'Rate unavailable';
- $('feeValue').textContent=fmt(currentFee(),f==='HDC'?4:2)+' '+f;
- $('outputAmount').textContent=fmt(currentReceive(),t==='HDC'?4:2);
- $('receiveValue').textContent=fmt(currentReceive(),t==='HDC'?4:2)+' '+t;
- $('maxBtn').disabled=!walletLoaded||available[f]<=0||converting;
- $('convertBtn').disabled=!walletLoaded||!(rateHdcUsd>0)||converting;
-}
-function render(){$('walletHdc').textContent=walletLoaded?fmt(total.HDC,4):'—';$('walletUsdt').textContent=walletLoaded?fmt(total.USD,2):'—';updateDirection();}
-$('amountInput').addEventListener('input',updateDirection);
-$('maxBtn').addEventListener('click',function(){$('amountInput').value=available[fromCode()]||'';updateDirection();});
-$('switchBtn').addEventListener('click',function(){direction=direction==='HDC'?'USD':'HDC';$('amountInput').value='';updateDirection();});
-function motion(){document.body.classList.add('is-converting');window.setTimeout(function(){document.body.classList.remove('is-converting');},1250);}
-function closeModal(){$('confirmModal').classList.remove('open');}
-$('convertBtn').addEventListener('click',function(){
- var amount=fromAmount(),f=fromCode();
- if(!walletLoaded){setStatus('Your real wallet is not connected. Sign in and reopen Convert.','error');return;}
- if(!(rateHdcUsd>0)){setStatus('The administrator has not configured an active conversion rate.','error');return;}
- if(!(amount>0)){setStatus('Enter an amount greater than zero.','error');return;}
- if(amount>available[f]){setStatus('The entered amount is greater than your available '+f+' wallet balance.','error');return;}
- if(!(currentReceive()>0)){setStatus('The amount is too small after the 1% fee.','error');return;}
- $('modalFrom').textContent=fmt(amount,f==='HDC'?4:2)+' '+f;
- $('modalFee').textContent=fmt(currentFee(),f==='HDC'?4:2)+' '+f;
- $('modalRate').textContent=$('exchangeRate').textContent;$('modalReceive').textContent=$('receiveValue').textContent;
- $('confirmPreview').disabled=false;$('confirmPreview').textContent='Confirm Conversion';
- $('confirmModal').classList.add('open');motion();
-});
-$('cancelModal').addEventListener('click',closeModal);
-$('confirmModal').addEventListener('click',function(e){if(e.target===$('confirmModal'))closeModal();});
-async function refreshWallet(){
- var r=await db.from('wallets').select('balance_hwc,balance_usd,reserved_hwc,staked_hwc,reserved_usd,staked_usd').eq('user_id',currentUser.id).maybeSingle();
- if(r.error)throw r.error;
- var w=r.data||{};
- total.HDC=clean(w.balance_hwc);total.USD=clean(w.balance_usd);
- available.HDC=Math.max(0,total.HDC-clean(w.reserved_hwc)-clean(w.staked_hwc));
- available.USD=Math.max(0,total.USD-clean(w.reserved_usd)-clean(w.staked_usd));
- walletLoaded=true;render();
-}
-function showHistory(rows){
- var root=$('historyList');
- if(!rows||!rows.length){root.className='history-empty';root.innerHTML='<div class="history-icon">↔</div>No conversion records yet';return;}
- var groups={};
- rows.forEach(function(row){
-  var k=row.reference||row.id;if(!groups[k])groups[k]={created_at:row.created_at,fromAsset:null,toAsset:null,spent:0,received:0,fee:0};
-  var g=groups[k];
-  if(row.transaction_type==='debit'){g.fromAsset=row.asset;g.spent+=Math.abs(clean(row.amount));if(String(row.description||'').toLowerCase().indexOf('fee')!==-1)g.fee+=Math.abs(clean(row.amount));}
-  if(row.transaction_type==='credit'){g.toAsset=row.asset;g.received+=clean(row.amount);}
- });
- root.className='';root.innerHTML='';
- Object.keys(groups).forEach(function(k){
-  var g=groups[k],item=document.createElement('div');item.className='history-item';
-  var left=document.createElement('div'),right=document.createElement('strong');
-  left.textContent=(g.fromAsset||'Asset')+' → '+(g.toAsset||'Asset');
-  var small=document.createElement('small');small.textContent=fmt(g.spent,6)+' '+(g.fromAsset||'')+' · Fee '+fmt(g.fee,6)+' · '+new Date(g.created_at).toLocaleString();
-  left.appendChild(small);right.textContent='+'+fmt(g.received,6)+' '+(g.toAsset||'');
-  item.appendChild(left);item.appendChild(right);root.appendChild(item);
- });
-}
-async function loadHistory(){
- var r=await db.from('wallet_transactions').select('id,asset,amount,transaction_type,description,reference,created_at')
-  .eq('user_id',currentUser.id).ilike('description','%Asset conversion%').order('created_at',{ascending:false}).limit(36);
- if(r.error)throw r.error;showHistory(r.data||[]);
-}
-$('confirmPreview').addEventListener('click',async function(){
- if(converting)return;
- var amount=fromAmount(),f=fromCode(),t=toCode();
- if(!walletLoaded||!currentUser||!db){setStatus('Your authenticated wallet session is unavailable.','error');closeModal();return;}
- if(!(amount>0)||amount>available[f]){closeModal();setStatus('The amount is no longer available. Refresh your wallet and try again.','error');return;}
- converting=true;$('confirmPreview').disabled=true;$('confirmPreview').textContent='Processing…';$('convertBtn').disabled=true;
- try{
-  var r=await db.rpc('hwc_convert_assets',{p_base_asset:dbCode(f),p_quote_asset:dbCode(t),p_amount:amount});
-  if(r.error)throw r.error;
-  var receipt=r.data||{};if(receipt.success!==true)throw new Error('The wallet service did not confirm this conversion.');
-  closeModal();motion();
-  setStatus('Conversion completed. '+fmt(receipt.net_input,f==='HDC'?4:2)+' '+f+' converted; '+fmt(receipt.received,t==='HDC'?4:2)+' '+t+' credited. Fee: '+fmt(receipt.fee,f==='HDC'?4:2)+' '+f+'.','good');
-  $('amountInput').value='';
-  await refreshWallet();await loadHistory();
-  try{if(host&&typeof host.loadHwcProfile==='function')await host.loadHwcProfile(currentUser);}catch(e){console.warn('Dashboard card refresh:',e);}
- }catch(e){setStatus(e&&e.message?e.message:'Conversion failed. No success was reported by the wallet service.','error');}
- finally{converting=false;$('confirmPreview').disabled=false;$('confirmPreview').textContent='Confirm Conversion';render();}
-});
-async function connectWallet(){
- try{
-  host=window.parent;db=host&&(host.__HWC_CONVERT_DB__||host.hwcSupabase);
-  if(!db||!db.auth)throw new Error('Open Convert from the signed-in HEWAD COIN Dashboard to connect your wallet.');
-  var auth=await db.auth.getUser();if(auth.error||!auth.data||!auth.data.user)throw new Error('Please sign in to your HEWAD COIN account first.');
-  currentUser=auth.data.user;
-  var rr=await db.from('exchange_rates').select('rate').eq('base_asset','HDC').eq('quote_asset','USD').eq('active',true).maybeSingle();
-  if(rr.error)throw rr.error;rateHdcUsd=clean(rr.data&&rr.data.rate);
-  if(!(rateHdcUsd>0))throw new Error('The administrator has not configured an active HDC/USD conversion rate.');
-  await refreshWallet();await loadHistory();
-  setStatus('Connected to your real HEWAD COIN wallet. Confirming a conversion will update your actual balances.','good');
- }catch(e){walletLoaded=false;rateHdcUsd=0;render();setStatus(e&&e.message?e.message:'Could not securely connect to your wallet.','error');}
-}
-render();connectWallet();
-})();
-</script>
-</body>
-</html>,full:'US Dollar wallet balance'};}
+function meta(c){return c==='HDC'?{symbol:'H',full:'HEWAD COIN'}:{symbol:'$',full:'US Dollar wallet balance'};}
 function updateDirection(){
  var f=fromCode(),t=toCode(),fm=meta(f),tm=meta(t);
  $('fromAsset').textContent=f;$('fromFull').textContent=fm.full;$('fromSymbol').textContent=fm.symbol;$('fromSymbol').className='asset-symbol '+f.toLowerCase();
