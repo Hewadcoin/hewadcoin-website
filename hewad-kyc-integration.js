@@ -284,7 +284,7 @@ async function loadKyc(category){
  renderKycRecords();
 }
 /* Delegated KYC tabs: also works when the admin panel is inserted after this script loads. */
-document.addEventListener('click',function(e){const b=e.target.closest('[data-kyc-category]');if(!b)return;loadKyc(b.dataset.kycCategory).catch(err=>notify(err.message||'Could not load KYC applications.'));},true);
+document.addEventListener('click',function(e){const back=e.target.closest('[data-admin-kyc-back]');if(back){const list=$('adminKycList'),menu=$('adminKyc');if(list){list.hidden=true;list.style.display='none';}if(menu){menu.hidden=false;menu.style.display='block';}return;}const b=e.target.closest('[data-kyc-category]');if(!b)return;const menu=$('adminKyc'),list=$('adminKycList');if(menu){menu.hidden=true;menu.style.display='none';}if(list){list.hidden=false;list.style.display='block';}loadKyc(b.dataset.kycCategory).catch(err=>notify(err.message||'Could not load KYC applications.'));},true);
 document.addEventListener('click',async e=>{
  if(!e.target.closest('#adminKycList'))return;
  const file=e.target.closest('[data-kyc-file]');if(file){try{const {data,error}=await hwcSupabase.storage.from('kyc-documents').createSignedUrl(file.dataset.kycFile,120);if(error)throw error;window.open(data.signedUrl,'_blank','noopener');}catch(err){notify(err.message);}return;}
