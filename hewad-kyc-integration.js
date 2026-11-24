@@ -221,17 +221,18 @@ function ensureHost(){
  let search=$('hwcKycSearch');
  if(!search){
   const wrap=document.createElement('div');wrap.className='hwc-kyc-search';
-  wrap.innerHTML='<label for="hwcKycSearch">Search by name or Tazkira ID</label><div><input id="hwcKycSearch" type="search" placeholder="Enter full name or ID number"><button type="button" id="hwcKycSearchClear">Clear</button></div>';
+  wrap.innerHTML='<label for="hwcKycSearch">Search by full name, Tazkira / Passport ID, card number, referral code or email</label><div><input id="hwcKycSearch" type="search" autocomplete="off" placeholder="Name · ID · Card · Referral · Email"><button type="button" id="hwcKycSearchClear">Clear</button></div>';
   const title=$('adminKycListTitle');if(title&&title.parentNode)title.parentNode.insertBefore(wrap,title.nextSibling);else list.appendChild(wrap);
   search=$('hwcKycSearch');
-  search.addEventListener('input',function(){selectedKycId=null;renderKycRecords();});
-  wrap.querySelector('#hwcKycSearchClear').addEventListener('click',()=>{search.value='';renderKycRecords();});
+  search.addEventListener('input',function(){selectedKycId=null;clearTimeout(kycSearchTimer);kycSearchTimer=setTimeout(()=>loadKyc(window.currentAdminKycCategory||'requests',search.value).catch(err=>notify(err.message||'KYC search failed.')),350);});
+  wrap.querySelector('#hwcKycSearchClear').addEventListener('click',()=>{search.value='';selectedKycId=null;clearTimeout(kycSearchTimer);loadKyc(window.currentAdminKycCategory||'requests','').catch(err=>notify(err.message||'Could not load KYC applications.'));});
  }
  let h=$('adminKycRecords');if(!h){h=document.createElement('div');h.id='adminKycRecords';h.className='admin-empty';list.appendChild(h);}
  return h;
 }
 function normalizeKycSearch(v){return String(v||'').normalize('NFKC').toLowerCase().replace(/[^a-z0-9\u0600-\u06ff]/g,'');}
 let selectedKycId=null;
+let kycSearchTimer=null;
 function renderKycRecords(){
  const host=$('adminKycRecords'),input=$('hwcKycSearch');if(!host)return;
  const all=window.__HWC_KYC_RECORDS||[],q=normalizeKycSearch(input&&input.value);
@@ -249,21 +250,49 @@ function renderKycRecords(){
  const selected=filtered.find(x=>String(x.record.id)===String(selectedKycId));
  if(!selected){selectedKycId=null;renderKycRecords();return;}
  const x=selected.record,photos=selected.photos||[],duplicates=selected.duplicates||[];
- const rows=[['Application ID',x.id],['First name',x.first_name],['Last name',x.last_name],['Tazkira / Passport ID',x.national_id_number],['Document type',x.document_type],['Country',x.country],['Province',x.province],['District',x.district||'—'],['Date of birth',x.date_of_birth||'—'],['Mobile number',x.mobile_number||'—'],['Account ID',x.user_id],['Submitted',x.created_at?new Date(x.created_at).toLocaleString():'—'],['Status',x.status],['Rejection reason',x.rejection_reason||'—']];
+ const m=selected.member||{};
+ const rows=[['Application ID',x.id],['First name',x.first_name],['Last name',x.last_name],['Full name',[x.first_name,x.last_name].filter(Boolean).join(' ')],['Tazkira / Passport ID',x.national_id_number],['Member card number',m.card_number||'—'],['Referral code',m.referral_code||'—'],['Email address',m.email||'—'],['Document type',x.document_type],['Country',x.country],['Province',x.province],['District',x.district||'—'],['Date of birth',x.date_of_birth||'—'],['Mobile number',x.mobile_number||m.mobile_number||'—'],['Account ID',x.user_id],['Submitted',x.created_at?new Date(x.created_at).toLocaleString():'—'],['Status',x.status],['Rejection reason',x.rejection_reason||'—']];
  const photoHtml=photos.map(p=>'<div class="hwc-kyc-admin-photo '+(p.label==='Selfie'?'hwc-kyc-admin-photo-selfie':'')+'"><b>'+esc(p.label)+'</b>'+(p.url?'<img data-kyc-zoom src="'+esc(p.url)+'" alt="'+esc(p.label)+'" loading="lazy">':'<div class="hwc-kyc-admin-photo-empty">Image unavailable</div>')+'</div>').join('');
  host.innerHTML='<button type="button" class="hwc-kyc-back-results" data-kyc-back-to-results>‹ Back to results</button><article class="hwc-kyc-admin-card"><div class="hwc-kyc-review-layout"><div class="hwc-kyc-photo-column">'+photoHtml+'</div><div class="hwc-kyc-info-column"><div class="hwc-kyc-record-heading"><strong>'+esc([x.first_name,x.last_name].filter(Boolean).join(' ')||'KYC Applicant')+'</strong>'+statusBadge(x.status)+'</div><table class="hwc-kyc-admin-table"><tbody>'+rows.map(r=>'<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>').join('')+'</tbody></table>'+(duplicates.length?'<div class="hwc-kyc-duplicate-alert"><b>⚠ Duplicate document number found</b><p>'+esc(x.national_id_number)+' appears in '+duplicates.length+' other account(s).</p></div>':'')+(x.status==='pending'?'<div class="hwc-kyc-admin-actions"><button data-kyc-review="approved" data-kyc-id="'+esc(x.id)+'">Approve KYC</button><button data-kyc-review="rejected" data-kyc-id="'+esc(x.id)+'">Reject KYC</button></div>':'')+'</div></div></article>';
 }
-async function loadKyc(category){
+async function loadKyc(category,searchTerm){
  const host=ensureHost();if(!host)return;
  selectedKycId=null;
  const status=category==='requests'?'pending':category;window.currentAdminKycCategory=category;
  const title=$('adminKycListTitle');if(title)title.textContent=category==='requests'?'KYC Requests':category==='approved'?'KYC Approved':'KYC Rejected';
  host.innerHTML='<p>Loading KYC applications…</p>';
  const allStatusRows=[];let offset=0;
- while(true){
-  const page=await hwcSupabase.from('kyc_applications').select('id,user_id,first_name,last_name,country,province,district,mobile_number,document_type,national_id_number,date_of_birth,passport_expiry_date,status,rejection_reason,created_at,front_document_path,back_document_path,selfie_document_path').eq('status',status).order('created_at',{ascending:false}).range(offset,offset+499);
-  if(page.error){host.textContent=page.error.message;return;}
-  allStatusRows.push(...(page.data||[]));if(!page.data||page.data.length<500)break;offset+=500;
+ const selectKyc='id,user_id,first_name,last_name,country,province,district,mobile_number,document_type,national_id_number,date_of_birth,passport_expiry_date,status,rejection_reason,created_at,front_document_path,back_document_path,selfie_document_path';
+ const term=String(searchTerm||'').trim();
+ if(term){
+  host.innerHTML='<p>Searching KYC applications...</p>';
+  const matchedMembers=[];let memberOffset=0;
+  while(true){
+   const page=await hwcSupabase.rpc('admin_search_users',{p_search_type:'all',p_search_value:term,p_limit:50,p_offset:memberOffset});
+   if(page.error){host.textContent='Member search failed: '+page.error.message;return;}
+   matchedMembers.push(...(page.data||[]));if(!page.data||page.data.length<50)break;memberOffset+=50;
+  }
+  const memberMap=new Map(matchedMembers.map(m=>[String(m.id),m]));
+  const userIds=[...memberMap.keys()];
+  const found=[];
+  if(userIds.length){
+   const byMember=await hwcSupabase.from('kyc_applications').select(selectKyc).eq('status',status).in('user_id',userIds).order('created_at',{ascending:false});
+   if(byMember.error){host.textContent=byMember.error.message;return;}
+   found.push(...(byMember.data||[]));
+  }
+  const byDocument=await hwcSupabase.from('kyc_applications').select(selectKyc).eq('status',status).ilike('national_id_number','%'+term+'%').order('created_at',{ascending:false});
+  if(byDocument.error){host.textContent=byDocument.error.message;return;}
+  found.push(...(byDocument.data||[]));
+  const unique=new Map(found.map(x=>[String(x.id),x]));
+  allStatusRows.push(...unique.values());
+  window.__HWC_KYC_MEMBER_MATCHES=memberMap;
+ }else{
+  window.__HWC_KYC_MEMBER_MATCHES=new Map();
+  while(true){
+   const page=await hwcSupabase.from('kyc_applications').select(selectKyc).eq('status',status).order('created_at',{ascending:false}).range(offset,offset+499);
+   if(page.error){host.textContent=page.error.message;return;}
+   allStatusRows.push(...(page.data||[]));if(!page.data||page.data.length<500)break;offset+=500;
+  }
  }
  if(!allStatusRows.length){window.__HWC_KYC_RECORDS=[];renderKycRecords();return;}
  const allRecords=[];offset=0;
@@ -291,7 +320,7 @@ async function loadKyc(category){
   const normalized=normalizeId(x.national_id_number);
   const docType=String(x.document_type||'').toLowerCase().includes('passport')?'passport':'tazkira';
   const duplicates=normalized?allRecords.filter(y=>y.user_id!==x.user_id&&normalizeId(y.national_id_number)===normalized&&(String(y.document_type||'').toLowerCase().includes('passport')?'passport':'tazkira')===docType):[];
-  return {record:x,photos,duplicates};
+  return {record:x,photos,duplicates,member:(window.__HWC_KYC_MEMBER_MATCHES||new Map()).get(String(x.user_id))||null};
  }));
  window.__HWC_KYC_RECORDS=records;
  renderKycRecords();
