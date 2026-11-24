@@ -293,8 +293,7 @@ $('confirmPreview').addEventListener('click',async function(){
 });
 async function connectWallet(){
  try{
-  host=window.parent;db=null;
-  try{if(host)db=host.eval('typeof hwcSupabase !== "undefined" ? hwcSupabase : window.hwcSupabase');}catch(e){db=host&&host.hwcSupabase;}
+  host=window.parent;db=host&&(host.__HWC_CONVERT_DB__||host.hwcSupabase);
   if(!db||!db.auth)throw new Error('Open Convert from the signed-in HEWAD COIN Dashboard to connect your wallet.');
   var auth=await db.auth.getUser();if(auth.error||!auth.data||!auth.data.user)throw new Error('Please sign in to your HEWAD COIN account first.');
   currentUser=auth.data.user;
