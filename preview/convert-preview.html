@@ -95,6 +95,7 @@ h1{margin:7px 0 4px;font-size:clamp(26px,5vw,35px);line-height:1.08;letter-spaci
 .modal-line strong{text-align:right;font-variant-numeric:tabular-nums}
 .modal-actions{display:flex;gap:9px;margin-top:19px}
 .modal-actions button{flex:1;padding:12px;border-radius:10px;font-size:11px;font-weight:800}
+ .success-icon{font-size:54px;line-height:1;margin:4px 0 17px;text-align:center;filter:drop-shadow(0 0 18px #ffd90055)}.success-title{color:#ffe36a;text-align:center}.success-copy{text-align:center}.success-dashboard{width:100%;margin-top:18px;padding:13px;border:0;border-radius:11px;background:linear-gradient(105deg,#ffe66b,#d9a92e);color:#201800;font-weight:900}
 .cancel-btn{border:1px solid #3a414c;background:#171b21;color:#c7cdd6}
 .confirm-btn{border:0;background:var(--gold);color:#191408}
 .coin-stage{display:grid;place-items:center;width:50px;height:50px;margin:0 auto 13px;perspective:600px}
@@ -183,7 +184,17 @@ h1{margin:7px 0 4px;font-size:clamp(26px,5vw,35px);line-height:1.08;letter-spaci
   </div>
 </div>
 
-
+<div class="modal-backdrop" id="successModal" role="dialog" aria-modal="true" aria-labelledby="successTitle">
+  <div class="modal">
+    <div class="success-icon">🎉</div>
+    <h3 id="successTitle" class="success-title">Congratulations!</h3>
+    <p class="success-copy">Your conversion has been completed successfully. Your wallet balances have been updated.</p>
+    <div class="modal-line"><span>Converted</span><strong id="successFrom">—</strong></div>
+    <div class="modal-line"><span>Fee (1%)</span><strong id="successFee">—</strong></div>
+    <div class="modal-line"><span>Added to wallet</span><strong id="successReceive" style="color:var(--green)">—</strong></div>
+    <button class="success-dashboard" id="successDashboard" type="button">← Back to Dashboard</button>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -219,6 +230,12 @@ $('maxBtn').addEventListener('click',function(){$('amountInput').value=available
 $('switchBtn').addEventListener('click',function(){direction=direction==='HDC'?'USD':'HDC';$('amountInput').value='';updateDirection();});
 function motion(){document.body.classList.add('is-converting');window.setTimeout(function(){document.body.classList.remove('is-converting');},1250);}
 function closeModal(){$('confirmModal').classList.remove('open');}
+ function showSuccess(receipt,f,t){
+  $('successFrom').textContent=fmt(receipt.net_input,f==='HDC'?4:2)+' '+f;
+  $('successFee').textContent=fmt(receipt.fee,f==='HDC'?4:2)+' '+f;
+  $('successReceive').textContent='+'+fmt(receipt.received,t==='HDC'?4:2)+' '+t;
+  $('successModal').classList.add('open');
+ }
 $('convertBtn').addEventListener('click',function(){
  var amount=fromAmount(),f=fromCode();
  if(!walletLoaded){setStatus('Your real wallet is not connected. Sign in and reopen Convert.','error');return;}
@@ -233,6 +250,10 @@ $('convertBtn').addEventListener('click',function(){
  $('confirmModal').classList.add('open');motion();
 });
 $('cancelModal').addEventListener('click',closeModal);
+ $('successDashboard').addEventListener('click',function(){
+  $('successModal').classList.remove('open');
+  try{var overlay=host&&host.document.getElementById('hwc-convert-overlay');if(overlay)overlay.remove();}catch(e){console.warn('Dashboard return:',e);}
+ });
 $('confirmModal').addEventListener('click',function(e){if(e.target===$('confirmModal'))closeModal();});
 async function refreshWallet(){
  var r=await db.from('wallets').select('balance_hwc,balance_usd,reserved_hwc,staked_hwc,reserved_usd,staked_usd').eq('user_id',currentUser.id).maybeSingle();
@@ -260,6 +281,7 @@ $('confirmPreview').addEventListener('click',async function(){
   try{await refreshWallet();}catch(refreshError){refreshFailed=true;console.warn('Wallet refresh after completed conversion:',refreshError);}
   try{if(host&&typeof host.loadHwcProfile==='function')await host.loadHwcProfile(currentUser);}catch(cardError){refreshFailed=true;console.warn('Dashboard card refresh:',cardError);}
   if(refreshFailed)setStatus('Conversion completed successfully, but the displayed balances could not refresh. Reopen Dashboard to load the updated balances.','good');
+   showSuccess(receipt,f,t);
  }catch(e){setStatus(e&&e.message?e.message:'Conversion failed. No success was reported by the wallet service.','error');}
  finally{converting=false;$('confirmPreview').disabled=false;$('confirmPreview').textContent='Confirm Conversion';render();}
 });
