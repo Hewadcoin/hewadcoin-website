@@ -199,6 +199,7 @@ create table if not exists private.admin_user_notes (
 );
 create index if not exists admin_user_notes_user_created_idx
   on private.admin_user_notes(user_id, created_at desc);
+alter table private.admin_user_notes enable row level security;
 revoke all on private.admin_user_notes from public, anon, authenticated;
 
 create or replace function private.hwc_admin_get_user_notes(p_user_id uuid)
