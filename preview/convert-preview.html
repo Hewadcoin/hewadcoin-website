@@ -292,8 +292,11 @@ h1{margin:7px 0 4px;font-size:clamp(26px,5vw,35px);line-height:1.08;letter-spaci
         if(!history.error&&history.data&&history.data.length)showHistory(history.data);
       }catch(e){}
     }catch(error){
-      walletLoaded=false;render();
-      setStatus(error&&error.message?error.message:'Unable to load your wallet. Open the main website and sign in first.','error');
+      // Standalone visual preview fallback: sample balances only; never a real wallet.
+      total.HDC=1750.03;total.USDT=125.50;
+      available.HDC=1750.03;available.USDT=125.50;
+      walletLoaded=true;render();
+      setStatus('Sample preview balances are shown. This page does not connect to or change any real wallet.','good');
     }
   }
   render();
