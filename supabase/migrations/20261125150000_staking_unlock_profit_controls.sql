@@ -262,7 +262,7 @@ create or replace function public.hwc_member_staking_overview() returns jsonb la
 create or replace function public.hwc_publish_staking_daily_result(p_result_type text,p_percent numeric,p_distribution_date date default current_date) returns jsonb language sql security definer set search_path='' as $$ select private.hwc_publish_staking_daily_result(p_result_type,p_percent,p_distribution_date); $$;
 
 insert into public.staking_plans(name,asset,min_amount,max_amount,duration_days,apr_percent,active)
-select 'Yearly Plan','HDC',5000,1000000000000000,360,0,true
+select 'Yearly Plan','HDC',5000,999999999999.99999999,360,0,true
 where not exists(select 1 from public.staking_plans where active=true and asset='HDC' and duration_days=360);
 
 revoke execute on function private.hwc_start_staking(uuid,numeric),private.hwc_request_staking_unlock(uuid),private.hwc_admin_review_staking_position(uuid,text,text),private.hwc_admin_set_minimum_stake(uuid,numeric),private.hwc_admin_list_staking_positions(text,text,text),private.hwc_admin_get_staking_position(uuid),private.hwc_member_staking_overview(),private.hwc_publish_staking_daily_result(text,numeric,date),private.hwc_notify_all_matured_staking_positions() from public,anon,authenticated;
