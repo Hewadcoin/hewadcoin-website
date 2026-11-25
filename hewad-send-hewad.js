@@ -41,11 +41,11 @@ style.textContent = `
 #hwcSendHewadModal #hwcSendRecipient:-webkit-autofill:focus,
 #hwcSendHewadModal #hwcSendRecipient:autofill{ -webkit-box-shadow:0 0 0 1000px #090d11 inset !important;box-shadow:0 0 0 1000px #090d11 inset !important;-webkit-text-fill-color:#f5f6f7 !important;caret-color:#f5f6f7;color-scheme:dark; }
 #hwcSendHewadModal #hwcSendRecipient{color-scheme:dark}
-#hwcSendHewadModal .amount-field{min-height:48px;padding:0 10px;gap:8px}
-#hwcSendHewadModal .amount-field input#hwcSendAmount{flex:1 1 0;width:1%;min-width:0;padding:12px 0;border:0!important;border-radius:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:#f5f6f7!important}
+#hwcSendHewadModal .amount-field{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;width:100%!important;height:54px!important;min-height:54px!important;max-height:54px!important;padding:0 10px!important;gap:8px!important;overflow:hidden!important}
+#hwcSendHewadModal .amount-field input#hwcSendAmount{display:block!important;position:static!important;flex:1 1 0!important;width:0!important;min-width:0!important;max-width:none!important;height:42px!important;min-height:42px!important;max-height:42px!important;margin:0!important;padding:0 2px!important;border:0!important;border-radius:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:#f5f6f7!important;-webkit-text-fill-color:#f5f6f7!important;font:inherit!important;font-size:16px!important;line-height:1.2!important;opacity:1!important;visibility:visible!important;appearance:textfield!important;-webkit-appearance:none!important}
 #hwcSendHewadModal .amount-field input#hwcSendAmount:focus{border:0!important;outline:0!important;box-shadow:none!important}
-#hwcSendHewadModal .amount-field .amount-max{flex:0 0 auto;margin:0;padding:8px 11px}
-#hwcSendHewadModal .amount-field .unit{flex:0 0 auto}
+#hwcSendHewadModal .amount-field .amount-max{display:block!important;position:static!important;flex:0 0 auto!important;width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px 11px!important;white-space:nowrap!important}
+#hwcSendHewadModal .amount-field .unit{display:block!important;position:static!important;flex:0 0 auto!important;margin:0!important;white-space:nowrap!important}
 
 #hwcSendHewadModal .max{padding:7px 9px;border:1px solid #695522;border-radius:8px;background:#2b2414;color:#f0cf70;font-size:9px;font-weight:900;cursor:pointer}
 #hwcSendHewadModal .unit{color:#a9b0bb;font-size:10px;font-weight:800}
