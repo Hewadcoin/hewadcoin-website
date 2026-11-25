@@ -9,7 +9,7 @@ var dt=function(v){return v?new Date(v).toLocaleString():'—';};
 var money=function(v){return fmt(v,8)+' HDC';};
 var say=function(m){if(typeof window.showNotice==='function')window.showNotice(m);else alert(m);};
 var me=function(){return typeof hwcCurrentUser!=='undefined'?hwcCurrentUser:null;};
-var admin=function(){return window.HEWAD_USER_ROLE==='admin'&&!!me();};
+var admin=function(){return window.HEWAD_USER_ROLE==='admin';};
 var stakeCss=document.createElement('style');stakeCss.id='hwc-staking-production-style';
 stakeCss.textContent=`
 .hwc-staking-live{max-width:900px;margin:0 auto;color:#f5f7f8}
@@ -112,7 +112,7 @@ function addMenu(){
  if(!grid.querySelector('[data-hwc-staking-admin="positions"]')){var a=document.createElement('button');a.type='button';a.className='hwc-admin-option';a.dataset.hwcStakingAdmin='positions';a.innerHTML='<span class="ico">🔐</span><span><strong>Position Management</strong><small>Pending, blocked, unlocked and reset staking positions</small></span><span class="arrow">›</span>';grid.appendChild(a);}
  if(!grid.querySelector('[data-hwc-staking-admin="distribution"]')){var b=document.createElement('button');b.type='button';b.className='hwc-admin-option';b.dataset.hwcStakingAdmin='distribution';b.innerHTML='<span class="ico">📈</span><span><strong>Profit Distribution</strong><small>Daily HDC profit, loss and transaction records</small></span><span class="arrow">›</span>';grid.appendChild(b);}
 }
-function showAdmin(html){var r=adminRoot();if(!r)return;panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});r.hidden=false;r.style.display='block';r.innerHTML=html;window.scrollTo(0,0);}
+function showAdmin(html){var r=adminRoot();if(!r)return;var h=$('adminHome');if(h){h.hidden=true;h.style.display='none';}panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});r.hidden=false;r.style.display='block';r.innerHTML=html;window.scrollTo(0,0);}
 function backBtn(){return '<button type="button" class="hwc-admin-back" data-hwc-staking-back>‹ Control Panel</button>';}
 function kv(k,v){return '<div><span>'+esc(k)+'</span><b>'+esc(v==null||v===''?'—':v)+'</b></div>';}
 async function landing(){
