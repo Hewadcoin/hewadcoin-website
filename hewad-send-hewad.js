@@ -11,7 +11,7 @@ var fmt=function(n){return Number(n||0).toLocaleString('en-US',{minimumFractionD
 var round8=function(n){return Math.round((Number(n)+Number.EPSILON)*1e8)/1e8;};
 var style=document.createElement('style');
 style.id='hwc-send-hewad-style';
-style.textContent = \`
+style.textContent = `
 #hwcSendHewadModal{display:none;position:fixed;inset:0;z-index:100005;align-items:center;justify-content:center;padding:14px;background:rgba(0,0,0,.78);backdrop-filter:blur(7px);box-sizing:border-box;color:#f4f6f8;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 #hwcSendHewadModal.open{display:flex}#hwcSendHewadModal *{box-sizing:border-box}
 #hwcSendHewadModal .card{position:relative;width:min(100%,500px);max-height:94vh;overflow:auto;padding:21px;border:1px solid #665226;border-radius:20px;background:radial-gradient(ellipse at 50% -20%,#25231b 0,#15171b 55%);box-shadow:0 25px 90px #000c}
@@ -60,11 +60,11 @@ style.textContent = \`
 #hwcSendHewadModal .status.error{border-color:#78413a;background:#2b1b19;color:#ffc2ad}
 #hwcSendHewadModal .foot{margin:11px 2px 0;color:#737e8a;font-size:9px;line-height:1.5;text-align:center}
 @media(max-width:390px){#hwcSendHewadModal{padding:8px}#hwcSendHewadModal .card{padding:15px;border-radius:16px}#hwcSendHewadModal h2{font-size:22px}#hwcSendHewadModal .balance strong{font-size:24px}}
-\`;
+`;
 document.head.appendChild(style);
 var root=document.createElement('div');
 root.id='hwcSendHewadModal';
-root.innerHTML = \`
+root.innerHTML = `
 <div class="card" role="dialog" aria-modal="true" aria-labelledby="hwcSendTitle">
  <div class="head"><div class="brand"><span class="logo">H</span><span>HEWAD COIN</span></div><button type="button" class="close" id="hwcSendClose" aria-label="Close">×</button></div>
  <h2 id="hwcSendTitle">Send Hewad</h2><p class="sub">Send HDC securely to another verified HEWAD COIN member.</p>
@@ -94,7 +94,7 @@ root.innerHTML = \`
   <div class="status" id="hwcSendStatus">Connecting to your secure HEWAD COIN wallet…</div>
   <p class="foot">Transfers are processed securely on the server. The 1% fee is included in the amount entered. Recipients must have an active account, verified email and approved KYC.</p>
  </section>
-</div>\`;
+</div>`;
 document.body.appendChild(root);
 
 function setStatus(message,type){var el=$('hwcSendStatus');el.textContent=message;el.className='status'+(type?' '+type:'');}
