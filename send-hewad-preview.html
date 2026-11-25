@@ -21,13 +21,13 @@ label{display:block;color:#c7d8cf;font-size:12px;font-weight:650;margin:15px 0 7
 <header class="top"><div class="brand"><div class="logo">H</div><span>HEWAD COIN</span></div><span class="preview">INTERACTIVE PREVIEW</span></header>
 <button class="back" id="back" hidden>← Back to transfer methods</button>
 <h1>Send Hewad</h1><p class="sub">Transfer HDC instantly to another Hewad COIN member.</p>
-<section class="balance"><div class="eyebrow">YOUR AVAILABLE BALANCE</div><div class="amount"><span id="balance">0.00</span> <small>HDC</small></div><div class="hint">Available HDC balance · Sample preview balance</div></section>
+<div class="toast" id="connectionStatus" style="display:block;margin:0 0 15px;background:#10251e;border-color:#244238;color:#b9d8c8">Connecting to your HEWAD COIN wallet…</div><section class="balance"><div class="eyebrow">YOUR AVAILABLE BALANCE</div><div class="amount"><span id="balance">0.00</span> <small>HDC</small></div><div class="hint">Live available HDC balance · Connected wallet</div></section>
 <section class="panel" id="methodPanel"><div class="panel-title">CHOOSE TRANSFER METHOD</div><div class="choices">
 <button class="choice active" data-method="email"><span class="ico">✉</span><strong>Email Address</strong><span>Send using recipient email</span></button>
 <button class="choice" data-method="card"><span class="ico">▤</span><strong>Card Number</strong><span>Send using HDC card number</span></button>
 </div></section>
 <section class="panel" id="formPanel"><div class="panel-title" id="formTitle">EMAIL TRANSFER</div>
-<label id="recipientLabel" for="recipientInput">Recipient Email Address</label><div class="field"><span class="field-icon" id="fieldIcon">✉</span><input id="recipientInput" autocomplete="off" placeholder="Enter recipient's email address"><span class="field-icon">⌕</span></div><div class="small" id="inputHint" style="margin:7px 2px 0">Preview test: khattakabid1122@gmail.com is marked verified. No real transfer is made.</div>
+<label id="recipientLabel" for="recipientInput">Recipient Email Address</label><div class="field"><span class="field-icon" id="fieldIcon">✉</span><input id="recipientInput" autocomplete="off" placeholder="Enter recipient's email address"><span class="field-icon">⌕</span></div><div class="small" id="inputHint" style="margin:7px 2px 0">Recipient status is checked securely against the HEWAD COIN account database.</div>
 <div class="recipient" id="recipientCard"><div class="recipient-row"><div><div class="person" id="recipientName">Recipient account</div><div class="small" id="recipientDetail">Account details found</div></div><span id="verification" class="verified">✓ VERIFIED</span></div></div>
 <label for="amountInput">Amount to Send</label><div class="field"><input id="amountInput" type="number" min="0" step="0.0001" inputmode="decimal" placeholder="Enter HDC amount"><button class="max" id="maxBtn">MAX</button><span class="unit">HDC</span></div>
 <div class="calc"><div class="calc-title">TRANSFER CALCULATION</div>
@@ -37,31 +37,141 @@ label{display:block;color:#c7d8cf;font-size:12px;font-weight:650;margin:15px 0 7
 <div class="row"><span>Amount to Send</span><b id="calcAmount">0.00 HDC</b></div>
 <div class="row"><span>Transfer Fee (1%)</span><b id="calcFee">0.00 HDC</b></div>
 <div class="net"><span>NET TRANSFER</span><strong id="calcNet">0.00 HDC</strong></div>
-<button class="confirm" id="confirm" disabled>CONFIRM TRANSFER</button>
+<button class="confirm" id="confirm" disabled>TRANSFERS DISABLED IN PREVIEW</button>
 <div class="toast" id="toast"></div>
-<p class="notice"><b>Security:</b> Transfers are allowed only to active, verified accounts. The 1% fee is deducted from the amount entered. Reserved and staked HDC are not available for sending.</p>
+<p class="notice"><b>Security:</b> Live recipient verification is enabled. Actual transfers remain disabled on this preview page. The secure server checks account status, verified email, approved KYC, available balance and duplicate requests.</p>
 </div></section>
-<p class="foot">HEWAD COIN · HDC INTERNAL TRANSFER · DEMO ONLY</p>
+<p class="foot">HEWAD COIN · SECURE RECIPIENT CHECK · PREVIEW</p>
 </main>
+<iframe id="hwc-auth-bridge" title="HEWAD wallet session bridge" aria-hidden="true" tabindex="-1" src="index.html" style="position:fixed;left:-5px;bottom:-5px;width:2px;height:2px;opacity:0;pointer-events:none;border:0"></iframe>
 <script>
 (function(){
-let method='email';const $=id=>document.getElementById(id);
-const demoBalance=344590.4258;
-$('balance').textContent=demoBalance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
-const state={verified:false,name:'',normalized:''};
-function switchMethod(next){method=next;document.querySelectorAll('.choice').forEach(b=>b.classList.toggle('active',b.dataset.method===next));$('formTitle').textContent=next==='email'?'EMAIL TRANSFER':'CARD NUMBER TRANSFER';$('recipientLabel').textContent=next==='email'?'Recipient Email Address':'Recipient Card Number';$('recipientKey').textContent=next==='email'?'Recipient Email':'Recipient Card Number';$('fieldIcon').textContent=next==='email'?'✉':'▤';$('recipientInput').value='';$('recipientInput').placeholder=next==='email'?"Enter recipient's email address":"Enter recipient's card number";$('recipientInput').type=next==='email'?'email':'text';$('recipientInput').inputMode=next==='email'?'email':'numeric';$('inputHint').textContent=next==='email'?'Preview test: khattakabid1122@gmail.com is marked verified. No real transfer is made.':'Preview test card: 000000123456 is marked verified. This is a demo number only.';$('recipientCard').classList.remove('show');$('amountInput').value='';$('toast').classList.remove('show');Object.assign(state,{verified:false,name:'',normalized:''});update();}
-document.querySelectorAll('.choice').forEach(b=>b.addEventListener('click',()=>switchMethod(b.dataset.method)));
-function lookup(){const v=$('recipientInput').value.trim();state.normalized=v;state.verified=false;state.name='';$('recipientCard').classList.remove('show');if(!v){update();return;}
-/* Preview-only fixtures. These do not query Supabase or perform transfers. */
-if(method==='email'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){state.verified=v.toLowerCase()==='khattakabid1122@gmail.com';state.name=state.verified?'Verified preview recipient':'Unverified preview recipient';}
-if(method==='card'&&/^\d{6,20}$/.test(v)){state.verified=v==='000000123456';state.name=state.verified?'Verified preview recipient':'Unverified preview recipient';}
-if(state.name){$('recipientName').textContent=state.name;$('recipientDetail').textContent=method==='email'?v:'Card ending '+v.slice(-4);$('verification').textContent=state.verified?'✓ VERIFIED':'✕ NOT VERIFIED';$('verification').className=state.verified?'verified':'notverified';$('recipientCard').classList.add('show');}
-update();}
-function update(){const raw=parseFloat($('amountInput').value),amount=Number.isFinite(raw)&&raw>0?raw:0,fee=amount*.01,net=amount-fee,v=$('recipientInput').value.trim();$('calcRecipient').textContent=v||'—';$('calcVerify').textContent=v?(state.verified?'✓ Verified':'✕ Not Verified'):'—';$('calcVerify').style.color=v?(state.verified?'#54dfa3':'#ff9c83'):'';$('calcName').textContent=state.name||'—';$('calcAmount').textContent=amount.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('calcFee').textContent=fee.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('calcNet').textContent=net.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('confirm').disabled=!(state.verified&&amount>0&&amount<=demoBalance);}
-$('recipientInput').addEventListener('input',lookup);$('amountInput').addEventListener('input',update);
-$('maxBtn').addEventListener('click',()=>{$('amountInput').value=demoBalance.toString();update();});
-$('confirm').addEventListener('click',()=>{$('toast').textContent='Preview only: this recipient is marked verified in the demo, but no HDC is sent and no balance is changed. Real transfers will be enabled only after secure backend integration.';$('toast').classList.add('show');});
-$('back').addEventListener('click',()=>{$('methodPanel').hidden=false;$('formPanel').hidden=true;$('back').hidden=true;});
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var db=null,user=null,method='email',available=0,verified=false,recipientName='',lookupStatus='',lookupSeq=0,lookupTimer=null,lookupBusy=false;
+var fmt=function(n){return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});};
+function status(message,type){
+ var el=$('connectionStatus');el.textContent=message;
+ el.style.background=type==='error'?'#35201d':type==='good'?'#102d22':'#10251e';
+ el.style.borderColor=type==='error'?'#78523b':type==='good'?'#285b43':'#244238';
+ el.style.color=type==='error'?'#ffd0bd':type==='good'?'#8fe0bd':'#b9d8c8';
+}
+function update(){
+ var raw=Number($('amountInput').value),amount=Number.isFinite(raw)&&raw>0?raw:0,fee=amount*.01,net=Math.max(0,amount-fee),v=$('recipientInput').value.trim();
+ $('calcRecipient').textContent=v||'—';
+ $('calcVerify').textContent=!v?'—':lookupBusy?'Checking…':lookupStatus==='VERIFIED'?'✓ Verified':lookupStatus==='NOT_VERIFIED'?'✕ Not Verified':lookupStatus==='ACCOUNT_INACTIVE'?'✕ Account Inactive':lookupStatus==='KYC_REQUIRED'?'✕ KYC Required':lookupStatus==='SELF_TRANSFER'?'✕ Your Own Account':lookupStatus==='NOT_FOUND'?'✕ Account Not Found':'—';
+ $('calcVerify').style.color=lookupStatus==='VERIFIED'?'#54dfa3':(v&&!lookupBusy?'#ff9c83':'');
+ $('calcName').textContent=recipientName||'—';
+ $('calcAmount').textContent=fmt(amount)+' HDC';
+ $('calcFee').textContent=fmt(fee)+' HDC';
+ $('calcNet').textContent=fmt(net)+' HDC';
+ $('confirm').disabled=true;
+}
+function resetRecipient(){
+ verified=false;recipientName='';lookupStatus='';lookupBusy=false;
+ $('recipientCard').classList.remove('show');
+ $('recipientName').textContent='Recipient account';
+ $('recipientDetail').textContent='Checking account status';
+ $('verification').textContent='—';
+ $('verification').className='small';
+ update();
+}
+function renderLookup(result,identifier){
+ lookupStatus=result.verification_status||'NOT_FOUND';
+ verified=result.eligible===true&&lookupStatus==='VERIFIED';
+ recipientName=verified?(result.display_name||'HEWAD COIN Member'):'';
+ $('recipientName').textContent=recipientName||'Recipient account';
+ $('recipientDetail').textContent=method==='email'?identifier:'Card ending '+identifier.slice(-4);
+ var labels={VERIFIED:'✓ VERIFIED',NOT_VERIFIED:'✕ NOT VERIFIED',ACCOUNT_INACTIVE:'✕ ACCOUNT INACTIVE',KYC_REQUIRED:'✕ KYC NOT APPROVED',SELF_TRANSFER:'✕ YOUR OWN ACCOUNT',NOT_FOUND:'✕ ACCOUNT NOT FOUND'};
+ $('verification').textContent=labels[lookupStatus]||'✕ NOT VERIFIED';
+ $('verification').className=verified?'verified':'notverified';
+ $('recipientCard').classList.add('show');
+ if(verified)status('Recipient account found and verified. Review the amount and 1% fee below.','good');
+ else if(lookupStatus==='NOT_VERIFIED')status('Recipient Email Not Verified — this account cannot receive HDC. No funds will be deducted.','error');
+ else if(lookupStatus==='ACCOUNT_INACTIVE')status('This recipient account is not active. No funds will be deducted.','error');
+ else if(lookupStatus==='KYC_REQUIRED')status('Recipient KYC is not approved. No funds will be deducted.','error');
+ else if(lookupStatus==='SELF_TRANSFER')status('You cannot send HDC to your own account.','error');
+ else status('No eligible HEWAD COIN account was found. Check the email or card number.','error');
+ update();
+}
+async function lookup(){
+ var identifier=$('recipientInput').value.trim(),seq=++lookupSeq;
+ resetRecipient();
+ if(!identifier)return;
+ var valid=method==='email'?/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier):/^\d{6,20}$/.test(identifier);
+ if(!valid){update();return;}
+ if(!db){status('Wallet connection is not ready. Please refresh the page.','error');return;}
+ lookupBusy=true;update();
+ try{
+  var result=await db.rpc('hdc_lookup_hewad_recipient',{p_identifier:identifier});
+  if(seq!==lookupSeq)return;
+  if(result.error)throw result.error;
+  var row=Array.isArray(result.data)?result.data[0]:result.data;
+  if(!row)row={eligible:false,verification_status:'NOT_FOUND'};
+  renderLookup(row,identifier);
+ }catch(e){
+  if(seq!==lookupSeq)return;
+  lookupStatus='LOOKUP_ERROR';verified=false;recipientName='';
+  $('recipientName').textContent='Verification unavailable';
+  $('recipientDetail').textContent='Secure lookup failed';
+  $('verification').textContent='⚠ CHECK FAILED';$('verification').className='notverified';
+  $('recipientCard').classList.add('show');
+  status('Could not verify this recipient right now. Please try again; no transfer can be made.','error');
+  update();
+ }
+}
+function scheduleLookup(){
+ if(lookupTimer)clearTimeout(lookupTimer);
+ lookupTimer=setTimeout(lookup,350);
+}
+function switchMethod(next){
+ method=next;
+ document.querySelectorAll('.choice').forEach(function(b){b.classList.toggle('active',b.dataset.method===next);});
+ $('formTitle').textContent=next==='email'?'EMAIL TRANSFER':'CARD NUMBER TRANSFER';
+ $('recipientLabel').textContent=next==='email'?'Recipient Email Address':'Recipient Card Number';
+ $('recipientKey').textContent=next==='email'?'Recipient Email':'Recipient Card Number';
+ $('fieldIcon').textContent=next==='email'?'✉':'▤';
+ $('recipientInput').value='';
+ $('recipientInput').placeholder=next==='email'?"Enter recipient's email address":"Enter recipient's card number";
+ $('recipientInput').type=next==='email'?'email':'text';
+ $('recipientInput').inputMode=next==='email'?'email':'numeric';
+ $('inputHint').textContent=next==='email'?'Recipient status is checked securely against the HEWAD COIN account database.':'Enter the recipient’s actual HEWAD COIN card number for a secure account check.';
+ if(lookupTimer)clearTimeout(lookupTimer);lookupSeq++;resetRecipient();update();
+}
+document.querySelectorAll('.choice').forEach(function(b){b.addEventListener('click',function(){switchMethod(b.dataset.method);});});
+$('recipientInput').addEventListener('input',scheduleLookup);
+$('amountInput').addEventListener('input',update);
+$('maxBtn').addEventListener('click',function(){$('amountInput').value=available.toString();update();});
+$('confirm').addEventListener('click',function(){status('Transfers are intentionally disabled in this preview. The secure backend is prepared; production activation requires the dashboard integration step.','error');});
+async function connectWallet(){
+ var frame=$('hwc-auth-bridge');
+ try{
+  await new Promise(function(resolve,reject){
+   if(frame.contentDocument&&frame.contentDocument.readyState==='complete'){resolve();return;}
+   frame.addEventListener('load',resolve,{once:true});
+   frame.addEventListener('error',reject,{once:true});
+   setTimeout(function(){reject(new Error('Wallet connection timed out'));},18000);
+  });
+  var win=frame.contentWindow;
+  try{db=win.eval('typeof hwcSupabase !== "undefined" ? hwcSupabase : window.hwcSupabase');}catch(e){}
+  if(!db||!db.auth||!db.rpc)throw new Error('Supabase wallet client is unavailable.');
+  var auth=await db.auth.getUser();
+  if(auth.error||!auth.data||!auth.data.user)throw new Error('Please sign in to the main HEWAD COIN website first, then reopen this page.');
+  user=auth.data.user;
+  var wr=await db.from('wallets').select('balance_hwc,reserved_hwc,staked_hwc').eq('user_id',user.id).maybeSingle();
+  if(wr.error)throw wr.error;
+  var w=wr.data||{};
+  available=Math.max(0,Number(w.balance_hwc||0)-Number(w.reserved_hwc||0)-Number(w.staked_hwc||0));
+  $('balance').textContent=fmt(available);
+  $('maxBtn').disabled=available<=0;
+  status('Wallet connected. Recipient lookup uses live account verification. Transfers are disabled in preview.','good');
+ }catch(e){
+  available=0;$('balance').textContent='—';$('maxBtn').disabled=true;
+  status(e&&e.message?e.message:'Could not connect to your HEWAD COIN wallet.','error');
+ }
+ update();
+}
 $('formPanel').hidden=false;
+connectWallet();
 })();
 </script></body></html>
