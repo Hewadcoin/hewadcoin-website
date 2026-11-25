@@ -21,7 +21,7 @@ label{display:block;color:#c7d8cf;font-size:12px;font-weight:650;margin:15px 0 7
 <header class="top"><div class="brand"><div class="logo">H</div><span>HEWAD COIN</span></div><span class="preview">INTERACTIVE PREVIEW</span></header>
 <button class="back" id="back" hidden>← Back to transfer methods</button>
 <h1>Send Hewad</h1><p class="sub">Transfer HDC instantly to another Hewad COIN member.</p>
-<section class="balance"><div class="eyebrow">YOUR AVAILABLE BALANCE</div><div class="amount"><span id="balance">0.00</span> <small>HDC</small></div><div class="hint">Available HDC balance · Preview data</div></section>
+<section class="balance"><div class="eyebrow">YOUR AVAILABLE BALANCE</div><div class="amount"><span id="balance">0.00</span> <small>HDC</small></div><div class="hint">Available HDC balance · Sample preview balance</div></section>
 <section class="panel" id="methodPanel"><div class="panel-title">CHOOSE TRANSFER METHOD</div><div class="choices">
 <button class="choice active" data-method="email"><span class="ico">✉</span><strong>Email Address</strong><span>Send using recipient email</span></button>
 <button class="choice" data-method="card"><span class="ico">▤</span><strong>Card Number</strong><span>Send using HDC card number</span></button>
@@ -46,7 +46,7 @@ label{display:block;color:#c7d8cf;font-size:12px;font-weight:650;margin:15px 0 7
 <script>
 (function(){
 let method='email';const $=id=>document.getElementById(id);
-const demoBalance=0;
+const demoBalance=344590.4258;
 $('balance').textContent=demoBalance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
 const state={verified:false,name:'',normalized:''};
 function switchMethod(next){method=next;document.querySelectorAll('.choice').forEach(b=>b.classList.toggle('active',b.dataset.method===next));$('formTitle').textContent=next==='email'?'EMAIL TRANSFER':'CARD NUMBER TRANSFER';$('recipientLabel').textContent=next==='email'?'Recipient Email Address':'Recipient Card Number';$('recipientKey').textContent=next==='email'?'Recipient Email':'Recipient Card Number';$('fieldIcon').textContent=next==='email'?'✉':'▤';$('recipientInput').value='';$('recipientInput').placeholder=next==='email'?"Enter recipient's email address":"Enter recipient's card number";$('recipientInput').type=next==='email'?'email':'text';$('recipientInput').inputMode=next==='email'?'email':'numeric';$('recipientCard').classList.remove('show');$('amountInput').value='';$('toast').classList.remove('show');Object.assign(state,{verified:false,name:'',normalized:''});update();}
@@ -55,9 +55,9 @@ function lookup(){const v=$('recipientInput').value.trim();state.normalized=v;st
 /* Preview-only mock: no directory lookup and no real transfers. */ 
 if(method==='email'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){state.name='Recipient account';state.verified=false;}
 if(method==='card'&&/^\d{6,20}$/.test(v)){state.name='Recipient account';state.verified=false;}
-if(state.name){$('recipientName').textContent=state.name;$('recipientDetail').textContent=method==='email'?v:v;$('verification').textContent='✕ NOT VERIFIED';$('verification').className='notverified';$('recipientCard').classList.add('show');}
+if(state.name){$('recipientName').textContent=state.name;$('recipientDetail').textContent=method==='email'?v:v;$('verification').textContent=state.verified?'✓ VERIFIED':'✕ NOT VERIFIED';$('verification').className=state.verified?'verified':'notverified';$('recipientCard').classList.add('show');}
 update();}
-function update(){const raw=parseFloat($('amountInput').value),amount=Number.isFinite(raw)&&raw>0?raw:0,fee=amount*.01,net=amount-fee,v=$('recipientInput').value.trim();$('calcRecipient').textContent=v||'—';$('calcVerify').textContent=v?'✕ Not Verified':'—';$('calcVerify').style.color=v?'#ff9c83':'';$('calcName').textContent=state.name||'—';$('calcAmount').textContent=amount.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('calcFee').textContent=fee.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('calcNet').textContent=net.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('confirm').disabled=true;}
+function update(){const raw=parseFloat($('amountInput').value),amount=Number.isFinite(raw)&&raw>0?raw:0,fee=amount*.01,net=amount-fee,v=$('recipientInput').value.trim();$('calcRecipient').textContent=v||'—';$('calcVerify').textContent=v?(state.verified?'✓ Verified':'✕ Not Verified'):'—';$('calcVerify').style.color=v?(state.verified?'#54dfa3':'#ff9c83'):'';$('calcName').textContent=state.name||'—';$('calcAmount').textContent=amount.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('calcFee').textContent=fee.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('calcNet').textContent=net.toLocaleString('en-US',{maximumFractionDigits:4})+' HDC';$('confirm').disabled=!(state.verified&&amount>0&&amount<=demoBalance);}
 $('recipientInput').addEventListener('input',lookup);$('amountInput').addEventListener('input',update);
 $('maxBtn').addEventListener('click',()=>{$('amountInput').value=demoBalance.toString();update();});
 $('confirm').addEventListener('click',()=>{$('toast').textContent='Preview only: transfers are disabled. Connect the verified recipient lookup and secure transfer service before enabling real HDC transfers.';$('toast').classList.add('show');});
