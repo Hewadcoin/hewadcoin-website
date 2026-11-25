@@ -27,10 +27,24 @@ insert into public.staking_plans(name,asset,min_amount,max_amount,duration_days,
 select 'Yearly Plan','HDC',5000,1000000000,360,0,true
 where not exists(select 1 from public.staking_plans where active and asset='HDC' and duration_days=360);
 
+create table if not exists private.staking_admin_audit (
+ id uuid primary key default gen_random_uuid(),
+ position_id uuid not null references public.staking_positions(id) on delete cascade,
+ member_id uuid not null references auth.users(id) on delete cascade,
+ actor_id uuid references auth.users(id) on delete set null,
+ action text not null check(action in ('stake_created','block','reset','unlock','unblock')),
+ note text,
+ details jsonb not null default '{}'::jsonb,
+ created_at timestamptz not null default clock_timestamp()
+);
+alter table private.staking_admin_audit enable row level security;
+create index if not exists staking_admin_audit_position_created_idx
+ on private.staking_admin_audit(position_id,created_at desc);
+
 create or replace function private.hwc_start_staking(p_plan_id uuid,p_amount numeric)
 returns uuid language plpgsql security definer set search_path=''
 as $$
-declare u uuid:=(select auth.uid()); p public.staking_plans%rowtype; k text; id uuid; t timestamptz:=clock_timestamp(); rate numeric(30,12); amt numeric(30,8);
+declare u uuid:=(select auth.uid()); p public.staking_plans%rowtype; k text; id uuid; t timestamptz:=clock_timestamp(); rate numeric(30,12); amt numeric(30,8); member_name text;
 begin
  if u is null then raise exception 'Authentication required.'; end if;
  if p_amount is null or p_amount<=0 then raise exception 'Enter a valid staking amount.'; end if;
@@ -49,6 +63,13 @@ begin
  values(u,p.id,p.name,'HDC',amt,amt,0,0,360,t,t+interval '360 days',rate,case when rate is null then null else round(amt*rate,8) end) returning staking_positions.id into id;
  insert into public.wallet_transactions(user_id,asset,amount,transaction_type,status,description,reference,created_by)
  values(u,'HDC',-amt,'debit','completed','HDC Digital Staking principal locked',id::text,u);
+ select concat_ws(' ',first_name,last_name) into member_name from public.profiles where id=u;
+ insert into public.notifications(user_id,title,body,notification_type)
+ values(u,'HDC staking successful','Your Yearly Plan position was created successfully. Amount: '||amt::text||' HDC.','staking_new_position');
+ insert into public.notifications(user_id,title,body,notification_type)
+ values(null,'New HDC staking request',coalesce(nullif(member_name,''),'A member')||' staked '||amt::text||' HDC in the Yearly Plan for 360 days.','staking_new_position');
+ insert into private.staking_admin_audit(position_id,member_id,actor_id,action,details)
+ values(id,u,u,'stake_created',jsonb_build_object('amount',amt,'plan_name',p.name,'duration_days',360));
  return id;
 end; $$;
 create or replace function public.hwc_start_staking(p_plan_id uuid,p_amount numeric)
@@ -84,6 +105,7 @@ begin
   if p.status<>'unlock_pending' then raise exception 'Only pending positions can be blocked.'; end if;
   update public.staking_positions set status='blocked',blocked_at=clock_timestamp(),reviewed_by=a,reviewed_at=clock_timestamp(),review_action='block',review_note=note where id=p_position_id;
   insert into public.notifications(user_id,title,body,notification_type) values(p.user_id,'Staking position blocked','Your position is blocked. Your HDC remains locked.','staking_position_status');
+  insert into private.staking_admin_audit(position_id,member_id,actor_id,action,note,details) values(p.id,p.user_id,a,'block',note,jsonb_build_object('status','blocked'));
   return jsonb_build_object('status','blocked','returned_amount',0);
  end if;
  if act='reset' then
@@ -93,6 +115,7 @@ begin
   if not found then raise exception 'Staked balance reconciliation failed.'; end if;
   update public.staking_positions set status='reset',reset_at=clock_timestamp(),reviewed_by=a,reviewed_at=clock_timestamp(),review_action='reset',review_note=note where id=p_position_id;
   insert into public.notifications(user_id,title,body,notification_type) values(p.user_id,'Staking position reset','Your position was reset. No HDC was returned to your available balance.','staking_position_status');
+  insert into private.staking_admin_audit(position_id,member_id,actor_id,action,note,details) values(p.id,p.user_id,a,'reset',note,jsonb_build_object('status','reset','returned_amount',0));
   return jsonb_build_object('status','reset','returned_amount',0);
  end if;
  if act='unlock' and p.status<>'unlock_pending' then raise exception 'Only pending positions can be approved.'; end if;
@@ -108,6 +131,7 @@ begin
  insert into public.wallet_transactions(id,user_id,asset,amount,transaction_type,status,description,reference,created_by)
  values(tx,p.user_id,'HDC',p.original_principal,'credit','completed','Staking principal returned after admin approval',p_position_id::text,a);
  insert into public.notifications(user_id,title,body,notification_type) values(p.user_id,'Staking position unlocked',p.original_principal::text||' HDC was returned to your available balance.','staking_position_status');
+ insert into private.staking_admin_audit(position_id,member_id,actor_id,action,note,details) values(p.id,p.user_id,a,act,note,jsonb_build_object('status','completed','returned_amount',p.original_principal,'transaction_id',tx));
  return jsonb_build_object('status','completed','returned_amount',p.original_principal,'transaction_id',tx);
 end; $$;
 
@@ -161,7 +185,8 @@ begin
   'net_result',coalesce((select sum(case when result_type='profit' then amount else -amount end) from public.staking_daily_results where position_id=sp.id),0),
   'user_id',pr.id,'full_name',concat_ws(' ',pr.first_name,pr.last_name),'kyc_status',pr.kyc_status,'email',u.email,'mobile_number',pr.mobile_number,'country',pr.country,'referral_code',pr.referral_code,'card_number',pr.card_number,
   'balance_hwc',coalesce(w.balance_hwc,0),'staked_hwc',coalesce(w.staked_hwc,0)),
-  'daily_history',coalesce((select jsonb_agg(jsonb_build_object('result_type',r.result_type,'percent',r.percent,'amount',r.amount,'created_at',r.created_at) order by r.created_at desc) from public.staking_daily_results r where r.position_id=sp.id),'[]'::jsonb))
+  'daily_history',coalesce((select jsonb_agg(jsonb_build_object('result_type',r.result_type,'percent',r.percent,'amount',r.amount,'created_at',r.created_at) order by r.created_at desc) from public.staking_daily_results r where r.position_id=sp.id),'[]'::jsonb),
+  'audit_history',coalesce((select jsonb_agg(jsonb_build_object('action',a.action,'note',a.note,'actor_id',a.actor_id,'details',a.details,'created_at',a.created_at) order by a.created_at desc) from private.staking_admin_audit a where a.position_id=sp.id),'[]'::jsonb))
  into out from public.staking_positions sp join public.profiles pr on pr.id=sp.user_id left join auth.users u on u.id=sp.user_id left join public.wallets w on w.user_id=sp.user_id where sp.id=p_position_id;
  if out is null then raise exception 'Position not found.'; end if; return out;
 end; $$;
@@ -174,7 +199,8 @@ begin
  if u is null then raise exception 'Authentication required.'; end if;
  return jsonb_build_object(
   'pool_total',coalesce((select sum(original_principal) from public.staking_positions where status in ('active','unlock_pending','blocked')),0),
-  'participants',coalesce((select count(distinct user_id) from public.staking_positions where status in ('active','unlock_pending','blocked')),0),
+  'participants',coalesce((select count(distinct user_id) from public.staking_positions where status='active'),0),
+  'my_active_positions',coalesce((select count(*) from public.staking_positions where user_id=u and status='active' and asset='HDC' and duration_days=360),0),
   'active_positions',coalesce((select count(*) from public.staking_positions where status='active'),0),
   'distributed_total',coalesce((select sum(amount) from public.staking_daily_results where result_type='profit'),0),
   'pending_total',coalesce((select sum(original_principal) from public.staking_positions where status in ('unlock_pending','blocked')),0),
@@ -234,6 +260,10 @@ create or replace function public.hwc_admin_list_staking_positions(p_status text
 create or replace function public.hwc_admin_get_staking_position(p_position_id uuid) returns jsonb language sql security definer set search_path='' as $$ select private.hwc_admin_get_staking_position(p_position_id); $$;
 create or replace function public.hwc_member_staking_overview() returns jsonb language sql security definer set search_path='' as $$ select private.hwc_member_staking_overview(); $$;
 create or replace function public.hwc_publish_staking_daily_result(p_result_type text,p_percent numeric,p_distribution_date date default current_date) returns jsonb language sql security definer set search_path='' as $$ select private.hwc_publish_staking_daily_result(p_result_type,p_percent,p_distribution_date); $$;
+
+insert into public.staking_plans(name,asset,min_amount,max_amount,duration_days,apr_percent,active)
+select 'Yearly Plan','HDC',5000,1000000000000000,360,0,true
+where not exists(select 1 from public.staking_plans where active=true and asset='HDC' and duration_days=360);
 
 revoke execute on function private.hwc_start_staking(uuid,numeric),private.hwc_request_staking_unlock(uuid),private.hwc_admin_review_staking_position(uuid,text,text),private.hwc_admin_set_minimum_stake(uuid,numeric),private.hwc_admin_list_staking_positions(text,text,text),private.hwc_admin_get_staking_position(uuid),private.hwc_member_staking_overview(),private.hwc_publish_staking_daily_result(text,numeric,date),private.hwc_notify_all_matured_staking_positions() from public,anon,authenticated;
 revoke execute on function public.hwc_start_staking(uuid,numeric),public.hwc_request_staking_unlock(uuid),public.hwc_admin_review_staking_position(uuid,text,text),public.hwc_admin_set_minimum_stake(uuid,numeric),public.hwc_admin_list_staking_positions(text,text,text),public.hwc_admin_get_staking_position(uuid),public.hwc_member_staking_overview(),public.hwc_publish_staking_daily_result(text,numeric,date) from public,anon;
