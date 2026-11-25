@@ -64,7 +64,7 @@ function showUserPage(title,html){
 }
 async function renderStaking(){
  var u=me();if(!u){say('Please sign in first.');return;}
- showUserPage('Staking Overview','<div class="dash-subpage-card">Loading your staking account…</div>');
+ showUserPage('Digital Staking','<div class="dash-subpage-card">Loading your staking account…</div>');
  var rs=await Promise.all([
   db.from('staking_plans').select('id,name,min_amount,max_amount,duration_days').eq('active',true).eq('asset','HDC').eq('duration_days',360).order('min_amount'),
   db.from('staking_positions').select('id,plan_name,principal,original_principal,status,started_at,matures_at,usd_value_at_stake,unlock_requested_at,unlock_notified_at,paid_at').eq('user_id',u.id).neq('status','reset').order('started_at',{ascending:false}).limit(100),
@@ -73,7 +73,7 @@ async function renderStaking(){
   db.rpc('hwc_member_staking_overview')
  ]);
  var err=rs.find(function(x){return x.error;});
- if(err){showUserPage('Staking Overview','<div class="dash-subpage-card hwc-error">'+esc(err.error.message)+'</div>');return;}
+ if(err){showUserPage('Digital Staking','<div class="dash-subpage-card hwc-error">'+esc(err.error.message)+'</div>');return;}
  var plans=rs[0].data||[],positions=rs[1].data||[],wallet=rs[2].data||{},history=rs[3].data||[],overview=rs[4].data||{};
  var cutoff=Date.now()-3*86400000,recent=history.filter(function(x){return new Date(x.created_at).getTime()>=cutoff;}),sums={};
  history.forEach(function(x){var z=sums[x.position_id]||(sums[x.position_id]={profit:0,loss:0});z[x.result_type==='profit'?'profit':'loss']+=Number(x.amount||0);});
@@ -98,7 +98,7 @@ async function renderStaking(){
   var z=sums[p.id]||{profit:0,loss:0},remaining=Math.max(0,Math.ceil((new Date(p.matures_at).getTime()-Date.now())/86400000));
   var status=p.status==='active'?(remaining===0?'Matured · unlock available':'Active'):p.status==='unlock_pending'?'Pending admin approval':p.status==='blocked'?'Blocked by admin':p.status==='completed'?'Unlocked':p.status;
   var statusClass=p.status==='active'?'active':p.status==='unlock_pending'?'pending':p.status==='blocked'?'blocked':'completed';
-  var action=p.status==='active'&&remaining===0?'<button type="button" class="hwc-primary hwc-position-unlock" data-stake-unlock="'+esc(p.id)+'">REQUEST UNLOCK</button>':p.status==='unlock_pending'?'<span class="hwc-position-note">Your request is waiting for administrator approval.</span>':p.status==='blocked'?'<span class="hwc-position-note">This position is currently blocked by the administrator.</span>':p.status==='completed'?'<span class="hwc-position-note">The original principal has been returned to your HDC balance.</span>':'';
+  var action=p.status==='active'&&remaining===0?'<button type="button" class="hwc-primary hwc-position-unlock" data-stake-unlock="'+esc(p.id)+'">REQUEST UNLOCK</button>':p.status==='active'?'<span class="hwc-position-note">Your original principal will return to your available HDC balance at maturity.</span>':p.status==='unlock_pending'?'<span class="hwc-position-note">Your request is waiting for administrator approval.</span>':p.status==='blocked'?'<span class="hwc-position-note">This position is currently blocked by the administrator.</span>':p.status==='completed'?'<span class="hwc-position-note">The original principal has been returned to your HDC balance.</span>':'';
   var elapsed=Math.max(0,Math.min(360,360-remaining)),progress=p.status==='completed'?100:elapsed/360*100;
   return '<article class="hwc-position-card">'+
    '<div class="hwc-position-top"><div><span class="hwc-position-kicker">HEWAD COIN · DIGITAL STAKING</span><strong class="hwc-position-title">HDC STAKING POSITION</strong></div><span class="hwc-position-status '+statusClass+'">'+esc(status).toUpperCase()+'</span></div>'+
@@ -108,24 +108,29 @@ async function renderStaking(){
    '<div class="hwc-position-progress-head"><span>POSITION PROGRESS</span><b>Day '+elapsed+' / 360</b></div><div class="hwc-position-progress"><span style="width:'+progress+'%"></span></div>'+
    '<div class="hwc-position-dates"><div><small>START DATE</small><b>'+esc(dt(p.started_at))+'</b></div><div><small>MATURITY DATE</small><b>'+esc(dt(p.matures_at))+'</b></div><div><small>DURATION</small><b>360 Days</b></div><div><small>REMAINING</small><b>'+remaining+' Days</b></div></div>'+
    '<div class="hwc-position-footer"><span>POSITION STATUS</span><b>'+esc(status)+'</b></div>'+action+
-   (p.usd_value_at_stake==null?'':'<div class="hwc-position-usd">USD value at stake: '+fmt(p.usd_value_at_stake,8)+'</div>')+
+   '<button type="button" class="hwc-primary hwc-position-unlock" data-stake-details="'+esc(p.id)+'">VIEW POSITION DETAILS</button><div class="hwc-position-extra" data-stake-extra="'+esc(p.id)+'" hidden><p>Original principal: '+money(p.original_principal||p.principal)+'</p><p>360-day lock. The original principal returns to your available HDC balance only after maturity and administrator approval.</p>'+(p.usd_value_at_stake==null?'':'<p>USD value at stake: '+fmt(p.usd_value_at_stake,8)+'</p>')+'</div>'+
   '</article>';
  }).join(''):'<div class="hwc-position-empty"><span>✧</span><strong>No Active Positions</strong><p>Your staking positions will appear here after starting a stake.</p></div>';
  var historyHtml=recent.length?recent.map(function(x){
   return '<article class="hwc-record"><div><strong>'+esc(x.result_type==='profit'?'Daily Profit':'Daily Loss')+'</strong><small>'+esc(dt(x.created_at))+' · '+fmt(x.percent,4)+'%</small></div><b class="'+(x.result_type==='profit'?'hwc-stake-profit':'hwc-stake-loss')+'">'+(x.result_type==='profit'?'+':'−')+fmt(x.amount)+' HDC</b></article>';
- }).join(''):'<p class="hwc-empty">No profit or loss records in the last three days.</p>';
- var poolContent='<section class="dash-subpage-card"><div class="hwc-stake-section-head"><h3>Available Staking Pool</h3><span class="hwc-stake-tag">360 DAYS</span></div>'+(plans.length?'<form id="hwcStakeProductionForm" class="hwc-form">'+planHtml+'<label>Amount (HDC)<input name="amount" type="number" min="'+esc(plan.min_amount)+'" max="'+Math.min(available,Number(plan.max_amount))+'" step="0.00000001" placeholder="Minimum '+fmt(plan.min_amount)+' HDC" required></label><p class="hwc-muted">Minimum stake: '+money(plan.min_amount)+'. Your HDC will be locked for exactly 360 days. Daily results may be positive or negative; returns are not guaranteed.</p><button class="hwc-primary" type="submit" '+(available<Number(plan.min_amount)?'disabled':'')+'>🔒 Stake HDC</button></form>':'<p class="hwc-empty">The administrator has not published an active staking plan.</p>')+'</section>';
- var html='<div class="hwc-stake-app"><section class="hwc-stake-sticky"><div class="hwc-stake-overview-head"><div><span class="hwc-stake-kicker">HEWAD COIN · HDC</span><h2>Staking Overview</h2><p>Yearly Plan · 360-day lock</p></div><span class="hwc-stake-share">0.06% <small>SHARE</small></span></div><div class="hwc-stake-stats hwc-stake-premium-stats">'+
- '<div><span class="hwc-stake-stat-icon">'+icon('coin')+'</span><small>HDC STAKED</small><b>'+fmt(staked)+' HDC</b></div>'+
- '<div><span class="hwc-stake-stat-icon">'+icon('active')+'</span><small>ACTIVE STAKES</small><b>'+fmt(activeCount)+'</b></div>'+
- '<div><span class="hwc-stake-stat-icon">'+icon('return')+'</span><small>NET RETURN</small><b class="hwc-stake-profit">+'+fmt(profit)+' HDC</b></div>'+
- '<div><span class="hwc-stake-stat-icon">'+icon('people')+'</span><small>PARTICIPANTS</small><b>'+fmt(overview.participants||0)+'</b></div></div></section>'+
- '<section class="hwc-stake-transparency"><div class="hwc-stake-section-head"><h3>Pool Transparency</h3><span class="hwc-live-dot">LIVE</span></div><div class="hwc-stake-pool-grid"><div><small>Pool Total</small><b>'+fmt(overview.pool_total||0)+' HDC</b></div><div><small>Distributed Profit</small><b class="hwc-stake-profit">'+fmt(overview.distributed_total||0)+' HDC</b></div><div><small>Pending / Blocked</small><b>'+fmt(overview.pending_total||0)+' HDC</b></div></div><p class="hwc-muted">Available balance: '+fmt(available)+' HDC · Your total recorded loss: '+fmt(loss)+' HDC</p></section>'+
- '<nav class="hwc-stake-tabs" aria-label="Staking sections"><button type="button" class="hwc-stake-tab active" data-stake-tab="pools">Pools</button><button type="button" class="hwc-stake-tab" data-stake-tab="positions">My Positions ('+positions.length+')</button><button type="button" class="hwc-stake-tab" data-stake-tab="history">Profit History</button></nav>'+
- '<div id="hwcStakeTabContent">'+poolContent+'</div>'+
- '<nav class="hwc-stake-bottom" aria-label="Main navigation"><button type="button" data-stake-nav="Dashboard"><span>⌂</span>Dashboard</button><button type="button" data-stake-nav="Wallet"><span>◈</span>Wallet</button><button type="button" data-stake-nav="Support"><span>✉</span>Support</button><button type="button" data-stake-nav="Profile"><span>♙</span>Profile</button></nav></div>';
- showUserPage('Staking Overview',html);
- var content=$('hwcStakeTabContent');
+ }).join(''):'<p class="hwc-empty">No daily staking results yet.</p>';
+ var poolContent='<section class="dash-subpage-card"><div class="hwc-stake-section-head"><h3>Start a 360-Day Position</h3><span class="hwc-stake-tag">360 DAY PLAN</span></div>'+(plans.length?'<form id="hwcStakeProductionForm" class="hwc-form">'+planHtml+'<label>Stake Amount (HDC)<input name="amount" type="number" min="'+esc(plan.min_amount)+'" max="'+Math.min(available,Number(plan.max_amount))+'" step="0.00000001" placeholder="Minimum '+fmt(plan.min_amount)+' HDC" required></label><p class="hwc-muted">Your HDC will be locked for exactly 360 days. At maturity, the original principal becomes eligible to return to your available HDC balance after administrator approval.</p><button class="hwc-primary" type="submit" '+(available<Number(plan.min_amount)?'disabled':'')+'>🔒 Stake HDC</button></form>':'<p class="hwc-empty">No staking pool is currently available.</p>')+'</section>';
+ var html='<div class="hwc-stake-app">'+
+  '<header class="hwc-stake-hero"><div><h3>Digital Staking</h3><p>Stake HDC and follow your daily results</p></div><span class="hwc-stake-tag">360 DAY PLAN</span></header>'+
+  '<section class="hwc-stake-notice"><strong>⚠ Variable Profit &amp; Loss</strong><p>Daily results may be positive or negative. No fixed percentage or guaranteed return is promised. Results depend on system performance.</p></section>'+
+  '<section class="dash-subpage-card"><h3>My Staking Overview</h3><div class="hwc-stake-stats">'+
+  '<div><small>MY STAKED HDC</small><b>'+fmt(staked)+' HDC</b></div>'+
+  '<div><small>AVAILABLE HDC</small><b>'+fmt(available)+' HDC</b></div>'+
+  '<div><small>TOTAL PROFIT</small><b class="hwc-stake-profit">+'+fmt(profit)+' HDC</b></div>'+
+  '<div><small>TOTAL LOSS</small><b class="hwc-stake-loss">−'+fmt(loss)+' HDC</b></div></div></section>'+
+  '<section class="dash-subpage-card"><h3>Global Staking Statistics</h3><div class="hwc-stake-stats">'+
+  '<div><small>TOTAL STAKERS</small><b>'+fmt(overview.participants||0)+'</b></div>'+
+  '<div><small>TOTAL STAKED HDC</small><b>'+fmt(overview.pool_total||0)+' HDC</b></div></div></section>'+
+  poolContent+
+  '<section class="dash-subpage-card"><h3>My Positions ('+positions.length+')</h3>'+positionHtml+'</section>'+
+  '<section class="dash-subpage-card"><h3>Daily Profit &amp; Loss History</h3>'+historyHtml+'</section>'+
+  '<nav class="hwc-stake-bottom" aria-label="Main navigation"><button type="button" data-stake-nav="Dashboard"><span>⌂</span>Dashboard</button><button type="button" data-stake-nav="Wallet"><span>◈</span>Wallet</button><button type="button" data-stake-nav="Support"><span>✉</span>Support</button><button type="button" data-stake-nav="Profile"><span>♙</span>Profile</button><button type="button" data-stake-nav="Control"><span>⚙</span>Control</button></nav></div>';
+ showUserPage('Digital Staking',html);
  function bindPoolForm(){
   var form=$('hwcStakeProductionForm');if(!form)return;
   form.addEventListener('submit',async function(e){
@@ -140,21 +145,18 @@ async function renderStaking(){
    }catch(ex){say(ex.message||'Could not start staking.');if(btn.isConnected)btn.disabled=false;}
   });
  }
- function setTab(name){
-  document.querySelectorAll('[data-stake-tab]').forEach(function(b){b.classList.toggle('active',b.dataset.stakeTab===name);});
-  if(!content)return;
-  content.innerHTML=name==='pools'?poolContent:name==='positions'?'<section class="dash-subpage-card"><h3>My Positions ('+positions.length+')</h3>'+positionHtml+'</section>':'<section class="dash-subpage-card"><h3>Profit History · Last 3 Days</h3>'+historyHtml+'</section>';
-  if(name==='pools')bindPoolForm();
- }
- document.querySelectorAll('[data-stake-tab]').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.stakeTab);});});
  document.querySelectorAll('[data-stake-nav]').forEach(function(b){b.addEventListener('click',function(){
-  var action=b.dataset.stakeNav;if(action==='Dashboard'){$('hwcStakeBack')?.click();return;}
+  var action=b.dataset.stakeNav;
+  if(action==='Dashboard'){$('hwcStakeBack')?.click();return;}
+  if(action==='Control'){var adminButton=document.querySelector('.admin-nav-btn');if(adminButton){adminButton.click();return;}say('Administrator access only.');return;}
   if(typeof window.openHwcModule==='function'){window.openHwcModule(action);return;}
   var tile=document.querySelector('[data-action="'+action+'"]');if(tile)tile.click();
  });});
  bindPoolForm();
 }
 document.addEventListener('click',function(e){
+ var detail=e.target.closest('[data-stake-details]');
+ if(detail){e.preventDefault();e.stopImmediatePropagation();var extra=Array.from(document.querySelectorAll('[data-stake-extra]')).find(function(x){return x.dataset.stakeExtra===detail.dataset.stakeDetails;});if(extra){extra.hidden=!extra.hidden;detail.textContent=extra.hidden?'VIEW POSITION DETAILS':'HIDE POSITION DETAILS';}return;}
  var tile=e.target.closest('[data-action="Staking"]');
  if(tile){e.preventDefault();e.stopImmediatePropagation();renderStaking();return;}
  var un=e.target.closest('[data-stake-unlock]');
