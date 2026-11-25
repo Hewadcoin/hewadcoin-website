@@ -35,7 +35,8 @@
       }
       /* Load every enhancement independently. An existing live-enhancement tag
          must not prevent the compact-menu script from loading. */
-      loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
+      loadScript('hewad-convert-live','hewad-convert-live.js',function(){
+        loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
         loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
           loadScript('hewad-phone-metadata','https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/libphonenumber-max.js',function(){
             try{
@@ -64,6 +65,7 @@
             });
           });
         });
+      });
       });
     }catch(error){console.error('HEWAD COIN live features could not initialize:',error);}
   });
