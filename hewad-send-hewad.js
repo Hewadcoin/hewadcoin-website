@@ -116,6 +116,7 @@ function resetRecipient(){
 }
 function detail(id){return s.method==='email'?id:'Card ending '+id.slice(-4);}
 function renderRecipient(id,row){
+ s.lookupBusy=false;
  s.code=row.verification_status||'NOT_FOUND';s.eligible=row.eligible===true&&s.code==='VERIFIED';s.name=s.eligible?(row.display_name||'HEWAD COIN Member'):'';
  var map={
   VERIFIED:['✓ VERIFIED','verified',s.name,'Recipient account verified.'],
@@ -149,7 +150,7 @@ async function lookup(){
   $('hwcSendRecipientCard').classList.add('show');setStatus('Could not verify this recipient. Please try again. No funds will be deducted.','error');update();
  }
 }
-function scheduleLookup(){if(s.timer)clearTimeout(s.timer);s.timer=setTimeout(lookup,450);}
+function scheduleLookup(){if(s.sending)return;s.seq++;if(s.timer)clearTimeout(s.timer);s.timer=setTimeout(lookup,450);}
 function switchMethod(next){
  s.method=next;s.seq++;s.requestId=null;if(s.timer)clearTimeout(s.timer);
  document.querySelectorAll('#hwcSendHewadModal .method').forEach(function(b){b.classList.toggle('active',b.dataset.method===next);});
@@ -178,6 +179,7 @@ async function connect(){
   setStatus(s.senderAllowed?'Wallet connected. Enter an email or card number to verify the recipient.':'Your account must be active and KYC-approved before sending HDC.',s.senderAllowed?'good':'error');
  }catch(e){s.walletReady=false;s.senderAllowed=false;$('hwcSendBalance').textContent='Unavailable';setStatus(e&&e.message?e.message:'Could not connect to your wallet.','error');}
 }
+function lockInputs(lock){$('hwcSendRecipient').disabled=lock;$('hwcSendAmount').disabled=lock;$('hwcSendMax').disabled=lock;document.querySelectorAll('#hwcSendHewadModal .method').forEach(function(b){b.disabled=lock;});}
 function openModal(){root.classList.add('open');document.body.style.overflow='hidden';if(!s.walletReady)connect();setTimeout(function(){$('hwcSendRecipient').focus();},0);}
 function closeModal(){if(s.sending)return;root.classList.remove('open');document.body.style.overflow='';}
 async function send(){
@@ -187,7 +189,7 @@ async function send(){
  if(!(v.amount>0)){setStatus('Enter an amount greater than zero.','error');return;}
  if(v.amount>s.available+1e-8){setStatus('Insufficient available HDC balance, including the transfer fee.','error');return;}
  if(!s.requestId)s.requestId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():(Date.now().toString(16)+'-'+Math.random().toString(16).slice(2)+'-'+Math.random().toString(16).slice(2));
- s.sending=true;$('hwcSendConfirm').disabled=true;$('hwcSendConfirm').textContent='PROCESSING SECURELY…';$('hwcSendClose').disabled=true;
+ s.sending=true;lockInputs(true);$('hwcSendConfirm').disabled=true;$('hwcSendConfirm').textContent='PROCESSING SECURELY…';$('hwcSendClose').disabled=true;
  setStatus('Processing your HDC transfer securely. Please wait…','');
  try{
   var r=await db.rpc('hdc_send_hewad_v2',{p_recipient_code:id,p_amount:v.amount,p_request_id:s.requestId,p_note:null});
@@ -203,7 +205,7 @@ async function send(){
   else if(/cannot send HDC to your own/i.test(m))m='You cannot send HDC to your own account. No funds have been deducted.';
   setStatus(m,'error');
  }finally{
-  s.sending=false;$('hwcSendConfirm').textContent='CONFIRM TRANSFER';$('hwcSendClose').disabled=false;update();
+  s.sending=false;lockInputs(false);$('hwcSendConfirm').textContent='CONFIRM TRANSFER';$('hwcSendClose').disabled=false;update();
  }
 }
 document.addEventListener('click',function(e){
