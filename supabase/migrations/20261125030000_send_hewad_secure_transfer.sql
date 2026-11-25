@@ -161,7 +161,7 @@ begin
   v_gross := round(p_amount, 8);
   v_fee := round(v_gross * 0.01, 8);
   v_net := v_gross - v_fee;
-  if v_net <= 0 then raise exception 'The amount is too small after the 1% fee.'; end if;
+  if v_net <= 0 then raise exception 'The amount is too small after the 1%% fee.'; end if;
 
   select p.id, p.account_status, p.kyc_status, p.email_verified, (u.email_confirmed_at is not null)
     into v_recipient, v_recipient_status, v_recipient_kyc, v_recipient_email_verified, v_recipient_email_confirmed
@@ -191,7 +191,7 @@ begin
   update public.wallets
      set balance_hwc = balance_hwc - v_gross, updated_at = now()
    where user_id = v_uid and (balance_hwc - reserved_hwc - staked_hwc) >= v_gross;
-  if not found then raise exception 'Insufficient available HDC balance (including the 1% fee).'; end if;
+  if not found then raise exception 'Insufficient available HDC balance (including the 1%% fee).'; end if;
 
   update public.wallets set balance_hwc = balance_hwc + v_net, updated_at = now() where user_id = v_recipient;
   insert into public.wallet_transactions(user_id, asset, amount, transaction_type, status, description, reference, created_by)
@@ -243,7 +243,7 @@ begin
   v_gross := round(p_amount, 8);
   v_fee := round(v_gross * 0.01, 8);
   v_net := v_gross - v_fee;
-  if v_net <= 0 then raise exception 'The amount is too small after the 1% fee.'; end if;
+  if v_net <= 0 then raise exception 'The amount is too small after the 1%% fee.'; end if;
 
   select p.id, p.account_status, p.kyc_status, p.email_verified, (u.email_confirmed_at is not null)
     into v_recipient, v_recipient_status, v_recipient_kyc, v_recipient_email_verified, v_recipient_email_confirmed
@@ -289,7 +289,7 @@ begin
   update public.wallets
      set balance_hwc = balance_hwc - v_gross, updated_at = now()
    where user_id = v_uid and (balance_hwc - reserved_hwc - staked_hwc) >= v_gross;
-  if not found then raise exception 'Insufficient available HDC balance (including the 1% fee).'; end if;
+  if not found then raise exception 'Insufficient available HDC balance (including the 1%% fee).'; end if;
 
   update public.wallets set balance_hwc = balance_hwc + v_net, updated_at = now() where user_id = v_recipient;
   insert into public.wallet_transactions(user_id, asset, amount, transaction_type, status, description, reference, created_by)
