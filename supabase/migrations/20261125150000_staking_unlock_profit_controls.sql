@@ -158,6 +158,7 @@ begin
   'usd_rate_at_stake',sp.usd_rate_at_stake,'usd_value_at_stake',sp.usd_value_at_stake,
   'total_profit',coalesce((select sum(amount) from public.staking_daily_results where position_id=sp.id and result_type='profit'),0),
   'total_loss',coalesce((select sum(amount) from public.staking_daily_results where position_id=sp.id and result_type='loss'),0),
+  'net_result',coalesce((select sum(case when result_type='profit' then amount else -amount end) from public.staking_daily_results where position_id=sp.id),0),
   'user_id',pr.id,'full_name',concat_ws(' ',pr.first_name,pr.last_name),'kyc_status',pr.kyc_status,'email',u.email,'mobile_number',pr.mobile_number,'country',pr.country,'referral_code',pr.referral_code,'card_number',pr.card_number,
   'balance_hwc',coalesce(w.balance_hwc,0),'staked_hwc',coalesce(w.staked_hwc,0)),
   'daily_history',coalesce((select jsonb_agg(jsonb_build_object('result_type',r.result_type,'percent',r.percent,'amount',r.amount,'created_at',r.created_at) order by r.created_at desc) from public.staking_daily_results r where r.position_id=sp.id),'[]'::jsonb))
