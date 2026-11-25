@@ -36,6 +36,15 @@ style.textContent = `
 #hwcSendHewadModal .field:focus-within{border-color:#c9a13b;box-shadow:0 0 0 3px #d8ad3520}
 #hwcSendHewadModal input{width:100%;min-width:0;padding:12px 0;border:0;outline:0;background:transparent;color:#f5f6f7;font:inherit;font-size:14px}
 #hwcSendHewadModal input::placeholder{color:#69727d}
+#hwcSendHewadModal #hwcSendRecipient:-webkit-autofill,
+#hwcSendHewadModal #hwcSendRecipient:-webkit-autofill:hover,
+#hwcSendHewadModal #hwcSendRecipient:-webkit-autofill:focus,
+#hwcSendHewadModal #hwcSendRecipient:autofill{ -webkit-box-shadow:0 0 0 1000px #090d11 inset !important;box-shadow:0 0 0 1000px #090d11 inset !important;-webkit-text-fill-color:#f5f6f7 !important;caret-color:#f5f6f7;color-scheme:dark; }
+#hwcSendHewadModal #hwcSendRecipient{color-scheme:dark}
+#hwcSendHewadModal .amount-field{min-height:48px;padding:0 12px}
+#hwcSendHewadModal .amount-field input{padding:12px 0}
+#hwcSendHewadModal .amount-max{display:block;margin:8px auto 0;padding:7px 12px}
+
 #hwcSendHewadModal .max{padding:7px 9px;border:1px solid #695522;border-radius:8px;background:#2b2414;color:#f0cf70;font-size:9px;font-weight:900;cursor:pointer}
 #hwcSendHewadModal .unit{color:#a9b0bb;font-size:10px;font-weight:800}
 #hwcSendHewadModal .hint{margin:6px 2px 0;color:#818b98;font-size:10px;line-height:1.45}
@@ -80,7 +89,7 @@ root.innerHTML = `
   <div class="hint" id="hwcSendHint">Recipient account is checked securely before sending.</div>
   <div class="recipient" id="hwcSendRecipientCard"><div class="recipient-row"><div><div class="recipient-name" id="hwcSendRecipientName">Recipient account</div><div class="recipient-detail" id="hwcSendRecipientDetail">Checking account</div></div><span id="hwcSendVerification" class="unverified">CHECKING…</span></div></div>
   <label for="hwcSendAmount">Amount to Send</label>
-  <div class="field"><input id="hwcSendAmount" type="number" min="0.00000001" step="0.00000001" inputmode="decimal" placeholder="Enter HDC amount"><button type="button" class="max" id="hwcSendMax">MAX</button><span class="unit">HDC</span></div>
+  <div class="field amount-field"><input id="hwcSendAmount" type="number" min="0.00000001" step="0.00000001" inputmode="decimal" placeholder="Enter HDC amount"><span class="unit">HDC</span></div><button type="button" class="max amount-max" id="hwcSendMax">MAX</button>
   <div class="calcs">
    <div class="section-title">TRANSFER DETAILS</div>
    <div class="row"><span id="hwcSendRecipientKey">Recipient Email</span><b id="hwcSendCalcRecipient">—</b></div>
