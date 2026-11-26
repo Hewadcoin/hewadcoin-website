@@ -63,6 +63,14 @@ card.innerHTML='<strong>🤖 Telegram Bot</strong><p style="font-size:12px;color
 card.querySelector('button').addEventListener('click',openTelegram);host.appendChild(card);
 }
 document.addEventListener('click',function(e){
+var node=e.target, tile=node&&node.closest?node.closest('[data-action="Gift" i]'):null;
+if(!tile&&node&&node.closest){
+var candidates=node.closest('button,a,[role="button"],.menu-item,.dashboard-item,.dash-card,.menu-card');
+if(candidates&&/^🎁?\\s*Gift\\s*$/i.test((candidates.innerText||candidates.textContent||'').replace(/\\s+/g,' ').trim()))tile=candidates;
+}
+if(tile){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openGift();}
+},true);
+document.addEventListener('click',function(e){
 var node=e.target;
 for(var depth=0;node&&depth<6;depth++,node=node.parentElement){
 var label=(node.innerText||node.textContent||'').replace(/\s+/g,' ').trim();
