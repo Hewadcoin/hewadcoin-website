@@ -40,6 +40,15 @@ const menuText = "🏦 HEWAD COIN\nستاسو حساب په بریالیتوب �
 const supabase = () => createClient(SUPABASE_URL,SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 
 async function ensureWebhook() {
+  const identity=await telegram("getMe",{});
+  if ((identity.result?.username || "").toLowerCase() !== BOT_USERNAME.toLowerCase()) {
+    throw new Error("TELEGRAM_BOT_TOKEN does not belong to @"+BOT_USERNAME);
+  }
+  await telegram("setMyCommands",{commands:[
+    {command:"start",description:"Start HEWAD COIN Bot"},
+    {command:"menu",description:"Open account menu"},
+    {command:"help",description:"Get help"}
+  ]});
   const info=await telegram("getWebhookInfo",{});
   if (info.result?.url !== WEBHOOK_URL) {
     await telegram("setWebhook",{url:WEBHOOK_URL,secret_token:WEBHOOK_SECRET,allowed_updates:["message"],drop_pending_updates:false});
