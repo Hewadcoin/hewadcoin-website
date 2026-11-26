@@ -17,7 +17,7 @@ page.hidden=false;page.style.display='block';loadDaily();loadCodes();
 }
 function addMenu(){
 var home=document.getElementById('adminHome'),grid=home&&home.querySelector('.hwc-admin-grid');
-if(!grid||grid.querySelector('[data-hwc-gift-open]'))return;
+if(!grid||grid.querySelector('[data-hwc-gift-open],[data-hwc-page="gift"]'))return;
 var b=document.createElement('button');b.type='button';b.className='hwc-admin-option';b.setAttribute('data-hwc-gift-open','1');
 b.innerHTML='<span class="ico">🎁</span><span><strong>ډالۍ</strong><small>Create special gift codes and change the Daily Gift amount</small></span><span class="arrow">›</span>';
 b.addEventListener('click',showGift);grid.appendChild(b);
@@ -33,6 +33,7 @@ var q=await db.from('gift_codes').select('code,reward_amount,max_claims,claims_c
 if(q.error){host.textContent=q.error.message;return;}
 var rows=q.data||[];host.innerHTML=rows.length?rows.map(function(x){return '<div style="padding:9px 0;border-bottom:1px solid #333"><b>'+esc(x.code)+'</b> · '+fmt(x.reward_amount)+' HDC<br><small>'+fmt(x.claims_count)+' / '+(x.max_claims==null?'ټول':fmt(x.max_claims))+' claims · '+(x.active?'Active':'Inactive')+'</small></div>';}).join(''):'No special gift codes yet.';
 }
+document.addEventListener('hwc-admin-open-gift',showGift);
 document.addEventListener('click',async function(e){
 if(e.target.closest('[data-hwc-gift-back]')){e.preventDefault();e.stopPropagation();var home=document.getElementById('adminHome');if(home){adminPanel.querySelectorAll('.admin-view').forEach(function(el){el.hidden=el!==home;el.style.display=el===home?'block':'none';});home.hidden=false;}return;}
 },true);
