@@ -16,7 +16,7 @@
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261126-staking-click-fix-1';
+  var release='20261126-staking-mount-fix-2';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -24,10 +24,23 @@
     try{
       var doc=frame.contentDocument;
       if(!doc||!doc.body)return;
+      /* The staking renderer targets a dedicated dashboard subpage. The
+         original dashboard markup omitted that mount point, so create it
+         before the staking module is loaded. */
+      if(!doc.getElementById('modulePage')){
+        var modulePage=doc.createElement('section');
+        modulePage.id='modulePage';
+        modulePage.className='dash-subpage';
+        modulePage.setAttribute('aria-live','polite');
+        var dashShell=doc.querySelector('#dashboard .dash-shell');
+        var bottomNav=doc.querySelector('#dashboard .dash-bottom-nav');
+        if(dashShell&&bottomNav)dashShell.insertBefore(modulePage,bottomNav);
+        else if(dashShell)dashShell.appendChild(modulePage);
+      }
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261126-staking-click-fix-1';
+        script.id=id;script.src=src+'?v=20261126-staking-mount-fix-2';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
