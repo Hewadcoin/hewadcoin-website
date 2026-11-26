@@ -1,7 +1,7 @@
 /* HEWAD COIN — Gift redemption + Telegram account linking */
 (function(){
 'use strict';
-var db=window.hwcSupabase;
+var db=typeof hwcSupabase!=='undefined'?hwcSupabase:window.hwcSupabase;
 if(!db){console.warn('HEWAD Gift/Telegram: Supabase client unavailable.');return;}
 var BOT='https://t.me/Hewadcoinbot';
 var css=document.createElement('style');
@@ -26,7 +26,7 @@ finally{button.disabled=false;button.textContent='REDEEM';}
 });
 }
 async function openTelegram(){
-var u=currentUser();if(!u){notify('Please sign in first.');return;}
+var auth=await db.auth.getUser();if(auth.error)throw auth.error;var u=auth.data&&auth.data.user;if(!u){notify('Please sign in first.');return;}
 var wrap=modal('<div class="hwc-feature-title">🤖 TELEGRAM BOT</div><div class="hwc-feature-sub">@Hewadcoinbot</div><div id="hwcTelegramState" class="hwc-feature-note">Checking account link…</div><div id="hwcTelegramActions"></div>');
 var state=wrap.querySelector('#hwcTelegramState'),actions=wrap.querySelector('#hwcTelegramActions');
 try{
@@ -62,6 +62,15 @@ var card=document.createElement('div');card.className='hwc-profile-telegram-card
 card.innerHTML='<strong>🤖 Telegram Bot</strong><p style="font-size:12px;color:#b9bbc2;margin:7px 0">Connect your HEWAD COIN account to the official Telegram Bot.</p><button type="button" data-hwc-open-telegram>Telegram Bot</button>';
 card.querySelector('button').addEventListener('click',openTelegram);host.appendChild(card);
 }
+document.addEventListener('click',function(e){
+var node=e.target;
+for(var depth=0;node&&depth<6;depth++,node=node.parentElement){
+var label=(node.innerText||node.textContent||'').replace(/\\s+/g,' ').trim();
+if(/^Link Telegram(?:\\s|$)/i.test(label)&&/Not Linked/i.test(label)){
+e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openTelegram();return;
+}
+}
+},true);
 document.addEventListener('click',function(e){
 var tile=e.target.closest('[data-action]');
 if(tile&&(tile.getAttribute('data-action')||'').toLowerCase()==='profile'){setTimeout(injectProfileCard,250);setTimeout(injectProfileCard,900);}
