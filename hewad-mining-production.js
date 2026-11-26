@@ -134,7 +134,6 @@ async function open(){
  }
 }
 doc.querySelectorAll('[data-nav="wallet"]').forEach(function(btn){btn.addEventListener('click',function(){syncWalletFromServer().catch(function(e){console.warn('Wallet balance refresh:',e);});});});
-window.addEventListener('hwc:wallet-updated',function(e){if(e.detail&&e.detail.balance_hdc!=null)syncWalletBalance(e.detail.balance_hdc);});
 doc.addEventListener('click',function(e){
  var tile=e.target.closest('[data-action="Mining" i]');if(!tile)return;
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();open();
