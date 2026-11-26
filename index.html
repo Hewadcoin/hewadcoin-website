@@ -12,7 +12,7 @@
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090c}#hewad-app{display:block;width:100%;height:100%;border:0;background:#08090c}</style>
 </head>
 <body>
-<iframe id="hewad-app" title="HEWAD COIN" src="hewad_coin_homepage_fullscreen.html?hwc_release=20261126-staking-click-fix-1"></iframe>
+<iframe id="hewad-app" title="HEWAD COIN" src="hewad_coin_homepage_fullscreen.html?hwc_release=20261126-staking-mount-fix-3"></iframe>
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
@@ -34,13 +34,12 @@
         modulePage.setAttribute('aria-live','polite');
         var dashShell=doc.querySelector('#dashboard .dash-shell');
         var bottomNav=doc.querySelector('#dashboard .dash-bottom-nav');
-        if(dashShell&&bottomNav)dashShell.insertBefore(modulePage,bottomNav);
-        else if(dashShell)dashShell.appendChild(modulePage);
+        if(dashShell)dashShell.appendChild(modulePage);
       }
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261126-staking-mount-fix-2';
+        script.id=id;script.src=src+'?v=20261126-staking-mount-fix-3';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
