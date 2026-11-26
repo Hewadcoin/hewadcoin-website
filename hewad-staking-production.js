@@ -154,6 +154,7 @@ async function renderStaking(){
  });});
  bindPoolForm();
 }
+window.openHwcStakingPage=renderStaking;
 document.addEventListener('click',function(e){
  var detail=e.target.closest('[data-stake-details]');
  if(detail){e.preventDefault();e.stopImmediatePropagation();var extra=Array.from(document.querySelectorAll('[data-stake-extra]')).find(function(x){return x.dataset.stakeExtra===detail.dataset.stakeDetails;});if(extra){extra.hidden=!extra.hidden;detail.textContent=extra.hidden?'VIEW POSITION DETAILS':'HIDE POSITION DETAILS';}return;}
