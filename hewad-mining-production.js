@@ -60,7 +60,7 @@ function view(s){
  '<div class="hm-balance"><div class="hm-label">Your HDC Wallet Balance</div><div class="hm-big" id="hm-balance">'+fmt(s.balance_hdc,8)+' HDC</div></div>'+
  '<div class="hm-tapbox"><button class="hm-tap" id="hm-tap" '+(taps>=max?'disabled':'')+' aria-label="Tap to mine">⛏️</button><h3>Tap to Mine</h3><p>Every tap earns 0.1 HDC instantly in your Wallet</p>'+
  '<div class="hm-progress"><span id="hm-bar" style="width:'+pct+'%"></span></div><div class="hm-progressline"><span id="hm-taps">'+taps+' / 250 Taps</span><span id="hm-earned">'+fmt(s.earned_today,2)+' / 25 HDC</span></div></div>'+
- '<div class="hm-card"><h3>Daily Mining Goal</h3><div class="hm-goal"><span>250 / 250 Taps</span><strong>25 HDC</strong></div><div class="hm-auto">✓ Automatic Wallet Reward — 0.1 HDC per tap</div><p class="hm-note">Daily cycle: 8:00 AM to 8:00 AM Afghanistan time. Your taps and daily limit reset automatically at 8:00 AM.</p></div>'+
+ '<div class="hm-card"><h3>Daily Mining Goal</h3><div class="hm-goal"><span>'+taps+' / 250 Taps</span><strong>25 HDC</strong></div><div class="hm-auto">✓ Automatic Wallet Reward — 0.1 HDC per tap</div><p class="hm-note">Daily cycle: 8:00 AM to 8:00 AM Afghanistan time. Your taps and daily limit reset automatically at 8:00 AM.</p></div>'+
  '<div class="hm-card"><h3>Mining Statistics</h3><div class="hm-stats">'+
  '<div class="hm-stat"><small>Total Taps</small><b>'+fmt(s.total_taps,0)+'</b></div><div class="hm-stat"><small>Total Mined</small><b>'+fmt(s.total_mined,2)+' HDC</b></div>'+
  '<div class="hm-stat"><small>Completed Cycles</small><b>'+fmt(s.completed_cycles,0)+'</b></div><div class="hm-stat"><small>Remaining Taps</small><b id="hm-remaining">'+fmt(s.remaining_clicks,0)+'</b></div></div></div>'+
@@ -73,27 +73,68 @@ async function history(u){
  if(!q.data||!q.data.length){el.innerHTML='<div class="hm-note">No mining history yet.</div>';return;}
  el.innerHTML=q.data.map(function(x){return '<div class="hm-history"><span>'+esc(new Date(x.created_at).toLocaleString())+'</span><b>+'+fmt(x.reward,2)+' HDC</b></div>';}).join('');
 }
+var hiddenCards=[];
+function activatePage(){
+ var dash=$('dashboard'),page=$(rootId);
+ if(!dash||!page)throw new Error('Mining page mount point is unavailable.');
+ dash.querySelectorAll('.dash-subpage').forEach(function(x){x.classList.remove('active');});
+ hiddenCards=Array.prototype.slice.call(dash.querySelectorAll('#memberCard,#member-card,[id*="memberCard"],[id*="member-card"],[class*="member-card"],[class*="gold-member-card"]'));
+ hiddenCards.forEach(function(el){if(!el.hidden){el.setAttribute('data-hwc-mining-card-hidden','1');el.hidden=true;}});
+ page.hidden=false;page.classList.add('active');
+}
+function closePage(){
+ if(timer){clearInterval(timer);timer=null;}
+ var page=$(rootId);if(page){page.classList.remove('active');page.hidden=true;}
+ var home=$('dashboardMain');if(home)home.classList.add('active');
+ hiddenCards.forEach(function(el){if(el.getAttribute('data-hwc-mining-card-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-mining-card-hidden');}});
+ window.scrollTo(0,0);
+}
+function syncWalletBalance(value){
+ var el=$('walletHwcBalance');
+ if(el&&value!=null)el.textContent=fmt(value,8)+' HDC';
+ window.dispatchEvent(new CustomEvent('hwc:wallet-updated',{detail:{balance_hdc:Number(value||0)}}));
+}
+async function syncWalletFromServer(){
+ var u=await user();
+ var q=await db.from('wallets').select('balance_hwc').eq('user_id',u.id).maybeSingle();
+ if(q.error)throw q.error;
+ syncWalletBalance(q.data&&q.data.balance_hwc!=null?q.data.balance_hwc:0);
+}
 async function refresh(){
  var u=await user(),r=await db.rpc('hwc_mining_status');if(r.error)throw r.error;
- var s=r.data||{};var root=$(rootId);if(!root)return;
- root.innerHTML=view(s);await history(u);
+ var s=r.data||{},root=$(rootId);if(!root)return;
+ syncWalletBalance(s.balance_hdc);
+ root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button>'+view(s);
+ $('hm-back').addEventListener('click',closePage);
+ await history(u);
  var btn=$('hm-tap');if(btn)btn.addEventListener('click',tap);
 }
 async function tap(){
  if(busy)return;busy=true;var btn=$('hm-tap');if(btn)btn.disabled=true;
  try{
   var r=await db.rpc('hwc_mining_click');if(r.error)throw r.error;
-  await refresh();
-  var data=r.data||{};say('+'+fmt(data.reward||0.1,2)+' HDC added to your Wallet.');
+  var data=r.data||{};
+  syncWalletBalance(data.balance_hdc);
+  say('+'+fmt(data.reward||0.1,2)+' HDC added to your Wallet.');
+  try{await refresh();}catch(refreshError){console.error('Mining balance refreshed, but page refresh failed:',refreshError);}
  }catch(e){say(e&&e.message?e.message:'Mining tap failed. Please try again.');try{await refresh();}catch(_){}}finally{busy=false;var b=$('hm-tap');if(b&&Number(($('hm-taps')||{}).textContent?.split('/')[0]||0)<250)b.disabled=false;}
 }
 async function open(){
  if(timer){clearInterval(timer);timer=null;}
  var root=$(rootId);if(!root)return;
- root.innerHTML='<div class="hwc-mining hm-card">Loading Mining…</div>';
- try{await refresh();timer=setInterval(function(){refresh().catch(function(e){console.error('Mining refresh:',e);});},60000);}
- catch(e){root.innerHTML='<div class="hwc-mining hm-card"><h3>Mining unavailable</h3><p class="hm-note">'+esc(e.message||'Please sign in and complete account verification.')+'</p></div>';}
+ try{
+  activatePage();
+  root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card">Loading Mining…</div>';
+  $('hm-back').addEventListener('click',closePage);
+  await refresh();
+  timer=setInterval(function(){refresh().catch(function(e){console.error('Mining refresh:',e);});},60000);
+ }catch(e){
+  root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card"><h3>Mining unavailable</h3><p class="hm-note">'+esc(e.message||'Please sign in and complete account verification.')+'</p></div>';
+  var back=$('hm-back');if(back)back.addEventListener('click',closePage);
+ }
 }
+doc.querySelectorAll('[data-nav="wallet"]').forEach(function(btn){btn.addEventListener('click',function(){syncWalletFromServer().catch(function(e){console.warn('Wallet balance refresh:',e);});});});
+window.addEventListener('hwc:wallet-updated',function(e){if(e.detail&&e.detail.balance_hdc!=null)syncWalletBalance(e.detail.balance_hdc);});
 doc.addEventListener('click',function(e){
  var tile=e.target.closest('[data-action="Mining" i]');if(!tile)return;
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();open();
