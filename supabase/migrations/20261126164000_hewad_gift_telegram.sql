@@ -16,6 +16,7 @@ alter table public.gift_codes alter column starts_at drop not null;
 alter table public.gift_codes alter column expires_at drop not null;
 alter table public.gift_codes alter column created_by drop not null;
 alter table public.gift_claims drop constraint if exists gift_claims_one_per_user_per_day;
+create unique index if not exists gift_claims_daily_once_per_day on public.gift_claims(user_id,claim_date,gift_code_id);
 
 alter table public.telegram_account_links add column if not exists language text not null default 'ps';
 alter table public.telegram_account_links drop constraint if exists telegram_account_links_language_check;
