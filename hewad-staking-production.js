@@ -136,9 +136,11 @@ async function renderStaking(){
   '<div><small>AVAILABLE HDC</small><b>'+fmt(available)+' HDC</b></div>'+
   '<div><small>TOTAL PROFIT</small><b class="hwc-stake-profit">+'+fmt(profit)+' HDC</b></div>'+
   '<div><small>TOTAL LOSS</small><b class="hwc-stake-loss">−'+fmt(loss)+' HDC</b></div></div></section>'+
-  '<section class="dash-subpage-card"><h3>Global Staking Statistics</h3><div class="hwc-stake-stats">'+
-  '<div><small>TOTAL STAKERS</small><b>'+fmt(overview.participants||0)+'</b></div>'+
-  '<div><small>TOTAL STAKED HDC</small><b>'+fmt(overview.pool_total||0)+' HDC</b></div></div></section>'+
+  '<section class="dash-subpage-card"><h3>Global Staking Statistics</h3><div class="hwc-stake-stats hwc-stake-global-stats">'+
+  '<div><small>ACTIVE POSITIONS</small><b>'+fmt(overview.active_positions||0)+'</b></div></div></section>'+
+  '<section class="dash-subpage-card hwc-yearly-plan"><div class="hwc-yearly-head"><h3>Yearly Plan</h3><div><span>🔒 360 days lock</span><span>☪ Halal</span></div></div><div class="hwc-yearly-stats">'+
+  '<div><small>💰 POOL TOTAL</small><b>'+fmt(overview.pool_total||0)+' HDC</b><small class="hwc-yearly-caption">All HDC currently held in staking positions</small></div>'+
+  '<div><small>👥 PARTICIPANTS</small><b>'+fmt(overview.participants||0)+'</b><small class="hwc-yearly-caption">Members with at least one active position</small></div></div></section>'+
   poolContent+
   '<section class="dash-subpage-card"><h3>My Positions ('+positions.length+')</h3>'+positionHtml+'</section>'+
   '<section class="dash-subpage-card"><h3>Daily Profit &amp; Loss History</h3>'+historyHtml+'</section>'+
@@ -254,3 +256,5 @@ if(panel){
 }
 console.info('HEWAD staking production module loaded.');
 })();
+
+stakeCss.textContent += "\n/* Global staking statistics and yearly plan summary */\n.hwc-staking-live .hwc-stake-global-stats{grid-template-columns:minmax(0,1fr)}\n.hwc-staking-live .hwc-stake-global-stats>div{min-height:82px;display:flex;flex-direction:column;justify-content:center}\n.hwc-staking-live .hwc-yearly-plan{border-color:#80632e;background:linear-gradient(145deg,#211f1a,#151a27)}\n.hwc-staking-live .hwc-yearly-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}\n.hwc-staking-live .hwc-yearly-head h3{margin:0}\n.hwc-staking-live .hwc-yearly-head>div{display:flex;gap:7px;flex-wrap:wrap}\n.hwc-staking-live .hwc-yearly-head span{padding:6px 9px;border:1px solid #6c552c;border-radius:18px;background:#292316;color:#f0d58f;font-size:10px;font-weight:800}\n.hwc-staking-live .hwc-yearly-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}\n.hwc-staking-live .hwc-yearly-stats>div{min-width:0;padding:14px;border:1px solid #69532d;border-radius:15px;background:linear-gradient(145deg,#302a1d,#191c21)}\n.hwc-staking-live .hwc-yearly-stats>div small{display:block;color:#c9b989;font-size:10px;font-weight:800;letter-spacing:.5px}\n.hwc-staking-live .hwc-yearly-stats>div b{display:block;margin:8px 0;color:#f4d88f;font-size:clamp(14px,3.8vw,20px);overflow-wrap:anywhere}\n.hwc-staking-live .hwc-yearly-stats .hwc-yearly-caption{color:#9fa8ad;font-size:9px;font-weight:500;letter-spacing:0;line-height:1.4}\n@media(max-width:380px){.hwc-staking-live .hwc-yearly-stats{gap:7px}.hwc-staking-live .hwc-yearly-stats>div{padding:10px}.hwc-staking-live .hwc-yearly-stats>div small{font-size:9px}}\n";
