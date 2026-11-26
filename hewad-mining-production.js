@@ -67,11 +67,23 @@ function view(s){
  '<div class="hm-card"><h3>Mining History</h3><div id="hm-history"><div class="hm-note">Loading mining history…</div></div></div></div>';
 }
 async function history(u){
- var q=await db.from('mining_clicks').select('id,reward,created_at,mining_date').eq('user_id',u.id).order('created_at',{ascending:false}).limit(12);
+ var q=await db.from('mining_clicks').select('reward,created_at,mining_date').eq('user_id',u.id).order('mining_date',{ascending:false}).limit(1000);
  if(q.error)throw q.error;
  var el=$('hm-history');if(!el)return;
  if(!q.data||!q.data.length){el.innerHTML='<div class="hm-note">No mining history yet.</div>';return;}
- el.innerHTML=q.data.map(function(x){return '<div class="hm-history"><span>'+esc(new Date(x.created_at).toLocaleString())+'</span><b>+'+fmt(x.reward,2)+' HDC</b></div>';}).join('');
+ var days={};
+ q.data.forEach(function(x){
+  var day=String(x.mining_date||x.created_at||'').slice(0,10);
+  if(!day)return;
+  if(!days[day])days[day]=0;
+  days[day]+=Number(x.reward||0);
+ });
+ var dates=Object.keys(days).sort().reverse();
+ if(!dates.length){el.innerHTML='<div class="hm-note">No mining history yet.</div>';return;}
+ el.innerHTML=dates.map(function(day){
+  var label=day.replace(/-/g,'/');
+  return '<div class="hm-history"><span>'+esc(label)+'</span><b>+'+fmt(days[day],2)+' HDC</b></div>';
+ }).join('');
 }
 var hiddenCards=[];
 function activatePage(){
