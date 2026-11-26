@@ -24,7 +24,7 @@ begin
     select 1 from public.profiles p
     where p.id=v_uid
       and p.email_verified=true
-      and p.account_status='active'
+      and p.account_status<>'suspended'
       and p.kyc_status='approved'
   ) then
     raise exception 'Your account must be active, email verified and KYC approved to use Mining.';
@@ -86,7 +86,7 @@ begin
     select 1 from public.profiles p
     where p.id=v_uid
       and p.email_verified=true
-      and p.account_status='active'
+      and p.account_status<>'suspended'
       and p.kyc_status='approved'
   ) then
     raise exception 'Your account must be active, email verified and KYC approved to mine HDC.';
