@@ -2,7 +2,10 @@
 (function(){
 'use strict';
 var db=typeof hwcSupabase!=='undefined'?hwcSupabase:window.hwcSupabase;
-if(!db){console.warn('HEWAD Gift/Telegram: Supabase client unavailable.');return;}
+if(!db&&window.supabase&&typeof window.supabase.createClient==='function'){
+ db=window.supabase.createClient('https://qjclffmzkqfgqbbawhaz.supabase.co','sb_publishable_Sx7vXgrUAvdlWbjfwY6FVQ_DPEfEuPS',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+}
+if(!db||!db.auth||!db.rpc){console.error('HEWAD Gift/Telegram: Supabase client unavailable.');return;}
 var BOT='https://t.me/Hewadcoinbot';
 var css=document.createElement('style');
 css.textContent='.hwc-feature-modal{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}.hwc-feature-card{width:min(100%,460px);background:linear-gradient(155deg,#171a20,#0b0d11);border:1px solid #51452c;border-radius:22px;padding:22px;color:#f5f1e6;box-shadow:0 24px 80px #000a}.hwc-feature-close{float:right;border:0;background:#292c33;color:#fff;border-radius:10px;padding:7px 11px}.hwc-feature-title{text-align:center;color:#e8bd4a;font-size:24px;font-weight:900;letter-spacing:2px;margin:12px 0 5px}.hwc-feature-sub{text-align:center;color:#aeb2bc;font-size:12px;margin-bottom:22px}.hwc-feature-card label{display:block;font-size:12px;color:#c9cbd1;margin:12px 0 6px}.hwc-feature-card input{box-sizing:border-box;width:100%;padding:14px;border-radius:12px;background:#090b0f;border:1px solid #484b53;color:white;font-size:16px;letter-spacing:1px}.hwc-feature-primary{width:100%;border:0;border-radius:12px;padding:14px;background:linear-gradient(100deg,#b98727,#f0d17a);color:#17130a;font-weight:900;margin-top:12px}.hwc-feature-help{border-top:1px solid #33353b;margin-top:22px;padding-top:16px;color:#c8cbd2;font-size:12px;line-height:1.8}.hwc-feature-help b{color:#e9c76d}.hwc-feature-note{font-size:12px;color:#d8c58e;line-height:1.6;margin-top:12px}.hwc-feature-code{font-size:26px;letter-spacing:8px;text-align:center;color:#f1d17a;font-weight:900;padding:18px;border:1px dashed #79602b;border-radius:14px;margin:15px 0}.hwc-profile-telegram-card{margin:16px 0;padding:15px;border:1px solid #594829;border-radius:15px;background:linear-gradient(135deg,#1a1c21,#111318);color:#f5f1e6}.hwc-profile-telegram-card button{border:0;border-radius:9px;padding:10px 12px;margin:6px 6px 0 0;background:#d9b44d;color:#17130a;font-weight:800}.hwc-profile-telegram-card .secondary{background:#30343c;color:#fff}';
@@ -10,8 +13,10 @@ document.head.appendChild(css);
 function currentUser(){return window.hwcCurrentUser||null;}
 function notify(msg){if(typeof window.showNotice==='function')window.showNotice(msg);else alert(msg);}
 function modal(content){var old=document.getElementById('hwcFeatureModal');if(old)old.remove();var wrap=document.createElement('div');wrap.id='hwcFeatureModal';wrap.className='hwc-feature-modal';wrap.innerHTML='<section class="hwc-feature-card"><button class="hwc-feature-close" type="button" aria-label="Close">✕</button>'+content+'</section>';wrap.addEventListener('click',function(e){if(e.target===wrap||e.target.closest('.hwc-feature-close'))wrap.remove();});document.body.appendChild(wrap);return wrap;}
-function openGift(){
-var u=currentUser();if(!u){notify('Please sign in to redeem a gift.');return;}
+async function openGift(){
+var u=currentUser();
+if(!u){try{var auth=await db.auth.getUser();if(auth.error)throw auth.error;u=auth.data&&auth.data.user;}catch(e){notify((e&&e.message)||'Could not verify your account. Please sign in again.');return;}}
+if(!u){notify('Please sign in to redeem a gift.');return;}
 var wrap=modal('<div class="hwc-feature-title">🎁 HEWAD GIFT</div><div class="hwc-feature-sub">Redeem your gift code</div><label for="hwcGiftCode">GIFT CODE</label><input id="hwcGiftCode" maxlength="32" autocomplete="off" placeholder="Enter your gift code"><button id="hwcGiftRedeem" class="hwc-feature-primary" type="button">REDEEM</button><div id="hwcGiftMessage" class="hwc-feature-note" aria-live="polite"></div><div class="hwc-feature-help"><b>How it works</b><br>1. Copy your Gift Code from the Telegram Bot or another source.<br>2. Enter the code in the Gift section of the website.<br>3. Each user can redeem a code only once.<br>4. After successful verification, the reward is added to your Wallet.</div>');
 var input=wrap.querySelector('#hwcGiftCode'),button=wrap.querySelector('#hwcGiftRedeem'),message=wrap.querySelector('#hwcGiftMessage');
 input.addEventListener('input',function(){input.value=input.value.toUpperCase().replace(/\s+/g,'');});
