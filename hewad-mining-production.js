@@ -1,7 +1,18 @@
 /* HEWAD COIN Mining — fixed 08:00 Afghanistan daily cycle. */
 (function(){
 'use strict';
-var db=window.hwcSupabase,doc=document;
+var doc=document;
+/* The homepage creates hwcSupabase as a top-level lexical const, not window.hwcSupabase.
+   Reuse it when exposed; otherwise create a second client with the same project/key.
+   Supabase persists the login session in shared browser storage, so auth remains valid. */
+var db=window.hwcSupabase;
+if(!db&&window.supabase&&typeof window.supabase.createClient==='function'){
+ db=window.supabase.createClient(
+  'https://qjclffmzkqfgqbbawhaz.supabase.co',
+  'sb_publishable_Sx7vXgrUAvdlWbjfwY6FVQ_DPEfEuPS',
+  {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
+ );
+}
 if(!db){console.error('HEWAD Mining: Supabase client unavailable.');return;}
 var rootId='modulePage',timer=null,busy=false;
 var $=function(id){return doc.getElementById(id);};
