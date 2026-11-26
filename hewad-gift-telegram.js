@@ -12,7 +12,7 @@ function notify(msg){if(typeof window.showNotice==='function')window.showNotice(
 function modal(content){var old=document.getElementById('hwcFeatureModal');if(old)old.remove();var wrap=document.createElement('div');wrap.id='hwcFeatureModal';wrap.className='hwc-feature-modal';wrap.innerHTML='<section class="hwc-feature-card"><button class="hwc-feature-close" type="button" aria-label="Close">✕</button>'+content+'</section>';wrap.addEventListener('click',function(e){if(e.target===wrap||e.target.closest('.hwc-feature-close'))wrap.remove();});document.body.appendChild(wrap);return wrap;}
 function openGift(){
 var u=currentUser();if(!u){notify('Please sign in to redeem a gift.');return;}
-var wrap=modal('<div class="hwc-feature-title">🎁 HEWAD GIFT</div><div class="hwc-feature-sub">Redeem your gift code</div><label for="hwcGiftCode">GIFT CODE</label><input id="hwcGiftCode" maxlength="32" autocomplete="off" placeholder="Enter your gift code"><button id="hwcGiftRedeem" class="hwc-feature-primary" type="button">REDEEM</button><div id="hwcGiftMessage" class="hwc-feature-note" aria-live="polite"></div><div class="hwc-feature-help"><b>How it works</b><br>1. Copy your Gift Code from the Telegram Bot or another source.<br>2. Enter the code in the Gift section of the website.<br>3. Each code can only be used once.<br>4. After successful verification, the reward is added to your Wallet.</div>');
+var wrap=modal('<div class="hwc-feature-title">🎁 HEWAD GIFT</div><div class="hwc-feature-sub">Redeem your gift code</div><label for="hwcGiftCode">GIFT CODE</label><input id="hwcGiftCode" maxlength="32" autocomplete="off" placeholder="Enter your gift code"><button id="hwcGiftRedeem" class="hwc-feature-primary" type="button">REDEEM</button><div id="hwcGiftMessage" class="hwc-feature-note" aria-live="polite"></div><div class="hwc-feature-help"><b>How it works</b><br>1. Copy your Gift Code from the Telegram Bot or another source.<br>2. Enter the code in the Gift section of the website.<br>3. Each user can redeem a code only once.<br>4. After successful verification, the reward is added to your Wallet.</div>');
 var input=wrap.querySelector('#hwcGiftCode'),button=wrap.querySelector('#hwcGiftRedeem'),message=wrap.querySelector('#hwcGiftMessage');
 input.addEventListener('input',function(){input.value=input.value.toUpperCase().replace(/\s+/g,'');});
 button.addEventListener('click',async function(){
@@ -52,7 +52,7 @@ if(action==='telegram bot'&&!tile.dataset.hwcTelegramBound){tile.dataset.hwcTele
 });
 }
 function injectProfileCard(){
-var candidates=[].slice.call(document.querySelectorAll('#profilePage,#profileSection,.profile-page,.profile-content,.profile-container,[data-page="Profile"],.profile-view'));
+var candidates=[].slice.call(document.querySelectorAll('#profilePage,#profileSection,#profile,.profile-section,.profile-card,.profile-page,.profile-content,.profile-container,[data-page="Profile"],[data-page="profile"],.profile-view'));
 if(!candidates.length){
 candidates=[].slice.call(document.querySelectorAll('#dashboard section,#dashboard .dash-subpage,#dashboard .page-content')).filter(function(el){return el.offsetParent!==null&&/profile/i.test((el.innerText||'').slice(0,500));});
 }
