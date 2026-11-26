@@ -5,7 +5,7 @@ var doc=document;
 /* The homepage creates hwcSupabase as a top-level lexical const, not window.hwcSupabase.
    Reuse it when exposed; otherwise create a second client with the same project/key.
    Supabase persists the login session in shared browser storage, so auth remains valid. */
-var db=window.hwcSupabase;
+var db=typeof hwcSupabase!=='undefined'?hwcSupabase:window.hwcSupabase;
 if(!db&&window.supabase&&typeof window.supabase.createClient==='function'){
  db=window.supabase.createClient(
   'https://qjclffmzkqfgqbbawhaz.supabase.co',
