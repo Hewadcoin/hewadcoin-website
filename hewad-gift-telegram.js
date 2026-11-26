@@ -25,7 +25,13 @@ button.addEventListener('click',async function(){
 var code=input.value.trim();if(!/^[A-Z0-9-]{4,32}$/.test(code)){message.textContent='Please enter a valid Gift Code.';return;}
 button.disabled=true;button.textContent='VERIFYING…';message.textContent='';
 try{var q=await db.rpc('hwc_redeem_gift_code',{p_code:code});if(q.error)throw q.error;
-message.textContent='✓ Gift redeemed successfully. Your Wallet has been updated.';input.value='';
+var result=typeof q.data==='string'?JSON.parse(q.data):(q.data||{});
+if(result.gift_type==='special'&&result.max_claims!=null){
+message.textContent='✓ مبارک! ستا کوډ په بریالیتوب استعمال شو. ته د '+result.max_claims+' کسانو له ډلې '+result.claim_number+' نمبر شوې. +'+result.amount+' HDC ستا والټ ته جمع شول.';
+}else{
+message.textContent='✓ ډالۍ په بریالیتوب ترلاسه شوه. +'+(result.amount||'')+' HDC ستا والټ ته جمع شول.';
+}
+input.value='';
 setTimeout(function(){var el=document.getElementById('hwcFeatureModal');if(el)el.remove();},1800);
 }catch(e){message.textContent=(e&&e.message)||'Could not redeem this Gift Code.';}
 finally{button.disabled=false;button.textContent='REDEEM';}
