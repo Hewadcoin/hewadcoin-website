@@ -148,6 +148,8 @@ async function renderStaking(){
   var form=$('hwcStakeProductionForm');if(!form)return;
   var amountInput=$('hwcStakeAmountInput'),maxButton=$('hwcStakeMax');
   if(maxButton&&amountInput)maxButton.addEventListener('click',function(){amountInput.value=String(Math.min(available,Number(plan.max_amount)));amountInput.dispatchEvent(new Event('input',{bubbles:true}));});
+  form.addEventListener('submit',async function(e){
+   e.preventDefault();var fd=new FormData(form),btn=form.querySelector('button[type=submit]'),amount=Number(fd.get('amount')),selected=plans.find(function(p){return p.id===fd.get('plan_id');})||plan;
    if(!selected||!Number.isFinite(amount)||amount<Number(selected.min_amount)||amount>available||amount>Number(selected.max_amount)){say('Please enter a valid amount within the available balance and plan limits.');return;}
    btn.disabled=true;
    try{
@@ -158,13 +160,6 @@ async function renderStaking(){
    }catch(ex){say(ex.message||'Could not start staking.');if(btn.isConnected)btn.disabled=false;}
   });
  }
- document.querySelectorAll('[data-stake-nav]').forEach(function(b){b.addEventListener('click',function(){
-  var action=b.dataset.stakeNav;
-  if(action==='Dashboard'){$('hwcStakeBack')?.click();return;}
-  if(action==='Control'){var adminButton=document.querySelector('.admin-nav-btn');if(adminButton){adminButton.click();return;}say('Administrator access only.');return;}
-  if(typeof window.openHwcModule==='function'){window.openHwcModule(action);return;}
-  var tile=document.querySelector('[data-action="'+action+'"]');if(tile)tile.click();
- });});
  bindPoolForm();
 }
 window.openHwcStakingPage=renderStaking;
