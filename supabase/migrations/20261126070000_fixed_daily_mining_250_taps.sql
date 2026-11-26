@@ -157,6 +157,7 @@ $function$;
 create or replace function public.hwc_mining_status()
 returns jsonb
 language plpgsql
+security definer
 set search_path = ''
 as $function$
 begin
@@ -164,8 +165,26 @@ begin
 end;
 $function$;
 
+create or replace function public.hwc_mining_click()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null or not exists (
+    select 1 from public.profiles p
+    where p.id=(select auth.uid()) and p.kyc_status='approved'
+  ) then
+    raise exception 'KYC verification must be approved before using Mining.';
+  end if;
+  return private.hwc_mining_click();
+end;
+$function$;
+
 revoke all on function private.hwc_mining_status() from public,anon,authenticated;
 revoke all on function private.hwc_mining_click() from public,anon,authenticated;
 revoke all on function public.hwc_mining_status() from public,anon;
+revoke all on function public.hwc_mining_click() from public,anon;
 grant execute on function public.hwc_mining_status() to authenticated;
 grant execute on function public.hwc_mining_click() to authenticated;
