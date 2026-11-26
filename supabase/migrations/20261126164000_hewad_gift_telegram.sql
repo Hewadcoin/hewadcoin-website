@@ -145,3 +145,10 @@ begin
  values(v_uid,'HDC',v_code.reward_amount,'credit','completed',case when v_code.gift_type='daily' then 'Daily Gift Reward' else 'Special Gift Reward' end,v_claim_id::text,v_uid);
  return jsonb_build_object('claim_id',v_claim_id,'asset','HDC','claimed_at',now(),'claim_date',v_today);
 end $$;
+
+revoke all on function public.hwc_admin_create_gift_code_v2(text,numeric,integer) from public,anon;
+grant execute on function public.hwc_admin_create_gift_code_v2(text,numeric,integer) to authenticated;
+revoke all on function public.hwc_admin_set_daily_gift_amount(numeric) from public,anon;
+grant execute on function public.hwc_admin_set_daily_gift_amount(numeric) to authenticated;
+revoke all on function public.hwc_admin_get_daily_gift_amount() from public,anon;
+grant execute on function public.hwc_admin_get_daily_gift_amount() to authenticated;
