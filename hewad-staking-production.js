@@ -65,7 +65,6 @@ stakeCss.textContent += ".hwc-staking-live .hwc-stake-app{max-width:940px;margin
 stakeCss.textContent += "\n.hwc-staking-live .hwc-stake-balance-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 10px;padding:12px 14px;border:1px solid #80652e;border-radius:13px;background:linear-gradient(110deg,#29251b,#151a1c)}.hwc-staking-live .hwc-stake-balance-row span{color:#c9b989;font-size:10px;font-weight:900;letter-spacing:.8px}.hwc-staking-live .hwc-stake-balance-row strong{color:#f3d58b;font-size:14px;text-align:right;overflow-wrap:anywhere}.hwc-staking-live .hwc-stake-amount-row{display:flex;align-items:end;gap:9px}.hwc-staking-live .hwc-stake-amount-row label{flex:1;min-width:0}.hwc-staking-live .hwc-stake-max{flex:0 0 76px;height:46px;margin:7px 0 0;border:1px solid #c49a42;border-radius:12px;background:linear-gradient(145deg,#6b501e,#342712);color:#ffe5a0;font-weight:900;letter-spacing:1px}.hwc-staking-live .hwc-stake-max:disabled{opacity:.45}.hwc-staking-live .hwc-stake-submit{display:block;width:100%;min-height:52px;margin:14px 0 0;padding:15px 20px;border-radius:14px;font-size:16px}.hwc-staking-live .hwc-position-progress-head{margin:17px 0 8px}.hwc-staking-live .hwc-position-progress{height:11px;border-color:#9a7834;background:#28251e}.hwc-staking-live .hwc-position-progress span{background:linear-gradient(90deg,#9a6b20,#e6bb4d,#fff0a5);box-shadow:0 0 13px rgba(230,187,77,.42)}@media(max-width:420px){.hwc-staking-live .hwc-stake-max{flex-basis:68px}.hwc-staking-live .hwc-stake-balance-row strong{font-size:12px}}";
 
 function showUserPage(title,html){
-function showUserPage(title,html){
  var dash=$('dashboard'),page=$('modulePage'),card=$('memberCard');
  if(!dash||!page){say('Staking page is not available.');return;}
  dash.querySelectorAll('.dash-subpage').forEach(function(x){x.classList.remove('active');});
@@ -76,6 +75,7 @@ function showUserPage(title,html){
  $('hwcStakeBack').onclick=function(){page.classList.remove('active');page.hidden=true;if($('dashboardMain'))$('dashboardMain').classList.add('active');memberCards.forEach(function(el){if(el.getAttribute('data-hwc-staking-card-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-staking-card-hidden');}});if(card)card.hidden=false;window.scrollTo(0,0);};
  window.scrollTo(0,0);
 }
+async function renderStaking(){
  var u;try{u=await me();}catch(authError){say(authError.message||'Please sign in first.');return;}
  showUserPage('Digital Staking','<div class="dash-subpage-card">Loading your staking account…</div>');
  var rs=await Promise.all([
