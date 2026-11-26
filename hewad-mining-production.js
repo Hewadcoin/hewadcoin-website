@@ -64,7 +64,7 @@ function view(s){
  '<div class="hm-card"><h3>Mining Statistics</h3><div class="hm-stats">'+
  '<div class="hm-stat"><small>Total Taps</small><b>'+fmt(s.total_taps,0)+'</b></div><div class="hm-stat"><small>Total Mined</small><b>'+fmt(s.total_mined,2)+' HDC</b></div>'+
  '<div class="hm-stat"><small>Completed Cycles</small><b>'+fmt(s.completed_cycles,0)+'</b></div><div class="hm-stat"><small>Remaining Taps</small><b id="hm-remaining">'+fmt(s.remaining_clicks,0)+'</b></div></div></div>'+
- '<div class="hm-card"><h3>Mining History</h3><div id="hm-history"><div class="hm-note">Loading mining history…</div></div></div></div>';
+ '</div>';
 }
 async function history(u){
  var q=await db.from('mining_clicks').select('reward,created_at,mining_date').eq('user_id',u.id).order('mining_date',{ascending:false}).limit(1000);
@@ -121,7 +121,6 @@ async function refresh(){
  syncWalletBalance(s.balance_hdc);
  root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button>'+view(s);
  $('hm-back').addEventListener('click',closePage);
- await history(u);
  var btn=$('hm-tap');if(btn)btn.addEventListener('click',tap);
 }
 async function tap(){
