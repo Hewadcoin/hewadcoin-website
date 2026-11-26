@@ -62,7 +62,7 @@ document.getElementById('hwcDailyAmount').value='';await loadDaily();notice('Dai
 catch(e){notice(e.message||'Could not update Daily Gift amount.');}
 finally{b.disabled=false;b.textContent='SAVE DAILY AMOUNT';}
 });
-var observer=new MutationObserver(addMenu);observer.observe(adminPanel,{childList:true,subtree:true});
+var observer=new MutationObserver(function(){addMenu();var otherVisible=[].slice.call(adminPanel.querySelectorAll('.admin-view')).some(function(el){return el!==page&&!el.hidden&&el.style.display!=='none';});if(otherVisible){page.hidden=true;page.style.display='none';}});observer.observe(adminPanel,{childList:true,subtree:true,attributes:true,attributeFilter:['style','hidden']});
 addMenu();
 console.info('HEWAD Admin Gift controls initialized.');
 })();
