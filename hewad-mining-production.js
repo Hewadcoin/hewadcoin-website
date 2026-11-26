@@ -78,11 +78,14 @@ async function history(u){
   if(!days[day])days[day]=0;
   days[day]+=Number(x.reward||0);
  });
+ var names=['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه','شنبه'];
  var dates=Object.keys(days).sort().reverse();
  if(!dates.length){el.innerHTML='<div class="hm-note">No mining history yet.</div>';return;}
- el.innerHTML=dates.map(function(day){
-  var label=day.replace(/-/g,'/');
-  return '<div class="hm-history"><span>'+esc(label)+'</span><b>+'+fmt(days[day],2)+' HDC</b></div>';
+ el.innerHTML='<div class="hm-row"><span>نېټه / ورځ</span><b>ټایپ / ترلاسه شوي کوین</b></div>'+
+ dates.map(function(day){
+  var d=new Date(day+'T12:00:00');
+  var label=day.replace(/-/g,'/')+' · '+names[d.getDay()];
+  return '<div class="hm-history"><span>'+esc(label)+'</span><b><span style="color:#adb7c3;font-weight:600">Mining · </span>+'+fmt(days[day],2)+' HDC</b></div>';
  }).join('');
 }
 var hiddenCards=[];
