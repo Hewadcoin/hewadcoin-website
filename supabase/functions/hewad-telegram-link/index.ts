@@ -96,6 +96,10 @@ Deno.serve(async (req:Request) => {
     }
 
     const link=await linkedUser(db,from.id);
+    if(/^\/help(?:@Hewadcoinbot)?$/i.test(text)) {
+      await send(chat.id,"HEWAD COIN Bot\n/start — Open the account menu\n/menu — Show the services\nChoose Support to contact the team.",true);
+      return json({ok:true});
+    }
     if(/^\/(start|menu)(?:@Hewadcoinbot)?$/i.test(text)) {
       if(!link) await send(chat.id,"السلام علیکم! د HEWAD COIN حساب د نښلولو لپاره وېب‌سایټ ته لاړ شئ:\nProfile → Telegram Bot → Copy Code\n\n۴ رقمي کوډ دلته راولېږئ. کوډ ۶۰ ثانیې اعتبار لري.",false);
       else await send(chat.id,menuText,true);
