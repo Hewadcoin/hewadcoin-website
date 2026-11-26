@@ -8,7 +8,14 @@ var fmt=function(v,d){return Number(v||0).toLocaleString(undefined,{maximumFract
 var dt=function(v){return v?new Date(v).toLocaleString():'—';};
 var money=function(v){return fmt(v,8)+' HDC';};
 var say=function(m){if(typeof window.showNotice==='function')window.showNotice(m);else alert(m);};
-var me=async function(){\n if(typeof hwcCurrentUser!=='undefined'&&hwcCurrentUser&&hwcCurrentUser.id)return hwcCurrentUser;\n if(!db.auth||typeof db.auth.getUser!=='function')throw new Error('Secure account session is unavailable. Please sign in again.');\n var auth=await db.auth.getUser();\n if(auth.error)throw auth.error;\n if(!auth.data||!auth.data.user)throw new Error('Please sign in to your HEWAD COIN account first.');\n return auth.data.user;\n};
+var me=async function(){
+ if(typeof hwcCurrentUser!=='undefined'&&hwcCurrentUser&&hwcCurrentUser.id)return hwcCurrentUser;
+ if(!db.auth||typeof db.auth.getUser!=='function')throw new Error('Secure account session is unavailable. Please sign in again.');
+ var auth=await db.auth.getUser();
+ if(auth.error)throw auth.error;
+ if(!auth.data||!auth.data.user)throw new Error('Please sign in to your HEWAD COIN account first.');
+ return auth.data.user;
+};
 var admin=function(){return window.HEWAD_USER_ROLE==='admin';};
 var stakeCss=document.createElement('style');stakeCss.id='hwc-staking-production-style';
 stakeCss.textContent=`
