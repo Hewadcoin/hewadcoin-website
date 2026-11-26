@@ -12,7 +12,7 @@
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090c}#hewad-app{display:block;width:100%;height:100%;border:0;background:#08090c}</style>
 </head>
 <body>
-<iframe id="hewad-app" title="HEWAD COIN" src="hewad_coin_homepage_fullscreen.html?hwc_release=20261126-staking-mount-fix-3"></iframe>
+<iframe id="hewad-app" title="HEWAD COIN" src="hewad_coin_homepage_fullscreen.html?hwc_release=20261126-staking-click-fix-4"></iframe>
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
@@ -33,9 +33,18 @@
         modulePage.className='dash-subpage';
         modulePage.setAttribute('aria-live','polite');
         var dashShell=doc.querySelector('#dashboard .dash-shell');
-        var bottomNav=doc.querySelector('#dashboard .dash-bottom-nav');
         if(dashShell)dashShell.appendChild(modulePage);
       }
+      /* Register before the other enhancement scripts: some of them install
+         document-level capture handlers and otherwise swallow the Staking click. */
+      doc.addEventListener('click',function(e){
+        var tile=e.target.closest('[data-action="Staking" i]');
+        if(!tile)return;
+        e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+        var open=doc.defaultView.openHwcStakingPage;
+        if(typeof open==='function')Promise.resolve(open()).catch(function(err){console.error('Staking failed to open:',err);});
+        else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Staking is still loading. Please try again.');
+      },true);
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
