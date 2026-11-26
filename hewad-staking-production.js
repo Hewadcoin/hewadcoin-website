@@ -157,12 +157,12 @@ async function renderStaking(){
 document.addEventListener('click',function(e){
  var detail=e.target.closest('[data-stake-details]');
  if(detail){e.preventDefault();e.stopImmediatePropagation();var extra=Array.from(document.querySelectorAll('[data-stake-extra]')).find(function(x){return x.dataset.stakeExtra===detail.dataset.stakeDetails;});if(extra){extra.hidden=!extra.hidden;detail.textContent=extra.hidden?'VIEW POSITION DETAILS':'HIDE POSITION DETAILS';}return;}
- var tile=e.target.closest('[data-action="Staking"]');
- if(tile){e.preventDefault();e.stopImmediatePropagation();renderStaking();return;}
+ var tile=e.target.closest('[data-action="Staking" i], [data-action*="staking" i], .dash-tile');
+ if(tile&&(/staking/i.test(tile.dataset.action||'')||/digital\s+staking/i.test(tile.textContent||''))){e.preventDefault();e.stopImmediatePropagation();Promise.resolve(renderStaking()).catch(function(ex){console.error('HEWAD staking page failed to open:',ex);say('Could not open the staking page. Please refresh and try again.');});return;}
  var un=e.target.closest('[data-stake-unlock]');
  if(un){e.preventDefault();e.stopImmediatePropagation();if(!confirm('Submit an unlock request? Your HDC will return only after administrator approval.'))return;un.disabled=true;db.rpc('hwc_request_staking_unlock',{p_position_id:un.dataset.stakeUnlock}).then(function(r){if(r.error)throw r.error;say('Unlock request sent to the administrator.');return renderStaking();}).catch(function(ex){say(ex.message||'Unlock request failed.');un.disabled=false;});}
 },true);
-if(typeof window.openHwcModule==='function'){var oldOpen=window.openHwcModule;window.openHwcModule=async function(action){if(action==='Staking')return renderStaking();return oldOpen.apply(this,arguments);};}
+if(typeof window.openHwcModule==='function'){var oldOpen=window.openHwcModule;window.openHwcModule=async function(action){if(String(action).toLowerCase()==='staking')return renderStaking();return oldOpen.apply(this,arguments);};}
 
 /* Admin: Position Management and Profit Distribution */
 var panel=$('adminPanel'),root=null,currentStatus='unlock_pending',resultType='profit';
