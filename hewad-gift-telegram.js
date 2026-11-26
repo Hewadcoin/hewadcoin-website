@@ -65,8 +65,8 @@ card.querySelector('button').addEventListener('click',openTelegram);host.appendC
 document.addEventListener('click',function(e){
 var node=e.target;
 for(var depth=0;node&&depth<6;depth++,node=node.parentElement){
-var label=(node.innerText||node.textContent||'').replace(/\\s+/g,' ').trim();
-if(/^Link Telegram(?:\\s|$)/i.test(label)&&/Not Linked/i.test(label)){
+var label=(node.innerText||node.textContent||'').replace(/\s+/g,' ').trim();
+if(/^Link Telegram(?:\s|$)/i.test(label)&&/Not Linked/i.test(label)){
 e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openTelegram();return;
 }
 }
