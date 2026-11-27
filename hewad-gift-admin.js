@@ -48,30 +48,24 @@ return '<details class="gift-record"><summary><b>'+esc(x.code)+'</b> · '+fmt(x.
 }).join(''):'No gift codes found.';
 }
 async function loadEligibleUsers(){
-var wrap=$('hwcEligibleUsersWrap'),list=$('hwcEligibleUsers'),count=$('hwcEligibleUsersCount');
-if(!wrap||!list||!count)return 0;
-wrap.hidden=false;list.value='د مستحقو کاروونکو لېست لوډ کېږي…';count.textContent='';
+var field=$('hwcSpecialLimit');
+if(!field)return 0;
+field.value='';
+field.disabled=true;
 try{
-var q=await db.from('profiles').select('id,first_name,last_name,username,referral_code,card_number').eq('kyc_status','approved').eq('account_status','active').order('first_name',{ascending:true}).limit(1000);
+var q=await db.from('profiles').select('id',{count:'exact',head:true}).eq('kyc_status','approved').eq('account_status','active');
 if(q.error)throw q.error;
-var users=Array.isArray(q.data)?q.data:[];
-list.value=users.length?users.map(function(u,n){var name=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'Member';return (n+1)+'. '+name+(u.username?' (@'+u.username+')':'')+(u.referral_code?' · '+u.referral_code:'');}).join('\n'):'اوس مهال مستحق فعال کاروونکي ونه موندل شول.';
-count.textContent='ټول مستحق فعال کاروونکي: '+users.length;
-wrap.dataset.eligibleCount=String(users.length);
-return users.length;
+var eligibleCount=Number(q.count||0);
+field.value=String(eligibleCount);
+field.disabled=true;
+return eligibleCount;
 }catch(err){
-list.value='د کاروونکو لېست لوډ نه شو: '+(err.message||'Unknown error');
-count.textContent='';
-wrap.dataset.eligibleCount='0';
-notice('د مستحقو کاروونکو لېست ترلاسه نه شو: '+(err.message||'Unknown error'));
+field.value='';
+field.disabled=false;
+$('hwcSpecialAll').checked=false;
+notice('د KYC مستحقو کاروونکو شمېر ترلاسه نه شو: '+(err.message||'Unknown error'));
 throw err;
 }
-}
-async function openSpecial(){
-if(!isAdmin()){notice('Administrator access required.');return;}
-hideOtherViews();
-page.innerHTML=backButton('control')+'<h2>🎁 Gift Management</h2><button type="button" class="gift-choice" data-gift-nav="daily"><span class="ico">🎁</span><span><strong>Daily Gift Amount</strong><small>د ورځنۍ ډالۍ د HDC مقدار بدلول</small></span><span class="arrow">›</span></button><h2>🎟️ Special Gift Code</h2><div class="gift-card"><p class="gift-muted">کوډ، د HDC انعام او د استعمالوونکو شمېر وټاکئ. که «All Users» انتخاب کړئ، د ټولو فعالو او KYC تایید شويو کاروونکو نوملړ به ښکاره شي. Allowed Users کې د کوډ د استعمال اجازه لرونکو کسانو شمېر ولیکئ.</p><label for="hwcSpecialCode">1. Gift Code</label><div class="gift-row"><input id="hwcSpecialCode" maxlength="32" placeholder="لکه: HEWAD2026"><button type="button" id="hwcMakeRandom" class="gift-btn secondary">Generate</button></div><label for="hwcSpecialAmount">2. Reward Amount (HDC)</label><input id="hwcSpecialAmount" type="number" min="0.00000001" step="0.00000001" placeholder="د HDC مقدار ولیکئ"><label for="hwcSpecialLimit">3. Allowed Users</label><input id="hwcSpecialLimit" type="number" min="1" step="1" placeholder="د کاروونکو شمېر، لکه 100"><label class="gift-check"><input id="hwcSpecialAll" type="checkbox"> ټول کاروونکي (All Users)</label><div id="hwcEligibleUsersWrap" class="gift-card" hidden><label for="hwcEligibleUsers">Eligible Users</label><textarea id="hwcEligibleUsers" rows="6" readonly style="box-sizing:border-box;width:100%;padding:11px;border:1px solid #494b51;border-radius:9px;background:#0c0e12;color:#e8d18c;resize:vertical"></textarea><p id="hwcEligibleUsersCount" class="gift-muted"></p></div><p class="gift-muted">محدود کوډ به لومړیو ټاکل شویو ځانګړو کاروونکو ته انعام ورکړي. هر کاروونکی هر کوډ یوازې یو ځل کارولی شي. ځانګړي کوډونه په خپله نه ختمېږي.</p><button id="hwcCreateSpecialGift" class="gift-btn" type="button">CREATE GIFT CODE</button><div id="hwcSpecialResult" class="gift-result" hidden></div></div><div class="gift-card"><h3>Created Gift Codes & Claims</h3><div id="hwcGiftCodeList" class="gift-muted">Loading…</div></div>';
-loadCodes();
 }
 function backToControl(){
 var home=document.getElementById('adminHome');
@@ -83,7 +77,7 @@ var nav=e.target.closest('[data-gift-nav]');
 if(nav){e.preventDefault();e.stopPropagation();var target=nav.getAttribute('data-gift-nav');if(target==='control')backToControl();else if(target==='home')openHome();else if(target==='daily')openDaily();else if(target==='special')openSpecial();return;}
 if(e.target.closest('#hwcCopySpecialGift')){var copyCode=$('hwcSpecialCode').value.trim().toUpperCase();try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(copyCode);}else{var ta=document.createElement('textarea');ta.value=copyCode;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();if(!document.execCommand('copy'))throw new Error('Copy is not supported by this browser.');ta.remove();}notice('Gift Code copied: '+copyCode);}catch(err){notice('Copy failed. Select and copy the code manually.');}return;}
 if(e.target.closest('#hwcMakeRandom')){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',v='HDC-';for(var i=0;i<8;i++)v+=chars[Math.floor(Math.random()*chars.length)];$('hwcSpecialCode').value=v;return;}
-if(e.target.closest('#hwcSpecialAll')){var allChecked=$('hwcSpecialAll').checked,field=$('hwcSpecialLimit'),wrap=$('hwcEligibleUsersWrap');if(wrap)wrap.hidden=!allChecked;if(field)field.disabled=false;if(allChecked){loadEligibleUsers().catch(function(){});}return;}
+if(e.target.closest('#hwcSpecialAll')){var allChecked=$('hwcSpecialAll').checked,field=$('hwcSpecialLimit');if(allChecked){loadEligibleUsers().catch(function(){});}else if(field){field.value='';field.disabled=false;}return;}
 if(e.target.closest('#hwcCreateSpecialGift')){
 if(!isAdmin())return notice('Administrator access required.');
 var code=$('hwcSpecialCode').value.trim().toUpperCase(),amount=Number($('hwcSpecialAmount').value),limitText=$('hwcSpecialLimit').value.trim(),all=$('hwcSpecialAll').checked;
@@ -114,5 +108,5 @@ document.addEventListener('hwc-admin-open-gift',openHome);
 window.openHwcGiftManagement=openHome;
 /* Run at window capture phase so earlier dashboard document handlers cannot swallow the admin Gift click. */
 window.addEventListener('click',function(e){var target=e.target&&e.target.closest?e.target.closest('[data-hwc-page="gift"]'):null;if(!target)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openHome();},true);
-console.info('HEWAD Gift Management initialized: classic form, verified eligible-user list, and bounded All Users claims.');
+console.info('HEWAD Gift Management initialized: exact eligible-user count and bounded All Users claims.');
 })();
