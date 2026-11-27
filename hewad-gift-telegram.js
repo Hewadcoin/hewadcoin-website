@@ -77,7 +77,7 @@ document.addEventListener('click',function(e){
 var node=e.target, tile=node&&node.closest?node.closest('[data-action*="gift" i]'):null;
 if(!tile&&node&&node.closest){
 var candidates=node.closest('button,a,[role="button"],.menu-item,.dashboard-item,.dash-card,.menu-card,.dash-tile');
-if(candidates&&/^(?:🎁\s*)?(?:daily\s+)?gift\s*$/i.test((candidates.innerText||candidates.textContent||'').replace(/\s+/g,' ').trim()))tile=candidates;
+if(candidates&&/(?:^|\s)gift(?:\s|$)/i.test((candidates.innerText||candidates.textContent||'').replace(/\s+/g,' ').trim()))tile=candidates;
 }
 if(tile){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openGift();}
 },true);

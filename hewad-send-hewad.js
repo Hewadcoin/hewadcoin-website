@@ -176,7 +176,7 @@ function switchMethod(next){
 async function refreshWallet(){
  var r=await db.from('wallets').select('balance_hwc,reserved_hwc,staked_hwc').eq('user_id',s.user.id).maybeSingle();
  if(r.error)throw r.error;var w=r.data||{};
- s.available=Math.max(0,Number(w.balance_hwc||0)-Number(w.reserved_hwc||0)-Number(w.staked_hwc||0));
+ s.available=Math.max(0,Number(w.balance_hwc||0)-Number(w.reserved_hwc||0));
  $('hwcSendBalance').textContent=fmt(s.available)+' HDC';s.walletReady=true;update();
 }
 async function connect(){
