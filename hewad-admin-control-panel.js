@@ -75,6 +75,7 @@ document.addEventListener('click',function(e){var el=e.target.closest('[data-hwc
 var nav=document.querySelector('.admin-nav-btn');if(nav)nav.addEventListener('click',function(){if(isAdmin())setTimeout(home,0);},true);
 if(db.auth&&db.auth.onAuthStateChange)db.auth.onAuthStateChange(function(_event,session){if(session&&window.HEWAD_USER_ROLE==='admin')setTimeout(refreshMemberValue,0);});
 document.addEventListener('visibilitychange',function(){if(!document.hidden)refreshMemberValue();});
+window.addEventListener('hewad-admin-authorized',function(){var nav=document.querySelector('.admin-nav-btn');if(nav)nav.hidden=false;home();});
 if(isAdmin())home();refreshMemberValue();
 console.info('HEWAD four-section admin control panel initialized.');
 })();
