@@ -78,7 +78,9 @@ document.addEventListener('click',function(e){
 var node=e.target, tile=node&&node.closest?node.closest('[data-action*="gift" i]'):null;
 if(!tile&&node&&node.closest){
 var candidates=node.closest('button,a,[role="button"],.menu-item,.dashboard-item,.dash-card,.menu-card,.dash-tile');
-if(candidates&&/(?:^|\s)gift(?:\s|$)/i.test((candidates.innerText||candidates.textContent||'').replace(/\s+/g,' ').trim()))tile=candidates;
+var insideAdmin=candidates&&candidates.closest('#adminPanel,#hwcAdminGift');
+var label=candidates?(candidates.innerText||candidates.textContent||'').replace(/\s+/g,' ').trim():'';
+if(candidates&&!insideAdmin&&/^(?:gift|daily gift)$/i.test(label))tile=candidates;
 }
 if(tile){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openGift();}
 },true);
