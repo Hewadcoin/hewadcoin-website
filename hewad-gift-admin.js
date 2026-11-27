@@ -81,7 +81,7 @@ if(e.target.closest('#hwcMakeRandom')){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ234567
 if(e.target.closest('#hwcSpecialAll')){var allChecked=$('hwcSpecialAll').checked,field=$('hwcSpecialLimit'),wrap=$('hwcEligibleUsersWrap');if(wrap)wrap.hidden=!allChecked;if(field)field.disabled=allChecked;if(allChecked){loadEligibleUsers();}return;}
 if(e.target.closest('#hwcCreateSpecialGift')){
 if(!isAdmin())return notice('Administrator access required.');
-var code=$('hwcSpecialCode').value.trim().toUpperCase(),amount=Number($('hwcSpecialAmount').value),limitText=$('hwcSpecialLimit').value.trim(),all=$('hwcSpecialAll').checked,eligibleCount=Number(($('hwcEligibleUsersWrap')||{}).dataset&&$('hwcEligibleUsersWrap').dataset.eligibleCount||0),limit=limitText?Number(limitText):null;
+var code=$('hwcSpecialCode').value.trim().toUpperCase(),amount=Number($('hwcSpecialAmount').value),limitText=$('hwcSpecialLimit').value.trim(),all=$('hwcSpecialAll').checked;\nif(all)await loadEligibleUsers();\nvar eligibleCount=Number(($('hwcEligibleUsersWrap')||{}).dataset&&$('hwcEligibleUsersWrap').dataset.eligibleCount||0),limit=limitText?Number(limitText):null;
 if(!/^[A-Z0-9-]{4,32}$/.test(code)||!Number.isFinite(amount)||amount<=0||!limitText||!Number.isInteger(limit)||limit<=0)return notice('Valid Gift Code, HDC reward and Allowed Users limit are required.');
 if(all&&eligibleCount<=0)return notice('No active KYC-approved users were found.');
 if(all&&limit>eligibleCount)return notice('Allowed Users cannot exceed the eligible active-user count ('+eligibleCount+').');
