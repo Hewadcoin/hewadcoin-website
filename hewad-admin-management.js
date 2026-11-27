@@ -1,7 +1,7 @@
 /* HEWAD COIN — Owner-controlled Admin Management UI. Isolated module; existing business modules are untouched. */
 (function(){
 'use strict';
-var db=window.hwcSupabase, doc=document, ownerId='2d92f1b7-5134-4026-837f-fb3056923a04';
+var db=window.hwcSupabase || (typeof hwcSupabase !== 'undefined' ? hwcSupabase : null), doc=document, ownerId='2d92f1b7-5134-4026-837f-fb3056923a04';
 if(!db){console.error('Admin Management: Supabase client unavailable.');return;}
 var perms=[
  ['dashboard','Dashboard'],['all_users','All Users'],['user_management','User Management'],
@@ -14,7 +14,7 @@ var perms=[
 ];
 var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
 var note=function(m){if(typeof window.showNotice==='function')window.showNotice(m);else alert(m);};
-var owner=false,canList=false,ready=false,currentRows=[],myPermissions=[];
+var owner=false,canList=false,ready=false,currentRows=[],myPermissions=[],homeObserver=null;
 var css=doc.createElement('style');css.id='hwc-admin-management-style';
 css.textContent=`
 #hwcAdminManagement{padding:4px 0 22px;color:#f5f2e8;font-family:inherit}
@@ -60,29 +60,34 @@ return '<div class="hm-fields">'+items.map(function(x){return '<div class="hm-fi
 function permissionChecks(selected){selected=selected||[];return '<div class="hm-perms">'+perms.map(function(p){return '<label class="hm-perm"><input type="checkbox" value="'+p[0]+'" '+(selected.indexOf(p[0])>=0?'checked':'')+'> '+esc(p[1])+'</label>';}).join('')+'</div>';}
 function selectedPermissions(root){return Array.from(root.querySelectorAll('.hm-perms input:checked')).map(function(x){return x.value;});}
 async function rpc(name,args){var r=await db.rpc(name,args||{});if(r.error)throw r.error;return r.data;}
-async function init(){
+async function init(userOverride){
  try{
-  var u=await db.auth.getUser();if(!u.data||!u.data.user)return;
-  owner=u.data.user.id===ownerId && String(u.data.user.email||'').toLowerCase()==='hewadcoin@gmail.com';
+  var user;
+  if(arguments.length){user=userOverride||null;}
+  else{var u=await db.auth.getUser();user=u.data&&u.data.user||null;}
+  if(!user){owner=false;canList=false;ready=false;myPermissions=[];var old=doc.getElementById('hwcAdminManagementEntry');if(old)old.remove();return;}
+  owner=user.id===ownerId && String(user.email||'').toLowerCase()==='hewadcoin@gmail.com';
   myPermissions=owner?perms.map(function(p){return p[0];}):(await rpc('admin_mgmt_my_permissions'))||[];
   canList=owner||myPermissions.indexOf('admin_list')>=0;
-  ready=true;installHomeButton();
- }catch(e){console.warn('Admin Management access check:',e.message||e);}
+  ready=true;
+  if(owner||myPermissions.length){window.HEWAD_USER_ROLE='admin';doc.querySelectorAll('.admin-nav-btn').forEach(function(b){b.hidden=false;});window.dispatchEvent(new CustomEvent('hewad-admin-authorized'));}
+  installHomeButton();
+ }catch(e){ready=false;console.warn('Admin Management access check:',e.message||e);}
 }
 function installHomeButton(){
  var home=doc.getElementById('adminHome');if(!home)return;
  function inject(){
   if(!ready)return;
   var grid=home.querySelector('.hwc-admin-grid');if(!grid)return;
-  grid.querySelectorAll('[data-hwc-page]').forEach(function(item){var key=item.getAttribute('data-hwc-page');var needed={users:['all_users','user_management'],balance:['balance_management'],kyc:['kyc_management'],requests:['dashboard','deposit_management','withdraw_management'],rates:['settings'],gift:['gift_management']}[key]||[];item.style.display=owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;})?'':'none';});
-  if(!canList||doc.getElementById('hwcAdminManagementEntry'))return;
+  grid.querySelectorAll('[data-hwc-page]').forEach(function(item){var key=item.getAttribute('data-hwc-page');var needed={users:['all_users','user_management'],balance:['balance_management'],kyc:['kyc_management'],requests:['dashboard','deposit_management','withdraw_management','kyc_management'],rates:['settings'],gift:['gift_management']}[key]||[];item.style.display=owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;})?'':'none';});
+  if(!canList){var old=doc.getElementById('hwcAdminManagementEntry');if(old)old.remove();return;}\n  if(doc.getElementById('hwcAdminManagementEntry'))return;
   var b=doc.createElement('button');b.id='hwcAdminManagementEntry';b.type='button';b.className='hwc-admin-option';
   b.innerHTML='<span class="ico">♛</span><span><strong>Admin Management</strong><small>Owner-controlled administrator accounts, permissions and audit history</small></span><span class="arrow">›</span>';
   b.addEventListener('click',openHome);grid.appendChild(b);
  }
- inject();new MutationObserver(inject).observe(home,{childList:true,subtree:true});
+ inject();if(!homeObserver){homeObserver=new MutationObserver(inject);homeObserver.observe(home,{childList:true,subtree:true});}
 }
-function openHome(){if(!owner){openList();return;}shell('ADMIN MANAGEMENT','Only the verified Super Admin can create, delete or control staff administrators.','<div class="hm-grid"><button class="hm-option" data-hm="active"><span class="hm-ico">＋</span><span><b>Active Admin</b><small>Search users, review full profile and add administrators</small></span></button><button class="hm-option" data-hm="deleted"><span class="hm-ico">▣</span><span><b>Delete Admin</b><small>Deleted administrator history and Restore</small></span></button><button class="hm-option" data-hm="list"><span class="hm-ico">♙</span><span><b>Admin List</b><small>All active and suspended administrators</small></span></button><button class="hm-option" data-hm="control"><span class="hm-ico">⚙</span><span><b>Admin Control</b><small>Permissions, suspend and activate</small></span></button></div><div class="hm-card"><b>OWNER AUTHORITY</b><div class="hm-muted">hewadcoin@gmail.com · Super Admin · Fixed Owner ID verified by Supabase</div></div><div class="hm-card"><button class="hm-btn alt" data-hm="audit">View Admin Audit Log</button></div>');}
+function openList(){listPage(false);}\nfunction openHome(){if(!owner){openList();return;}shell('ADMIN MANAGEMENT','Only the verified Super Admin can create, delete or control staff administrators.','<div class="hm-grid"><button class="hm-option" data-hm="active"><span class="hm-ico">＋</span><span><b>Active Admin</b><small>Search users, review full profile and add administrators</small></span></button><button class="hm-option" data-hm="deleted"><span class="hm-ico">▣</span><span><b>Delete Admin</b><small>Deleted administrator history and Restore</small></span></button><button class="hm-option" data-hm="list"><span class="hm-ico">♙</span><span><b>Admin List</b><small>All active and suspended administrators</small></span></button><button class="hm-option" data-hm="control"><span class="hm-ico">⚙</span><span><b>Admin Control</b><small>Permissions, suspend and activate</small></span></button></div><div class="hm-card"><b>OWNER AUTHORITY</b><div class="hm-muted">hewadcoin@gmail.com · Super Admin · Fixed Owner ID verified by Supabase</div></div><div class="hm-card"><button class="hm-btn alt" data-hm="audit">View Admin Audit Log</button></div>');}
 async function activePage(){
  shell('Active Admin','Find a registered user using one of four search methods.','<div class="hm-card"><label>Search User</label><select id="hmSearchType"><option value="name">Full Name</option><option value="email">Email Address</option><option value="referral">Referral Code</option><option value="card">Card Number</option></select><input id="hmSearchValue" placeholder="Search Here..."><button class="hm-btn" id="hmSearchBtn">Search User</button></div><div id="hmSearchResults" class="hm-card"><div class="hm-empty">Enter a search value to find a user.</div></div>');
  doc.getElementById('hmSearchBtn').onclick=searchUsers;doc.getElementById('hmSearchValue').addEventListener('keydown',function(e){if(e.key==='Enter')searchUsers();});
