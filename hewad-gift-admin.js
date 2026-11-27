@@ -49,10 +49,22 @@ var details=claims.length?claims.map(function(u,i){var who=u.name||(u.username?'
 return '<details class="gift-record"><summary><b>'+esc(x.code)+'</b> · '+fmt(x.reward_amount)+' HDC<br><span class="gift-muted">'+count+' / '+limit+' claims · '+(x.gift_type==='daily'?'Daily':'Special')+' · '+(x.active?'Active':'Inactive')+'</span></summary><div><b>Claim recipients ('+claims.length+')</b>'+details+'</div></details>';
 }).join(''):'No gift codes found.';
 }
+async function loadEligibleUsers(){
+var wrap=$('hwcEligibleUsersWrap'),list=$('hwcEligibleUsers'),count=$('hwcEligibleUsersCount');
+if(!wrap||!list||!count)return;
+wrap.hidden=false;list.value='د مستحقو کاروونکو لېست لوډ کېږي…';count.textContent='';
+try{
+var q=await db.from('profiles').select('first_name,last_name,username,referral_code').eq('kyc_status','approved').eq('account_status','active').order('first_name',{ascending:true}).limit(1000);
+if(q.error)throw q.error;
+var users=Array.isArray(q.data)?q.data:[];
+list.value=users.length?users.map(function(u,n){var name=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'Member';return (n+1)+'. '+name+(u.username?' (@'+u.username+')':'')+(u.referral_code?' · '+u.referral_code:'');}).join('\n'):'اوس مهال مستحق فعال کاروونکي ونه موندل شول.';
+count.textContent='ټول مستحق فعال کاروونکي: '+users.length;
+}catch(err){list.value='د کاروونکو لېست لوډ نه شو: '+(err.message||'Unknown error');count.textContent='';}
+}
 async function openSpecial(){
 if(!isAdmin()){notice('Administrator access required.');return;}
 hideOtherViews();
-page.innerHTML=backButton('home')+'<h2>🎟️ Create Special Gift Code</h2><div class="gift-card"><p class="gift-muted">کوډ، د HDC انعام او د استعمالوونکو شمېر وټاکئ. که «ټول کاروونکي» انتخاب کړئ، هر کاروونکی دغه کوډ یو ځل کارولی شي.</p><label for="hwcSpecialCode">1. Gift Code</label><div class="gift-row"><input id="hwcSpecialCode" maxlength="32" placeholder="لکه: HEWAD2026"><button type="button" id="hwcMakeRandom" class="gift-btn secondary">Generate</button></div><label for="hwcSpecialAmount">2. Reward Amount (HDC)</label><input id="hwcSpecialAmount" type="number" min="0.00000001" step="0.00000001" placeholder="د HDC مقدار ولیکئ"><label for="hwcSpecialLimit">3. Allowed Users</label><input id="hwcSpecialLimit" type="number" min="1" step="1" placeholder="د کاروونکو شمېر، لکه 100"><label class="gift-check"><input id="hwcSpecialAll" type="checkbox"> ټول کاروونکي (All Users)</label><p class="gift-muted">محدود کوډ به لومړیو ټاکل شویو ځانګړو کاروونکو ته انعام ورکړي. هر کاروونکی هر کوډ یوازې یو ځل کارولی شي. ځانګړي کوډونه په خپله نه ختمېږي.</p><button id="hwcCreateSpecialGift" class="gift-btn" type="button">CREATE GIFT CODE</button><div id="hwcSpecialResult" class="gift-result" hidden></div></div><div class="gift-card"><h3>Created Gift Codes & Claims</h3><div id="hwcGiftCodeList" class="gift-muted">Loading…</div></div>';
+page.innerHTML=backButton('home')+'<h2>🎟️ Create Special Gift Code</h2><div class="gift-card"><p class="gift-muted">کوډ، د HDC انعام او د استعمالوونکو شمېر وټاکئ. که «ټول کاروونکي» انتخاب کړئ، هر کاروونکی دغه کوډ یو ځل کارولی شي.</p><label for="hwcSpecialCode">1. Gift Code</label><div class="gift-row"><input id="hwcSpecialCode" maxlength="32" placeholder="لکه: HEWAD2026"><button type="button" id="hwcMakeRandom" class="gift-btn secondary">Generate</button></div><label for="hwcSpecialAmount">2. Reward Amount (HDC)</label><input id="hwcSpecialAmount" type="number" min="0.00000001" step="0.00000001" placeholder="د HDC مقدار ولیکئ"><label for="hwcSpecialLimit">3. Allowed Users</label><input id="hwcSpecialLimit" type="number" min="1" step="1" placeholder="د کاروونکو شمېر، لکه 100"><label class="gift-check"><input id="hwcSpecialAll" type="checkbox"> ټول کاروونکي (All Users)</label><div id="hwcEligibleUsersWrap" class="gift-card" hidden><label for="hwcEligibleUsers">Eligible Users</label><textarea id="hwcEligibleUsers" rows="5" readonly style="box-sizing:border-box;width:100%;padding:11px;border:1px solid #494b51;border-radius:9px;background:#0c0e12;color:#e8d18c;resize:vertical"></textarea><p id="hwcEligibleUsersCount" class="gift-muted"></p></div><p class="gift-muted">محدود کوډ به لومړیو ټاکل شویو ځانګړو کاروونکو ته انعام ورکړي. هر کاروونکی هر کوډ یوازې یو ځل کارولی شي. ځانګړي کوډونه په خپله نه ختمېږي.</p><button id="hwcCreateSpecialGift" class="gift-btn" type="button">CREATE GIFT CODE</button><div id="hwcSpecialResult" class="gift-result" hidden></div></div><div class="gift-card"><h3>Created Gift Codes & Claims</h3><div id="hwcGiftCodeList" class="gift-muted">Loading…</div></div>';
 loadCodes();
 }
 function backToControl(){
@@ -65,14 +77,14 @@ var nav=e.target.closest('[data-gift-nav]');
 if(nav){e.preventDefault();e.stopPropagation();var target=nav.getAttribute('data-gift-nav');if(target==='control')backToControl();else if(target==='home')openHome();else if(target==='daily')openDaily();else if(target==='special')openSpecial();return;}
 if(e.target.closest('#hwcCopySpecialGift')){var copyCode=$('hwcSpecialCode').value.trim().toUpperCase();try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(copyCode);}else{var ta=document.createElement('textarea');ta.value=copyCode;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();if(!document.execCommand('copy'))throw new Error('Copy is not supported by this browser.');ta.remove();}notice('Gift Code copied: '+copyCode);}catch(err){notice('Copy failed. Select and copy the code manually.');}return;}
 if(e.target.closest('#hwcMakeRandom')){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',v='HDC-';for(var i=0;i<8;i++)v+=chars[Math.floor(Math.random()*chars.length)];$('hwcSpecialCode').value=v;return;}
-if(e.target.closest('#hwcSpecialAll')){var field=$('hwcSpecialLimit');field.disabled=$('hwcSpecialAll').checked;if(field.disabled)field.value='';return;}
+if(e.target.closest('#hwcSpecialAll')){var allChecked=$('hwcSpecialAll').checked,field=$('hwcSpecialLimit'),wrap=$('hwcEligibleUsersWrap');if(wrap)wrap.hidden=!allChecked;if(allChecked){loadEligibleUsers();}return;}
 if(e.target.closest('#hwcCreateSpecialGift')){
 if(!isAdmin())return notice('Administrator access required.');
 var code=$('hwcSpecialCode').value.trim().toUpperCase(),amount=Number($('hwcSpecialAmount').value),limitText=$('hwcSpecialLimit').value.trim(),all=$('hwcSpecialAll').checked,limit=all?null:(limitText?Number(limitText):null);
 if(!/^[A-Z0-9-]{4,32}$/.test(code)||!Number.isFinite(amount)||amount<=0||(!all&&(!limitText||!Number.isInteger(limit)||limit<=0)))return notice('Valid Gift Code, HDC reward and user limit are required. Select All Users to remove the limit.');
 var b=$('hwcCreateSpecialGift');b.disabled=true;b.textContent='CREATING…';
 try{var q=await db.rpc('hwc_admin_create_gift_code_v2',{p_code:code,p_reward_amount:amount,p_max_claims:limit});if(q.error)throw q.error;if(!q.data)throw new Error('The server did not confirm Gift Code creation.');
-var result=$('hwcSpecialResult');result.hidden=false;result.innerHTML='<div class="gift-success"><div class="gift-success-head">🎉 SPECIAL GIFT CODE CREATED!</div><div class="gift-code-display">'+esc(code)+'</div><div class="gift-success-meta"><div><small>🎁 REWARD</small><strong>'+fmt(amount)+' HDC</strong></div><div><small>👥 AVAILABLE CLAIMS</small><strong>'+(all?'Unlimited':fmt(limit)+' users')+'</strong></div></div><button type="button" id="hwcCopySpecialGift" class="gift-btn" style="margin-top:14px">📋 COPY GIFT CODE</button><p class="gift-muted" style="text-align:center;margin:10px 0 0">دا کوډ کاپي او له خپلو کاروونکو سره شریک کړئ.</p></div>';
+var result=$('hwcSpecialResult');result.hidden=false;result.innerHTML='<div class="gift-success"><div class="gift-success-head">🎉 SPECIAL GIFT CODE CREATED!</div><div class="gift-code-display">'+esc(code)+'</div><div class="gift-success-meta"><div><small>🎁 REWARD</small><strong>'+fmt(amount)+' HDC</strong></div><div><small>👥 AVAILABLE CLAIMS</small><strong>'+(all?'All users':fmt(limit)+' users')+'</strong></div></div><button type="button" id="hwcCopySpecialGift" class="gift-btn" style="margin-top:14px">📋 COPY GIFT CODE</button><p class="gift-muted" style="text-align:center;margin:10px 0 0">دا کوډ کاپي او له خپلو کاروونکو سره شریک کړئ.</p></div>';
 try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(code);notice('Special Gift Code created and copied successfully.');}else{notice('Special Gift Code created successfully. Use COPY CODE to copy it.');}}catch(_){notice('Special Gift Code created successfully. Use COPY CODE to copy it.');}await loadCodes();
 }catch(err){notice(err.message||'Could not create Gift Code.');}
 finally{b.disabled=false;b.textContent='CREATE GIFT CODE';}
@@ -89,5 +101,5 @@ finally{b.disabled=false;b.textContent='SAVE DAILY AMOUNT';}
 });
 document.addEventListener('hwc-admin-open-gift',openHome);
 window.openHwcGiftManagement=openHome;
-console.info('HEWAD Gift Management initialized: dedicated two-option page.');
+console.info('HEWAD Gift Management initialized: restored classic special-code form with eligible-user list.');
 })();
