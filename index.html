@@ -24,6 +24,16 @@
     try{
       var doc=frame.contentDocument;
       if(!doc||!doc.body)return;
+      /* Keep Pashto and Dari right-to-left after the language selector updates. */
+      var languageSelect=doc.getElementById('languageSelect');
+      if(languageSelect&&!languageSelect.dataset.hwcDirectionFix){
+        var syncLanguageDirection=function(){
+          doc.documentElement.dir=(languageSelect.value==='ps'||languageSelect.value==='fa')?'rtl':'ltr';
+        };
+        languageSelect.addEventListener('change',syncLanguageDirection);
+        syncLanguageDirection();
+        languageSelect.dataset.hwcDirectionFix='1';
+      }
       /* The staking renderer targets a dedicated dashboard subpage. The
          original dashboard markup omitted that mount point, so create it
          before the staking module is loaded. */
