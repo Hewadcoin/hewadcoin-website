@@ -16,7 +16,7 @@
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261127-gift-management-classic-1';
+  var release='20261127-gift-management-classic-2';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -57,7 +57,7 @@
         if(typeof openGift==='function')Promise.resolve(openGift()).catch(function(err){console.error('Gift failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Gift could not open. Please refresh and try again.');});
         else {
           var giftScript=doc.createElement('script');
-          giftScript.src='hewad-gift-telegram.js?v=20261127-gift-management-classic-1';
+          giftScript.src='hewad-gift-telegram.js?v=20261127-gift-management-classic-2';
           giftScript.onload=function(){var fn=doc.defaultView.openHwcGiftPage;if(typeof fn==='function')Promise.resolve(fn()).catch(function(err){console.error('Gift failed to open:',err);});else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Gift could not initialize.');};
           giftScript.onerror=function(){if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Gift module failed to load. Please refresh.');};
           doc.body.appendChild(giftScript);
@@ -66,7 +66,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261127-gift-management-classic-1';
+        script.id=id;script.src=src+'?v=20261127-gift-management-classic-2';
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
