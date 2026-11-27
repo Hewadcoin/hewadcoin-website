@@ -147,6 +147,7 @@ begin
     select sp.id position_id,sp.user_id,sp.status,sp.plan_name,sp.principal,sp.original_principal,
       sp.started_at,sp.matures_at,sp.unlock_requested_at,sp.unblock_requested_at,
       sp.blocked_at,sp.held_at,sp.deleted_at,sp.paid_at,sp.reset_at,sp.reviewed_at,
+      greatest(0,ceil(extract(epoch from (sp.matures_at-clock_timestamp()))/86400))::integer remaining_days,
       concat_ws(' ',p.first_name,p.last_name) full_name,u.email,
       k.national_id_number,p.referral_code,p.card_number,p.mobile_number,
       coalesce((select sum(r.amount) from public.staking_daily_results r where r.position_id=sp.id and r.result_type='profit'),0) total_profit,
@@ -159,13 +160,15 @@ begin
       where ka.user_id=sp.user_id order by ka.updated_at desc,ka.created_at desc limit 1
     ) k on true
     where
-      (bucket='all')
-      or (bucket='pending' and sp.status='unlock_pending')
-      or (bucket='blocked' and sp.status='blocked')
-      or (bucket='unblock' and sp.status='unblock_pending')
-      or (bucket='deleted' and sp.status='deleted')
-      or (bucket='active' and sp.status='active')
-      or (bucket='held' and sp.status='held')
+      (
+        (bucket='all')
+        or (bucket='pending' and sp.status='unlock_pending')
+        or (bucket='blocked' and sp.status='blocked')
+        or (bucket='unblock' and sp.status='unblock_pending')
+        or (bucket='deleted' and sp.status='deleted')
+        or (bucket='active' and sp.status='active')
+        or (bucket='held' and sp.status='held')
+      )
       and (
         term is null
         or (typ in ('all','name') and concat_ws(' ',p.first_name,p.last_name) ilike '%'||term||'%')
@@ -363,12 +366,12 @@ declare u uuid := (select auth.uid());
 begin
   if u is null then raise exception 'Authentication required.'; end if;
   return jsonb_build_object(
-    'pool_total',coalesce((select sum(original_principal) from public.staking_positions where status in ('active','unlock_pending','blocked','unblock_pending','held','deleted')),0),
+    'pool_total',coalesce((select sum(original_principal) from public.staking_positions where status in ('active','unlock_pending','blocked','unblock_pending','held') or (status='deleted' and coalesce(deleted_from_status,'') not in ('completed','reset','cancelled'))),0),
     'participants',coalesce((select count(distinct user_id) from public.staking_positions where status in ('active','held')),0),
     'my_active_positions',coalesce((select count(*) from public.staking_positions where user_id=u and status='active' and asset='HDC' and duration_days=360),0),
     'active_positions',coalesce((select count(*) from public.staking_positions where status='active'),0),
     'distributed_total',coalesce((select sum(amount) from public.staking_daily_results where result_type='profit'),0),
-    'pending_total',coalesce((select sum(original_principal) from public.staking_positions where status in ('unlock_pending','blocked','unblock_pending','held','deleted')),0),
+    'pending_total',coalesce((select sum(original_principal) from public.staking_positions where status in ('unlock_pending','blocked','unblock_pending','held') or (status='deleted' and coalesce(deleted_from_status,'') not in ('completed','reset','cancelled'))),0),
     'my_staked',coalesce((select staked_hwc from public.wallets where user_id=u),0),
     'my_profit',coalesce((select sum(amount) from public.staking_daily_results where user_id=u and result_type='profit'),0),
     'my_loss',coalesce((select sum(amount) from public.staking_daily_results where user_id=u and result_type='loss'),0)
