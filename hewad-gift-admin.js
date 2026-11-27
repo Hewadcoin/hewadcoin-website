@@ -55,7 +55,7 @@ try{
 var q=await db.from('profiles').select('id,first_name,last_name,username,referral_code,card_number').eq('kyc_status','approved').eq('account_status','active').order('first_name',{ascending:true}).limit(1000);
 if(q.error)throw q.error;
 var users=Array.isArray(q.data)?q.data:[];
-list.value=users.length?users.map(function(u,n){var name=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'Member';return (n+1)+'. '+name+(u.username?' (@'+u.username+')':'')+(u.referral_code?' · '+u.referral_code:'');}).join('\\n'):'اوس مهال مستحق فعال کاروونکي ونه موندل شول.';
+list.value=users.length?users.map(function(u,n){var name=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'Member';return (n+1)+'. '+name+(u.username?' (@'+u.username+')':'')+(u.referral_code?' · '+u.referral_code:'');}).join('\n'):'اوس مهال مستحق فعال کاروونکي ونه موندل شول.';
 count.textContent='ټول مستحق فعال کاروونکي: '+users.length;
 wrap.dataset.eligibleCount=String(users.length);
 return users.length;
