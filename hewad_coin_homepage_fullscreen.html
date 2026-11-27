@@ -540,7 +540,11 @@ async function loadHwcProfile(user){
  const nameEl=document.getElementById("memberName");if(nameEl)nameEl.textContent=fullName||user.email||"MEMBER";
  const profileName=document.getElementById("profileMemberName");if(profileName)profileName.textContent=fullName||user.email||"MEMBER";
  // Admin UI remains disabled until its server-side authorization and admin data policies are implemented.
- window.HEWAD_USER_ROLE="member";
+ var adminCheck=await hwcSupabase.rpc("is_hewad_admin");
+ window.HEWAD_USER_ROLE=(!adminCheck.error&&adminCheck.data===true)?"admin":"member";
+ const adminNav=document.querySelector(".admin-nav-btn");
+ if(adminNav)adminNav.hidden=window.HEWAD_USER_ROLE!=="admin";
+ if(window.HEWAD_USER_ROLE==="admin")window.dispatchEvent(new CustomEvent("hewad-admin-authorized"));
 }
 async function restoreHwcSession(){
  const {data,error}=await hwcSupabase.auth.getSession();
@@ -578,10 +582,10 @@ restoreHwcSession();
  const tabs={dashboard:"dashboardMain",wallet:"walletPage",support:"supportPage",profile:"profilePage",control:"adminPanel"};
  const navButtons=[...dash.querySelectorAll("[data-tab]")];
  const adminNav=dash.querySelector('.admin-nav-btn');
- const isAdmin=false; // Admin panel stays hidden until secure server-side admin authorization is added.
- if(adminNav)adminNav.hidden=!isAdmin;
+ const isAdmin=()=>window.HEWAD_USER_ROLE==="admin";
+ if(adminNav)adminNav.hidden=!isAdmin();
  function openTab(tab){
-  if(!tabs[tab]||(tab==="control"&&!isAdmin)) return;
+  if(!tabs[tab]||(tab==="control"&&!isAdmin())) return;
   Object.entries(tabs).forEach(([key,id])=>document.getElementById(id).classList.toggle("active",key===tab));
   navButtons.forEach(btn=>btn.classList.toggle("active",btn.dataset.tab===tab));
   const memberCard=document.getElementById("memberCard");
@@ -601,7 +605,7 @@ restoreHwcSession();
  // Admin Control navigation. Access visibility is supplied by the authenticated server session.
  const adminViews=["adminHome","adminUsers","adminKyc","adminKycList","adminNotifications"];
  function showAdminView(viewId){
-  if(!isAdmin)return;
+  if(!isAdmin())return;
   adminViews.forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=id!==viewId;});
   window.scrollTo(0,0);
  }
