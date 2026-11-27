@@ -67,6 +67,12 @@ notice('د KYC مستحقو کاروونکو شمېر ترلاسه نه شو: '+
 throw err;
 }
 }
+async function openSpecial(){
+if(!isAdmin()){notice('Administrator access required.');return;}
+hideOtherViews();
+page.innerHTML=backButton('control')+'<h2>🎁 Gift Management</h2><button type="button" class="gift-choice" data-gift-nav="daily"><span class="ico">🎁</span><span><strong>Daily Gift Amount</strong><small>د ورځنۍ ډالۍ د HDC مقدار بدلول</small></span><span class="arrow">›</span></button><h2>🎟️ Special Gift Code</h2><div class="gift-card"><p class="gift-muted">کوډ، د HDC انعام او د استعمالوونکو شمېر وټاکئ. که «All Users» انتخاب کړئ، د فعالو او KYC تایید شويو کاروونکو دقیق شمېر به په Allowed Users کې په اتومات ډول ولیکل شي.</p><label for="hwcSpecialCode">1. Gift Code</label><div class="gift-row"><input id="hwcSpecialCode" maxlength="32" placeholder="لکه: HEWAD2026"><button type="button" id="hwcMakeRandom" class="gift-btn secondary">Generate</button></div><label for="hwcSpecialAmount">2. Reward Amount (HDC)</label><input id="hwcSpecialAmount" type="number" min="0.00000001" step="0.00000001" placeholder="د HDC مقدار ولیکئ"><label for="hwcSpecialLimit">3. Allowed Users</label><input id="hwcSpecialLimit" type="number" min="1" step="1" placeholder="د کاروونکو شمېر، لکه 100"><label class="gift-check"><input id="hwcSpecialAll" type="checkbox"> ټول کاروونکي (All Users)</label><p class="gift-muted">محدود کوډ به لومړیو ټاکل شویو ځانګړو کاروونکو ته انعام ورکړي. هر کاروونکی هر کوډ یوازې یو ځل کارولی شي. ځانګړي کوډونه په خپله نه ختمېږي.</p><button id="hwcCreateSpecialGift" class="gift-btn" type="button">CREATE GIFT CODE</button><div id="hwcSpecialResult" class="gift-result" hidden></div></div><div class="gift-card"><h3>Created Gift Codes & Claims</h3><div id="hwcGiftCodeList" class="gift-muted">Loading…</div></div>';
+loadCodes();
+}
 function backToControl(){
 var home=document.getElementById('adminHome');
 adminPanel.querySelectorAll('.admin-view').forEach(function(el){el.hidden=el!==home;el.style.display=el===home?'block':'none';});
