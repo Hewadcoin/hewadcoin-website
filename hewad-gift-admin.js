@@ -52,12 +52,13 @@ var wrap=$('hwcEligibleUsersWrap'),list=$('hwcEligibleUsers'),count=$('hwcEligib
 if(!wrap||!list||!count)return;
 wrap.hidden=false;list.value='د مستحقو کاروونکو لېست لوډ کېږي…';count.textContent='';
 try{
-var q=await db.from('profiles').select('id,username,referral_code,card_number').eq('kyc_status','approved').order('referral_code',{ascending:true}).limit(1000);
+var q=await db.from('profiles').select('id,first_name,last_name,username,referral_code,card_number').eq('kyc_status','approved').eq('account_status','active').order('first_name',{ascending:true}).limit(1000);
 if(q.error)throw q.error;
 var users=Array.isArray(q.data)?q.data:[];
-list.value=users.length?users.map(function(u,n){var label=u.username?'@'+u.username:(u.referral_code?'Referral: '+u.referral_code:(u.card_number?'Card: '+u.card_number:'Verified user'));return (n+1)+'. '+label;}).join('\n'):'اوس مهال د KYC تایید شوي کاروونکي ونه موندل شول.';
-count.textContent='ټول مستحق کاروونکي: '+users.length;
-if(limitField){limitField.value=String(users.length||'');limitField.disabled=true;}
+list.value=users.length?users.map(function(u,n){var fullName=[u.first_name,u.last_name].filter(Boolean).join(' ');var label=fullName|| (u.username?'@'+u.username:(u.referral_code?'Referral: '+u.referral_code:(u.card_number?'Card: '+u.card_number:'Verified user')));return (n+1)+'. '+label+(u.username?' (@'+u.username+')':'')+(u.referral_code?' · '+u.referral_code:'');}).join('\n'):'اوس مهال د KYC تایید شوي کاروونکي ونه موندل شول.';
+count.textContent='ټول مستحق فعال کاروونکي: '+users.length;
+/* All Users displays the eligible-user roster; Allowed Users remains an independent admin-entered claim cap. */
+if(limitField){limitField.disabled=false;}
 wrap.dataset.eligibleCount=String(users.length);
 }catch(err){list.value='د کاروونکو لېست لوډ نه شو: '+(err.message||'Unknown error');count.textContent='';wrap.dataset.eligibleCount='0';if(limitField){limitField.value='';limitField.disabled=false;}}
 }
@@ -80,8 +81,10 @@ if(e.target.closest('#hwcMakeRandom')){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ234567
 if(e.target.closest('#hwcSpecialAll')){var allChecked=$('hwcSpecialAll').checked,field=$('hwcSpecialLimit'),wrap=$('hwcEligibleUsersWrap');if(wrap)wrap.hidden=!allChecked;if(field)field.disabled=allChecked;if(allChecked){loadEligibleUsers();}return;}
 if(e.target.closest('#hwcCreateSpecialGift')){
 if(!isAdmin())return notice('Administrator access required.');
-var code=$('hwcSpecialCode').value.trim().toUpperCase(),amount=Number($('hwcSpecialAmount').value),limitText=$('hwcSpecialLimit').value.trim(),all=$('hwcSpecialAll').checked,eligibleCount=Number(($('hwcEligibleUsersWrap')||{}).dataset&&$('hwcEligibleUsersWrap').dataset.eligibleCount||0),limit=all?eligibleCount:(limitText?Number(limitText):null);
-if(!/^[A-Z0-9-]{4,32}$/.test(code)||!Number.isFinite(amount)||amount<=0||(!all&&(!limitText||!Number.isInteger(limit)||limit<=0))||(all&&(!Number.isInteger(limit)||limit<=0)))return notice(all?'No eligible KYC-approved users were found.':'Valid Gift Code, HDC reward and user limit are required.');
+var code=$('hwcSpecialCode').value.trim().toUpperCase(),amount=Number($('hwcSpecialAmount').value),limitText=$('hwcSpecialLimit').value.trim(),all=$('hwcSpecialAll').checked,eligibleCount=Number(($('hwcEligibleUsersWrap')||{}).dataset&&$('hwcEligibleUsersWrap').dataset.eligibleCount||0),limit=limitText?Number(limitText):null;
+if(!/^[A-Z0-9-]{4,32}$/.test(code)||!Number.isFinite(amount)||amount<=0||!limitText||!Number.isInteger(limit)||limit<=0)return notice('Valid Gift Code, HDC reward and Allowed Users limit are required.');
+if(all&&eligibleCount<=0)return notice('No active KYC-approved users were found.');
+if(all&&limit>eligibleCount)return notice('Allowed Users cannot exceed the eligible active-user count ('+eligibleCount+').');
 var b=$('hwcCreateSpecialGift');b.disabled=true;b.textContent='CREATING…';
 try{var q=await db.rpc('hwc_admin_create_gift_code_v2',{p_code:code,p_reward_amount:amount,p_max_claims:limit});if(q.error)throw q.error;if(!q.data)throw new Error('The server did not confirm Gift Code creation.');
 var result=$('hwcSpecialResult');result.hidden=false;result.innerHTML='<div class="gift-success"><div class="gift-success-head">🎉 SPECIAL GIFT CODE CREATED!</div><div class="gift-code-display">'+esc(code)+'</div><div class="gift-success-meta"><div><small>🎁 REWARD</small><strong>'+fmt(amount)+' HDC</strong></div><div><small>👥 AVAILABLE CLAIMS</small><strong>'+(all?fmt(limit)+' eligible users':fmt(limit)+' users')+'</strong></div></div><button type="button" id="hwcCopySpecialGift" class="gift-btn" style="margin-top:14px">📋 COPY GIFT CODE</button><p class="gift-muted" style="text-align:center;margin:10px 0 0">دا کوډ کاپي او له خپلو کاروونکو سره شریک کړئ.</p></div>';
