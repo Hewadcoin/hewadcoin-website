@@ -149,7 +149,7 @@ async function acceptRequest(id){if(!confirm('Accept for manual payout? It will 
 async function completeRequest(id){var tx=$('wdTxHash').value.trim();if(!tx)return say('TX Hash / payment reference is required.');var q=await db.rpc('hwc_admin_complete_withdrawal',{p_request_id:id,p_tx_hash:tx});if(q.error)return say(q.error.message);say('Withdrawal completed after the payout reference was recorded.');await loadRequests();await openRequest(id);}
 function findWithdrawTile(){
  var dash=$('dashboard');if(!dash)return;var nodes=dash.querySelectorAll('button,a,[role="button"],.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card'),found=null;
- nodes.forEach(function(el){if(found||el.closest('#adminPanel'))return;var a=(el.getAttribute('data-action')||'').trim().toLowerCase(),t=(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();if(a==='withdraw'||a==='withdrawal'||/^withdraw(?:al)?$/i.test(t))found=el;});
+ nodes.forEach(function(el){if(found||el.closest('#adminPanel'))return;var a=(el.getAttribute('data-action')||'').trim().toLowerCase(),t=(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();if(a==='withdraw'||a==='withdrawal'||/^withdraw(?:al)?(?:\\s|$)/i.test(t))found=el;});
  if(found){found.setAttribute('data-hwc-withdraw-open','1');return;}
  var grid=dash.querySelector('.dash-grid,.dashboard-grid,.menu-grid,.dash-cards')||dash.querySelector('.dash-shell')||$('dashboardMain');
  if(grid&&!grid.querySelector('[data-hwc-withdraw-open]')){var b=document.createElement('button');b.type='button';b.className='dash-tile';b.dataset.hwcWithdrawOpen='1';b.innerHTML='<span aria-hidden="true">⬇</span><span>Withdraw</span>';grid.appendChild(b);}
