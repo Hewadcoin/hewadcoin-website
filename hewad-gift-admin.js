@@ -1,7 +1,7 @@
 /* HEWAD COIN — Gift Management: dedicated menu + working daily/special pages. */
 (function(){
 'use strict';
-var db=window.hwcSupabase,adminPanel=document.getElementById('adminPanel');
+var db=hwcSupabase,adminPanel=document.getElementById('adminPanel');
 if(!db||!adminPanel){console.error('HEWAD Gift Management: required dashboard elements are unavailable.');return;}
 var $=function(id){return document.getElementById(id);};
 var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
