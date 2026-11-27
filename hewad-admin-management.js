@@ -80,7 +80,8 @@ function installHomeButton(){
  var home=doc.getElementById('adminHome');if(!home)return;
  function inject(){
   if(!ready)return;
-  var grid=home.querySelector('.admin-menu');if(!grid)return;
+  /* The production Control Panel renders .hwc-admin-grid (not the preview-only .admin-menu). Support both layouts so the entry is actually visible on the live site. */
+  var grid=home.querySelector('.hwc-admin-grid')||home.querySelector('.admin-menu');if(!grid)return;
   var cards=grid.querySelectorAll('[data-admin-open]');
   cards.forEach(function(item){
    var key=item.getAttribute('data-admin-open');
@@ -91,7 +92,8 @@ function installHomeButton(){
   if(!canList){if(existing)existing.remove();return;}
   if(existing)return;
   var b=doc.createElement('button');b.id='hwcAdminManagementEntry';b.type='button';b.className='admin-menu-card';
-  b.innerHTML='<span class="admin-menu-icon">♛</span><span class="admin-menu-copy"><strong>Admin Management</strong><small>Administrator accounts, permissions and audit history</small></span><span class="admin-chevron">›</span>';
+  b.className=grid.classList.contains('hwc-admin-grid')?'hwc-admin-option':'admin-menu-card';
+  b.innerHTML=grid.classList.contains('hwc-admin-grid')?'<span class="ico">♛</span><span><strong>Admin Management</strong><small>Administrator accounts, permissions and audit history</small></span><span class="arrow">›</span>':'<span class="admin-menu-icon">♛</span><span class="admin-menu-copy"><strong>Admin Management</strong><small>Administrator accounts, permissions and audit history</small></span><span class="admin-chevron">›</span>';
   b.addEventListener('click',openHome);grid.appendChild(b);
  }
  inject();if(!homeObserver){homeObserver=new MutationObserver(inject);homeObserver.observe(home,{childList:true,subtree:true});}
