@@ -97,8 +97,13 @@ document.addEventListener('click',function(e){
 var tile=e.target.closest('[data-action]');
 if(tile&&(tile.getAttribute('data-action')||'').toLowerCase()==='profile'){setTimeout(injectProfileCard,250);setTimeout(injectProfileCard,900);}
 },true);
-var observer=new MutationObserver(function(){bindTiles();injectProfileCard();});
-observer.observe(document.documentElement,{childList:true,subtree:true});
+var giftScanQueued=false;
+function scheduleGiftScan(){if(giftScanQueued)return;giftScanQueued=true;var raf=window.requestAnimationFrame||function(fn){return setTimeout(fn,16);};raf(function(){giftScanQueued=false;bindTiles();var profile=document.getElementById('profilePage');if(profile&&profile.classList.contains('active'))injectProfileCard();});}
+/* Watch only the dashboard, coalesce bursts of mutations, and avoid scanning
+   profile content while the member is on another page. */
+var giftRoot=document.getElementById('dashboard')||document.getElementById('dashboardMain')||document.body;
+var observer=new MutationObserver(function(records){if(records.some(function(record){return record.addedNodes&&record.addedNodes.length;}))scheduleGiftScan();});
+observer.observe(giftRoot,{childList:true,subtree:true});
 bindTiles();
 console.info('HEWAD Gift and Telegram client features initialized.');
 })();
