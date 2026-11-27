@@ -129,5 +129,6 @@ async function auditPage(){
  try{var rows=await rpc('admin_mgmt_get_audit',{p_user_id:null});shell('Admin Audit Log','Recent administrator changes are retained, including deletion history.','<div class="hm-card">'+(rows.length?rows.map(function(x){return '<div class="hm-record"><b>'+esc(x.action)+'</b><div class="hm-muted">Actor: '+esc(x.actor_email)+' · Target: '+esc(x.target_email||'—')+'<br>'+new Date(x.created_at).toLocaleString()+'<br>'+esc(JSON.stringify(x.details))+'</div></div>';}).join(''):'<div class="hm-empty">No audit events yet.</div>')+'</div>');}catch(e){shell('Admin Audit Log','', '<div class="hm-card hm-empty">'+esc(e.message)+'</div>');}
 }
 doc.addEventListener('click',function(e){var b=e.target.closest('[data-hm]');if(!b)return;var a=b.getAttribute('data-hm');if(a==='home')openHome();else if(a==='active')activePage();else if(a==='deleted')listPage(true);else if(a==='list')listPage(false);else if(a==='control')listPage(false);else if(a==='audit')auditPage();});
+if(db.auth&&db.auth.onAuthStateChange)db.auth.onAuthStateChange(function(_event,session){setTimeout(function(){init(session&&session.user||null);},0);});
 init();
 })();
