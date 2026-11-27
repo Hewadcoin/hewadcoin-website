@@ -80,12 +80,19 @@ function installHomeButton(){
  var home=doc.getElementById('adminHome');if(!home)return;
  function inject(){
   if(!ready)return;
-  var grid=home.querySelector('.hwc-admin-grid');if(!grid)return;
-  grid.querySelectorAll('[data-hwc-page]').forEach(function(item){var key=item.getAttribute('data-hwc-page');var needed={users:['all_users','user_management'],balance:['balance_management'],kyc:['kyc_management'],requests:['dashboard','deposit_management','withdraw_management','kyc_management'],rates:['settings'],gift:['gift_management']}[key]||[];item.style.display=owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;})?'':'none';});
-  if(!canList){var old=doc.getElementById('hwcAdminManagementEntry');if(old)old.remove();return;}
-  if(doc.getElementById('hwcAdminManagementEntry'))return;
-  var b=doc.createElement('button');b.id='hwcAdminManagementEntry';b.type='button';b.className='hwc-admin-option';
-  b.innerHTML='<span class="ico">♛</span><span><strong>Admin Management</strong><small>Owner-controlled administrator accounts, permissions and audit history</small></span><span class="arrow">›</span>';
+  var grid=home.querySelector('.admin-menu');if(!grid)return;
+  var cards=grid.querySelectorAll('[data-admin-open]');
+  cards.forEach(function(item){
+   var key=item.getAttribute('data-admin-open');
+   var needed=key==='users'?['all_users','user_management']:key==='kyc'?['kyc_management']:['dashboard'];
+   item.style.display=owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;})?'none':'none';
+   if(owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;}))item.style.display='';
+  });
+  var existing=doc.getElementById('hwcAdminManagementEntry');
+  if(!canList){if(existing)existing.remove();return;}
+  if(existing)return;
+  var b=doc.createElement('button');b.id='hwcAdminManagementEntry';b.type='button';b.className='admin-menu-card';
+  b.innerHTML='<span class="admin-menu-icon">♛</span><span class="admin-menu-copy"><strong>Admin Management</strong><small>Administrator accounts, permissions and audit history</small></span><span class="admin-chevron">›</span>';
   b.addEventListener('click',openHome);grid.appendChild(b);
  }
  inject();if(!homeObserver){homeObserver=new MutationObserver(inject);homeObserver.observe(home,{childList:true,subtree:true});}
