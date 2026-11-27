@@ -65,12 +65,14 @@ async function init(userOverride){
   var user;
   if(arguments.length){user=userOverride||null;}
   else{var u=await db.auth.getUser();user=u.data&&u.data.user||null;}
-  if(!user){owner=false;canList=false;ready=false;myPermissions=[];var old=doc.getElementById('hwcAdminManagementEntry');if(old)old.remove();return;}
+  if(!user){owner=false;canList=false;ready=false;myPermissions=[];window.HEWAD_USER_ROLE='member';doc.querySelectorAll('.admin-nav-btn').forEach(function(b){b.hidden=true;});var old=doc.getElementById('hwcAdminManagementEntry');if(old)old.remove();return;}
   owner=user.id===ownerId && String(user.email||'').toLowerCase()==='hewadcoin@gmail.com';
   myPermissions=owner?perms.map(function(p){return p[0];}):(await rpc('admin_mgmt_my_permissions'))||[];
   canList=owner||myPermissions.indexOf('admin_list')>=0;
   ready=true;
-  if(owner||myPermissions.length){window.HEWAD_USER_ROLE='admin';doc.querySelectorAll('.admin-nav-btn').forEach(function(b){b.hidden=false;});window.dispatchEvent(new CustomEvent('hewad-admin-authorized'));}
+  window.HEWAD_USER_ROLE=(owner||myPermissions.length>0)?'admin':'member';
+  doc.querySelectorAll('.admin-nav-btn').forEach(function(b){b.hidden=window.HEWAD_USER_ROLE!=='admin';});
+  if(window.HEWAD_USER_ROLE==='admin')window.dispatchEvent(new CustomEvent('hewad-admin-authorized'));
   installHomeButton();
  }catch(e){ready=false;console.warn('Admin Management access check:',e.message||e);}
 }
