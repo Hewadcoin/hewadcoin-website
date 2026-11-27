@@ -49,7 +49,7 @@
         var gift=e.target.closest('[data-action*="gift" i]');
         if(!gift){
           var candidate=e.target.closest('.dash-tile,button,a,[role="button"]');
-          if(candidate&&/^(?:🎁\\s*)?(?:daily\\s+)?gift$/i.test((candidate.innerText||candidate.textContent||'').replace(/\\s+/g,' ').trim()))gift=candidate;
+          if(candidate&&/^(?:🎁\s*)?(?:daily\s+)?gift$/i.test((candidate.innerText||candidate.textContent||'').replace(/\s+/g,' ').trim()))gift=candidate;
         }
         if(!gift)return;
         e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
