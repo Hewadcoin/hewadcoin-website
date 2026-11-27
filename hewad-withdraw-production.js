@@ -120,11 +120,11 @@ async function openRequest(id){
   db.from('wallets').select('balance_hwc,balance_usd,balance_afn,reserved_hwc,reserved_usd,reserved_afn,staked_hwc').eq('user_id',w.user_id).maybeSingle(),
   db.from('staking_positions').select('id,plan_name,principal,original_principal,status,started_at,matures_at').eq('user_id',w.user_id).neq('status','reset').order('started_at',{ascending:false}).limit(100),
   db.from('withdrawal_requests').select('id,asset,amount,status,created_at,network,fee_amount,net_amount,tx_hash').eq('user_id',w.user_id).order('created_at',{ascending:false}).limit(100),
-  db.rpc('admin_search_users',{p_search_type:'user_id',p_search_value:w.user_id,p_limit:1,p_offset:0})
+  db.rpc('hwc_admin_withdrawal_user_email',{p_user_id:w.user_id})
  ]);
  var bad=rs.find(function(x){return x.error;});if(bad){host.innerHTML='<div class="wd-card wd-note">'+esc(bad.error.message)+'</div>';return;}
  var p=rs[0].data||{},bal=rs[1].data||{},pos=rs[2].data||[],hist=rs[3].data||[],users=rs[4].data||[];
- var email=users[0]&&users[0].email||'—',name=[p.first_name,p.last_name].filter(Boolean).join(' ')||'Member';
+ var email=users||'—',name=[p.first_name,p.last_name].filter(Boolean).join(' ')||'Member';
  var staked=pos.reduce(function(n,x){return n+Number(x.original_principal||x.principal||0);},0);
  var approved=hist.filter(function(x){return x.status==='approved'||x.status==='completed';}).length,rejected=hist.filter(function(x){return x.status==='rejected';}).length,first=hist.length?hist[hist.length-1].created_at:null;
  var positions=pos.length?pos.map(function(x){return '<div class="wd-history"><b>'+esc(x.plan_name||'HDC Position')+' · '+fmt(x.original_principal||x.principal,4)+' HDC</b><small class="wd-muted">'+esc(x.status)+' · '+dt(x.started_at)+' → '+dt(x.matures_at)+'</small></div>';}).join(''):'<p class="wd-muted">No staking positions.</p>';
