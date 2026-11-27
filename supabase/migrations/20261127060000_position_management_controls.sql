@@ -308,15 +308,15 @@ begin
       where user_id=p.user_id and staked_hwc>=p.original_principal;
     if not found then raise exception 'Staked balance reconciliation failed. No funds were transferred.'; end if;
     tx:=gen_random_uuid();
+    insert into public.wallet_transactions(id,user_id,asset,amount,transaction_type,status,description,reference,created_by)
+      values(tx,p.user_id,'HDC',p.original_principal,'credit','completed',
+        'Staking principal returned after administrator reset',p_position_id::text,a);
     update public.staking_positions
       set status='reset',reset_at=clock_timestamp(),paid_at=clock_timestamp(),
           reviewed_by=a,reviewed_at=clock_timestamp(),review_action='reset',
           review_note=note,unlock_transaction_id=tx
       where id=p_position_id and status in ('unlock_pending','deleted');
     if not found then raise exception 'Position state changed; refresh and retry.'; end if;
-    insert into public.wallet_transactions(id,user_id,asset,amount,transaction_type,status,description,reference,created_by)
-      values(tx,p.user_id,'HDC',p.original_principal,'credit','completed',
-        'Staking principal returned after administrator reset',p_position_id::text,a);
     insert into public.notifications(user_id,title,body,notification_type)
       values(p.user_id,'Staking principal returned',p.original_principal::text||' HDC was returned to your available balance.','staking_position_status');
     insert into private.staking_admin_audit(position_id,member_id,actor_id,action,note,details)
