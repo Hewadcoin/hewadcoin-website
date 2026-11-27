@@ -2,7 +2,10 @@
 (function(){
 'use strict';
 if(window.__HWC_WITHDRAW_MODULE__)return;window.__HWC_WITHDRAW_MODULE__=true;
-var db=window.hwcSupabase,$=function(id){return document.getElementById(id);};
+var db=typeof hwcSupabase!=='undefined'?hwcSupabase:window.hwcSupabase,$=function(id){return document.getElementById(id);};
+if(!db&&window.supabase&&typeof window.supabase.createClient==='function'){
+ db=window.supabase.createClient('https://qjclffmzkqfgqbbawhaz.supabase.co','sb_publishable_Sx7vXgrUAvdlWbjfwY6FVQ_DPEfEuPS',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+}
 if(!db){console.error('HEWAD Withdraw: Supabase client unavailable.');return;}
 var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
 var fmt=function(v,d){return Number(v||0).toLocaleString(undefined,{maximumFractionDigits:d==null?4:d});};
