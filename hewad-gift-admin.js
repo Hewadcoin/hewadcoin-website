@@ -113,5 +113,7 @@ finally{b.disabled=false;b.textContent='SAVE DAILY AMOUNT';}
 });
 document.addEventListener('hwc-admin-open-gift',openHome);
 window.openHwcGiftManagement=openHome;
+/* Run at window capture phase so earlier dashboard document handlers cannot swallow the admin Gift click. */
+window.addEventListener('click',function(e){var target=e.target&&e.target.closest?e.target.closest('[data-hwc-page="gift"]'):null;if(!target)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openHome();},true);
 console.info('HEWAD Gift Management initialized: classic form, verified eligible-user list, and bounded All Users claims.');
 })();
