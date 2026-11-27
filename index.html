@@ -16,7 +16,7 @@
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261127-login-unfreeze-2';
+  var release='20261127-runtime-reliability-1';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -24,6 +24,8 @@
     try{
       var doc=frame.contentDocument;
       if(!doc||!doc.body)return;
+      /* Do not make the main app wait for optional enhancement scripts. */
+      frame.style.visibility='visible';
       /* Keep Pashto and Dari right-to-left after the language selector updates. */
       var languageSelect=doc.getElementById('languageSelect');
       if(languageSelect&&!languageSelect.dataset.hwcDirectionFix){
@@ -82,10 +84,11 @@
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
+        /* A stalled optional asset must not block every later feature forever. */
+        window.setTimeout(finish,12000);
         doc.body.appendChild(script);
       }
-      /* Load every enhancement independently. An existing live-enhancement tag
-         must not prevent the compact-menu script from loading. */
+      /* Load enhancements in dependency order, but keep the main app visible. */
       loadScript('hewad-convert-live','hewad-convert-live.js',function(){
         loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
         loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
@@ -118,7 +121,8 @@
                           ['hewad-gift-telegram-24h-claims-2','hewad-gift-telegram.js'],
                           ['hewad-gift-admin-claims-4','hewad-gift-admin.js'],
                           ['hewad-dashboard-card-visibility','hewad-dashboard-card-visibility.js'],
-                          ['hewad-withdraw-production','hewad-withdraw-production.js']
+                          ['hewad-withdraw-production','hewad-withdraw-production.js'],
+                          ['hewad-runtime-reliability','hewad-runtime-reliability.js']
                         ];
                         function loadFeatureAt(index){
                           if(index>=featureScripts.length){frame.style.visibility='visible';return;}
