@@ -16,7 +16,7 @@
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261127-admin-management-2';
+  var release='20261127-admin-management-3';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -78,7 +78,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        script.id=id;script.src=src+'?v=20261127-gift-management-classic-7';
+        script.id=id;script.src=src+'?v='+release;
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
@@ -107,7 +107,24 @@
                   loadScript('hewad-compact-menus','preview/hewad-compact-menus.js',function(){
                     loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js',function(){
                       loadScript('hewad-kyc-four-step','hewad-kyc-four-step.js',function(){
-                        loadScript('hewad-kyc-integration-refresh-20261123-4','hewad-kyc-integration.js',function(){loadScript('hewad-admin-gift-control-3','hewad-admin-control-panel.js',function(){loadScript('hewad-admin-management','hewad-admin-management.js',function(){loadScript('hewad-staking-production','hewad-staking-production.js',function(){loadScript('hewad-position-management','hewad-position-management.js',function(){loadScript('hewad-mining-production','hewad-mining-production.js',function(){loadScript('hewad-send-hewad','hewad-send-hewad.js',function(){loadScript('hewad-gift-telegram-24h-claims-2','hewad-gift-telegram.js',function(){loadScript('hewad-gift-admin-claims-4','hewad-gift-admin.js',function(){loadScript('hewad-dashboard-card-visibility','hewad-dashboard-card-visibility.js',function(){frame.style.visibility='visible';});});});});});});});});});
+                        var featureScripts=[
+                          ['hewad-kyc-integration-refresh-20261123-4','hewad-kyc-integration.js'],
+                          ['hewad-admin-gift-control-3','hewad-admin-control-panel.js'],
+                          ['hewad-admin-management','hewad-admin-management.js'],
+                          ['hewad-staking-production','hewad-staking-production.js'],
+                          ['hewad-position-management','hewad-position-management.js'],
+                          ['hewad-mining-production','hewad-mining-production.js'],
+                          ['hewad-send-hewad','hewad-send-hewad.js'],
+                          ['hewad-gift-telegram-24h-claims-2','hewad-gift-telegram.js'],
+                          ['hewad-gift-admin-claims-4','hewad-gift-admin.js'],
+                          ['hewad-dashboard-card-visibility','hewad-dashboard-card-visibility.js']
+                        ];
+                        function loadFeatureAt(index){
+                          if(index>=featureScripts.length){frame.style.visibility='visible';return;}
+                          var entry=featureScripts[index];
+                          loadScript(entry[0],entry[1],function(){loadFeatureAt(index+1);});
+                        }
+                        loadFeatureAt(0);
                       });
                     });
                   });
