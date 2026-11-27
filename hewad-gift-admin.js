@@ -50,7 +50,7 @@ return '<details class="gift-record"><summary><b>'+esc(x.code)+'</b> · '+fmt(x.
 }).join(''):'No gift codes found.';
 }
 async function loadEligibleUsers(){
-var wrap=$('hwcEligibleUsersWrap'),list=$('hwcEligibleUsers'),count=$('hwcEligibleUsersCount');
+var wrap=$('hwcEligibleUsersWrap'),list=$('hwcEligibleUsers'),count=$('hwcEligibleUsersCount'),limitField=$('hwcSpecialLimit');
 if(!wrap||!list||!count)return;
 wrap.hidden=false;list.value='د مستحقو کاروونکو لېست لوډ کېږي…';count.textContent='';
 try{
@@ -58,8 +58,8 @@ var q=await db.from('profiles').select('first_name,last_name,username,referral_c
 if(q.error)throw q.error;
 var users=Array.isArray(q.data)?q.data:[];
 list.value=users.length?users.map(function(u,n){var name=[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'Member';return (n+1)+'. '+name+(u.username?' (@'+u.username+')':'')+(u.referral_code?' · '+u.referral_code:'');}).join('\n'):'اوس مهال مستحق فعال کاروونکي ونه موندل شول.';
-count.textContent='ټول مستحق فعال کاروونکي: '+users.length;
-}catch(err){list.value='د کاروونکو لېست لوډ نه شو: '+(err.message||'Unknown error');count.textContent='';}
+count.textContent='ټول مستحق فعال کاروونکي: '+users.length;if(limitField){limitField.value=String(users.length||'');limitField.disabled=true;}
+}catch(err){list.value='د کاروونکو لېست لوډ نه شو: '+(err.message||'Unknown error');count.textContent='';if(limitField)limitField.disabled=false;}
 }
 async function openSpecial(){
 if(!isAdmin()){notice('Administrator access required.');return;}
@@ -77,7 +77,7 @@ var nav=e.target.closest('[data-gift-nav]');
 if(nav){e.preventDefault();e.stopPropagation();var target=nav.getAttribute('data-gift-nav');if(target==='control')backToControl();else if(target==='home')openHome();else if(target==='daily')openDaily();else if(target==='special')openSpecial();return;}
 if(e.target.closest('#hwcCopySpecialGift')){var copyCode=$('hwcSpecialCode').value.trim().toUpperCase();try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(copyCode);}else{var ta=document.createElement('textarea');ta.value=copyCode;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();if(!document.execCommand('copy'))throw new Error('Copy is not supported by this browser.');ta.remove();}notice('Gift Code copied: '+copyCode);}catch(err){notice('Copy failed. Select and copy the code manually.');}return;}
 if(e.target.closest('#hwcMakeRandom')){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',v='HDC-';for(var i=0;i<8;i++)v+=chars[Math.floor(Math.random()*chars.length)];$('hwcSpecialCode').value=v;return;}
-if(e.target.closest('#hwcSpecialAll')){var allChecked=$('hwcSpecialAll').checked,field=$('hwcSpecialLimit'),wrap=$('hwcEligibleUsersWrap');if(wrap)wrap.hidden=!allChecked;if(allChecked){loadEligibleUsers();}return;}
+if(e.target.closest('#hwcSpecialAll')){var allChecked=$('hwcSpecialAll').checked,field=$('hwcSpecialLimit'),wrap=$('hwcEligibleUsersWrap');if(wrap)wrap.hidden=!allChecked;if(field)field.disabled=allChecked;if(allChecked){loadEligibleUsers();}return;}
 if(e.target.closest('#hwcCreateSpecialGift')){
 if(!isAdmin())return notice('Administrator access required.');
 var code=$('hwcSpecialCode').value.trim().toUpperCase(),amount=Number($('hwcSpecialAmount').value),limitText=$('hwcSpecialLimit').value.trim(),all=$('hwcSpecialAll').checked,limit=all?null:(limitText?Number(limitText):null);
