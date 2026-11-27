@@ -85,8 +85,7 @@ function installHomeButton(){
   cards.forEach(function(item){
    var key=item.getAttribute('data-admin-open');
    var needed=key==='users'?['all_users','user_management']:key==='kyc'?['kyc_management']:['dashboard'];
-   item.style.display=owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;})?'none':'none';
-   if(owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;}))item.style.display='';
+   item.style.display=(owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;}))?'':'none';
   });
   var existing=doc.getElementById('hwcAdminManagementEntry');
   if(!canList){if(existing)existing.remove();return;}
