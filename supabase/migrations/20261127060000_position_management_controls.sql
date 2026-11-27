@@ -146,7 +146,7 @@ begin
   from (
     select sp.id position_id,sp.user_id,sp.status,sp.plan_name,sp.principal,sp.original_principal,
       sp.started_at,sp.matures_at,sp.unlock_requested_at,sp.unblock_requested_at,
-      sp.blocked_at,sp.held_at,sp.deleted_at,sp.paid_at,sp.reset_at,sp.reviewed_at,
+      sp.blocked_at,sp.held_at,sp.deleted_at,sp.paid_at,sp.reset_at,sp.reviewed_at,sp.review_action,
       greatest(0,ceil(extract(epoch from (sp.matures_at-clock_timestamp()))/86400))::integer remaining_days,
       concat_ws(' ',p.first_name,p.last_name) full_name,u.email,
       k.national_id_number,p.referral_code,p.card_number,p.mobile_number,
@@ -164,7 +164,7 @@ begin
         (bucket='all')
         or (bucket='pending' and sp.status='unlock_pending')
         or (bucket='blocked' and sp.status='blocked')
-        or (bucket='unblock' and sp.status='unblock_pending')
+        or (bucket='unblock' and (sp.status='unblock_pending' or (sp.review_action='unblock' and sp.status in ('active','unlock_pending','held'))))
         or (bucket='deleted' and sp.status='deleted')
         or (bucket='active' and sp.status='active')
         or (bucket='held' and sp.status='held')
