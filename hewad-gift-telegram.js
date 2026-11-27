@@ -35,6 +35,7 @@ successCard.querySelector('#hwcGiftDone').addEventListener('click',function(){wr
 finally{button.disabled=false;button.textContent='REDEEM';}
 });
 }
+window.openHwcGiftPage=openGift;
 async function openTelegram(){
 var auth=await db.auth.getUser();if(auth.error)throw auth.error;var u=auth.data&&auth.data.user;if(!u){notify('Please sign in first.');return;}
 var wrap=modal('<div class="hwc-feature-title">🤖 TELEGRAM BOT</div><div class="hwc-feature-sub">@Hewadcoinbot</div><div id="hwcTelegramState" class="hwc-feature-note">Checking account link…</div><div id="hwcTelegramActions"></div>');
@@ -57,7 +58,7 @@ copy.addEventListener('click',async function(){try{await navigator.clipboard.wri
 function bindTiles(){
 document.querySelectorAll('[data-action]').forEach(function(tile){
 var action=(tile.getAttribute('data-action')||'').trim().toLowerCase();
-if(action==='gift'&&!tile.dataset.hwcGiftBound){tile.dataset.hwcGiftBound='1';tile.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openGift();},false);}
+if(action.indexOf('gift')!==-1&&!tile.dataset.hwcGiftBound){tile.dataset.hwcGiftBound='1';tile.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openGift();},false);}
 if(action==='telegram bot'&&!tile.dataset.hwcTelegramBound){tile.dataset.hwcTelegramBound='1';tile.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openTelegram();},false);}
 });
 }
@@ -73,10 +74,10 @@ card.innerHTML='<strong>🤖 Telegram Bot</strong><p style="font-size:12px;color
 card.querySelector('button').addEventListener('click',openTelegram);host.appendChild(card);
 }
 document.addEventListener('click',function(e){
-var node=e.target, tile=node&&node.closest?node.closest('[data-action="Gift" i]'):null;
+var node=e.target, tile=node&&node.closest?node.closest('[data-action*="gift" i]'):null;
 if(!tile&&node&&node.closest){
-var candidates=node.closest('button,a,[role="button"],.menu-item,.dashboard-item,.dash-card,.menu-card');
-if(candidates&&/^🎁?\s*Gift\s*$/i.test((candidates.innerText||candidates.textContent||'').replace(/\s+/g,' ').trim()))tile=candidates;
+var candidates=node.closest('button,a,[role="button"],.menu-item,.dashboard-item,.dash-card,.menu-card,.dash-tile');
+if(candidates&&/^(?:🎁\s*)?(?:daily\s+)?gift\s*$/i.test((candidates.innerText||candidates.textContent||'').replace(/\s+/g,' ').trim()))tile=candidates;
 }
 if(tile){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openGift();}
 },true);
