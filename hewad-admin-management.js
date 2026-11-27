@@ -14,7 +14,7 @@ var perms=[
 ];
 var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
 var note=function(m){if(typeof window.showNotice==='function')window.showNotice(m);else alert(m);};
-var owner=false,canList=false,ready=false,currentRows=[];
+var owner=false,canList=false,ready=false,currentRows=[],myPermissions=[];
 var css=doc.createElement('style');css.id='hwc-admin-management-style';
 css.textContent=`
 #hwcAdminManagement{padding:4px 0 22px;color:#f5f2e8;font-family:inherit}
@@ -64,7 +64,8 @@ async function init(){
  try{
   var u=await db.auth.getUser();if(!u.data||!u.data.user)return;
   owner=u.data.user.id===ownerId && String(u.data.user.email||'').toLowerCase()==='hewadcoin@gmail.com';
-  if(!owner){canList=!!(await rpc('admin_mgmt_has_permission',{p_permission:'admin_list'}));}
+  myPermissions=owner?perms.map(function(p){return p[0];}):(await rpc('admin_mgmt_my_permissions'))||[];
+  canList=owner||myPermissions.indexOf('admin_list')>=0;
   if(!owner&&!canList)return;
   ready=true;installHomeButton();
  }catch(e){console.warn('Admin Management access check:',e.message||e);}
@@ -72,8 +73,10 @@ async function init(){
 function installHomeButton(){
  var home=doc.getElementById('adminHome');if(!home)return;
  function inject(){
-  if(!ready||doc.getElementById('hwcAdminManagementEntry'))return;
+  if(!ready)return;
   var grid=home.querySelector('.hwc-admin-grid');if(!grid)return;
+  grid.querySelectorAll('[data-hwc-page]').forEach(function(item){var key=item.getAttribute('data-hwc-page');var needed={users:['all_users','user_management'],balance:['balance_management'],kyc:['kyc_management'],requests:['dashboard','deposit_management','withdraw_management'],rates:['settings'],gift:['gift_management']}[key]||[];item.style.display=owner||needed.some(function(p){return myPermissions.indexOf(p)>=0;})?'':'none';});
+  if(doc.getElementById('hwcAdminManagementEntry'))return;
   var b=doc.createElement('button');b.id='hwcAdminManagementEntry';b.type='button';b.className='hwc-admin-option';
   b.innerHTML='<span class="ico">♛</span><span><strong>Admin Management</strong><small>Owner-controlled administrator accounts, permissions and audit history</small></span><span class="arrow">›</span>';
   b.addEventListener('click',openHome);grid.appendChild(b);
