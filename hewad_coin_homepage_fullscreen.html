@@ -527,7 +527,7 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
  e.preventDefault();if(!e.currentTarget.reportValidity())return;
  const email=document.getElementById("loginEmail").value.trim(),password=document.getElementById("loginPassword").value;
  const button=e.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
- try{const {data,error}=await hwcSupabase.auth.signInWithPassword({email,password});if(error)throw error;hwcCurrentUser=data.user;await loadHwcProfile(data.user);showScreen("dashboard");showNotice("You are now logged in.");}
+ try{const {data,error}=await hwcSupabase.auth.signInWithPassword({email,password});if(error)throw error;hwcCurrentUser=data.user;showScreen("dashboard");showNotice("You are now logged in.");loadHwcProfile(data.user).catch(err=>console.warn("Profile setup continues in background:",err));}
  catch(err){showNotice(authErrorMessage(err));}
  finally{button.disabled=false;}
 });
@@ -540,7 +540,7 @@ async function loadHwcProfile(user){
  const nameEl=document.getElementById("memberName");if(nameEl)nameEl.textContent=fullName||user.email||"MEMBER";
  const profileName=document.getElementById("profileMemberName");if(profileName)profileName.textContent=fullName||user.email||"MEMBER";
  // Admin UI remains disabled until its server-side authorization and admin data policies are implemented.
- var adminCheck=await hwcSupabase.rpc("is_hewad_admin");
+ var adminCheck=await Promise.race([hwcSupabase.rpc("is_hewad_admin"),new Promise(resolve=>setTimeout(()=>resolve({data:false,error:{message:"Admin role check timed out"}}),5000))]);
  window.HEWAD_USER_ROLE=(!adminCheck.error&&adminCheck.data===true)?"admin":"member";
  const adminNav=document.querySelector(".admin-nav-btn");
  if(adminNav)adminNav.hidden=window.HEWAD_USER_ROLE!=="admin";
@@ -549,7 +549,7 @@ async function loadHwcProfile(user){
 async function restoreHwcSession(){
  const {data,error}=await hwcSupabase.auth.getSession();
  if(error){console.warn("Session restore:",error.message);return;}
- if(data.session){hwcCurrentUser=data.session.user;await loadHwcProfile(hwcCurrentUser);showScreen("dashboard");}
+ if(data.session){hwcCurrentUser=data.session.user;showScreen("dashboard");loadHwcProfile(hwcCurrentUser).catch(err=>console.warn("Session profile setup continues in background:",err));}
 }
 hwcSupabase.auth.onAuthStateChange((event,session)=>{
  hwcCurrentUser=session?.user||null;
