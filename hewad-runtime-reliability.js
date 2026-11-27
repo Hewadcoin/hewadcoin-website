@@ -11,8 +11,10 @@ function giftTiles(){
   if(!/(^|\s)(daily\s+)?gift(\s|$)/i.test(label))return;
   ['locked','is-locked','feature-locked','kyc-locked','is-disabled'].forEach(function(c){tile.classList.remove(c);});
   tile.removeAttribute('aria-disabled');
+  tile.removeAttribute('data-locked');
   if('disabled' in tile)tile.disabled=false;
-  tile.querySelectorAll('.lock-icon,.locked-icon,.feature-lock,.lock-badge,.locked-badge,[data-lock],[aria-label*="lock" i],[title*="lock" i],[data-icon="lock"],[data-lucide="lock"],svg.lucide-lock').forEach(function(n){n.remove();});
+  tile.style.pointerEvents='auto';
+  tile.querySelectorAll('.lock-icon,.locked-icon,.feature-lock,.lock-badge,.locked-badge,[data-lock],[data-locked],[aria-label*="lock" i],[title*="lock" i],[data-icon="lock"],[data-lucide="lock"],svg.lucide-lock').forEach(function(n){n.remove();});
   var walker=doc.createTreeWalker(tile,NodeFilter.SHOW_TEXT),textNodes=[];
   while(walker.nextNode())textNodes.push(walker.currentNode);
   textNodes.forEach(function(n){if(/[🔒🔐🔓]/.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(/[🔒🔐🔓]/g,'').replace(/\s{2,}/g,' ');});
