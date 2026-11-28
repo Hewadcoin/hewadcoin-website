@@ -22,6 +22,9 @@ function unlockTiles(){
  /* Remove lock presentation for every member; the central click router still enforces KYC. */
  root.querySelectorAll(tileSelector).forEach(function(tile){
   if(!tile||tile.closest('#adminPanel,#hwcAdminGift')||!isFeatureTile(tile))return;
+  /* Detach legacy per-tile capture listeners that re-apply stale localStorage KYC locks.
+     The central KYC router is delegated from the document and remains in force. */
+  if(tile.dataset.hwcKycLegacyDetached!=='1'){var clean=tile.cloneNode(true);clean.dataset.hwcKycLegacyDetached='1';tile.replaceWith(clean);tile=clean;}
   ['locked','is-locked','feature-locked','kyc-locked','is-disabled','disabled'].forEach(function(c){tile.classList.remove(c);});
   tile.removeAttribute('aria-disabled');
   tile.removeAttribute('data-locked');
@@ -39,12 +42,12 @@ function unlockTiles(){
 }
 function addWithdrawAdminOptions(){
  if(window.HEWAD_USER_ROLE!=='admin')return;
- var home=doc.getElementById('adminHome'),grid=home&&home.querySelector('.hwc-admin-grid');
+ var home=doc.getElementById('adminHome'),grid=home&&(home.querySelector('.hwc-admin-grid')||home.querySelector('.admin-menu'));
  if(!grid)return;
  function add(key,icon,title,desc){
   if(grid.querySelector('[data-hwc-withdraw-admin="'+key+'"]'))return;
-  var b=doc.createElement('button');b.type='button';b.className='hwc-admin-option';b.dataset.hwcWithdrawAdmin=key;
-  b.innerHTML='<span class="ico">'+icon+'</span><span><strong>'+title+'</strong><small>'+desc+'</small></span><span class="arrow">›</span>';
+  var legacy=grid.classList.contains('hwc-admin-grid');var b=doc.createElement('button');b.type='button';b.className=legacy?'hwc-admin-option':'admin-menu-card';b.dataset.hwcWithdrawAdmin=key;
+  b.innerHTML=legacy?'<span class="ico">'+icon+'</span><span><strong>'+title+'</strong><small>'+desc+'</small></span><span class="arrow">›</span>':'<span class="admin-menu-icon">'+icon+'</span><span class="admin-menu-copy"><strong>'+title+'</strong><small>'+desc+'</small></span><span class="admin-chevron">›</span>';
   grid.appendChild(b);
  }
  add('settings','⚙','Withdraw Management','USDT BEP20 fee, minimum and rolling 24-hour maximum controls');
@@ -75,7 +78,7 @@ var style=doc.createElement('style');
 style.id='hwc-runtime-reliability-style';
 style.textContent='.hwc-feature-no-lock::before,.hwc-feature-no-lock::after{content:none!important;display:none!important}.hwc-feature-unlocked{pointer-events:auto!important;filter:none!important;opacity:1!important}';
 (doc.head||doc.documentElement).appendChild(style);
-window.addEventListener('hewad-admin-authorized',schedule);
+window.addEventListener('hewad-admin-authorized',function(){schedule();addWithdrawAdminOptions();});
 window.addEventListener('hewad-kyc-status-updated',schedule);
 if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',function(){schedule();observeDashboard();},{once:true});
 else{schedule();observeDashboard();}
