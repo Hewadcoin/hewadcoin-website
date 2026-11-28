@@ -81,8 +81,9 @@ async function renderWithdraw(prefill){
   $('hwcWithdrawEdit').onclick=function(){renderWithdraw({amount:a,address:addr});};
   $('hwcWithdrawConfirm').onclick=async function(){var b=$('hwcWithdrawConfirm');b.disabled=true;b.textContent='Submitting…';try{
    var q=await db.rpc('hwc_create_withdrawal_request',{p_asset:'USDT',p_amount:a,p_withdrawal_method:'BEP20',p_destination:addr,p_request_key:key});if(q.error)throw q.error;
+   if(navToken!==window.__HWC_MODULE_NAV_TOKEN)return;
    showUserPage('Withdraw Request Submitted','<div class="wd-card"><span class="wd-status">PENDING</span><h3>Request sent successfully</h3><p class="wd-muted">Your request is now awaiting administrator review. Reserved funds will be released if it is rejected, or deducted when the payout is completed with a saved TX Hash.</p><p><b>Request ID:</b> '+esc(q.data)+'</p><button class="wd-primary" id="hwcWithdrawReturn" type="button">View Withdraw History</button></div><section class="wd-card"><h3>Withdraw History</h3><div id="hwcWithdrawHistory">Loading…</div></section>');
-   $('hwcWithdrawReturn').onclick=renderWithdraw;await renderHistory(u.id);
+   $('hwcWithdrawReturn').onclick=renderWithdraw;await renderHistory(u.id);if(navToken!==window.__HWC_MODULE_NAV_TOKEN)return;
   }catch(err){say(err&&err.message?err.message:'Withdrawal request failed.');b.disabled=false;b.textContent='Confirm';}};
  });
 }
