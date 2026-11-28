@@ -140,58 +140,61 @@
         window.setTimeout(finish,12000);
         doc.body.appendChild(script);
       }
-      /* Load enhancements in dependency order, but keep the main app visible. */
+      /* Load core UI foundations first. Network-dependent extras must never block dashboard modules. */
       loadScript('hewad-convert-live','hewad-convert-live.js',function(){
         loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
-        loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
-          loadScript('hewad-phone-metadata','https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/libphonenumber-max.js',function(){
-            try{
-              var lib=doc.defaultView.libphonenumber;
-              if(lib&&lib.getCountries&&lib.getCountryCallingCode){
-                var all={};
-                lib.getCountries().forEach(function(iso){
-                  var code='+'+lib.getCountryCallingCode(iso);
-                  if(!all[code])all[code]=[Array.from(iso).map(function(ch){return String.fromCodePoint(ch.charCodeAt(0)+127397);}).join(''),iso];
-                });
-                doc.defaultView.__HWC_PHONE_COUNTRIES=all;
-              }
-            }catch(e){console.warn('Phone country metadata setup:',e);}
+          loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
+            /* Optional phone metadata loads independently and cannot block dashboard features. */
+            loadScript('hewad-phone-metadata','https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/libphonenumber-max.js',function(){
+              try{
+                var lib=doc.defaultView.libphonenumber;
+                if(lib&&lib.getCountries&&lib.getCountryCallingCode){
+                  var all={};
+                  lib.getCountries().forEach(function(iso){
+                    var code='+'+lib.getCountryCallingCode(iso);
+                    if(!all[code])all[code]=[Array.from(iso).map(function(ch){return String.fromCodePoint(ch.charCodeAt(0)+127397);}).join(''),iso];
+                  });
+                  doc.defaultView.__HWC_PHONE_COUNTRIES=all;
+                }
+              }catch(e){console.warn('Phone country metadata setup:',e);}
+            });
+
+            /* Signup-only enhancements are independent of dashboard initialization. */
             loadScript('hewad-signup-polish','preview/hewad-signup-polish.js',function(){
               loadScript('hewad-signup-final','hewad-signup-final.js',function(){
                 loadScript('hewad-password-recovery','hewad-password-recovery.js',function(){
                   loadScript('hewad-compact-menus','preview/hewad-compact-menus.js',function(){
-                    loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js',function(){
-                      loadScript('hewad-kyc-four-step','hewad-kyc-four-step.js',function(){
-                        var featureScripts=[
-                          ['hewad-kyc-integration-refresh-20261123-4','hewad-kyc-integration.js'],
-                          ['hewad-admin-gift-control-3','hewad-admin-control-panel.js'],
-                          ['hewad-admin-management','hewad-admin-management.js'],
-                          ['hewad-staking-production','hewad-staking-production.js'],
-                          ['hewad-position-management','hewad-position-management.js'],
-                          ['hewad-mining-production','hewad-mining-production.js'],
-                          ['hewad-send-hewad','hewad-send-hewad.js'],
-                          ['hewad-gift-telegram-24h-claims-2','hewad-gift-telegram.js'],
-                          ['hewad-gift-admin-claims-4','hewad-gift-admin.js'],
-                          ['hewad-dashboard-card-visibility','hewad-dashboard-card-visibility.js'],
-                          ['hewad-withdraw-production','hewad-withdraw-production.js'],
-                          ['hewad-runtime-reliability','hewad-runtime-reliability.js'],
-                          ['hewad-kyc-action-router','hewad-kyc-action-router.js']
-                        ];
-                        function loadFeatureAt(index){
-                          if(index>=featureScripts.length){frame.style.visibility='visible';return;}
-                          var entry=featureScripts[index];
-                          loadScript(entry[0],entry[1],function(){loadFeatureAt(index+1);});
-                        }
-                        loadFeatureAt(0);
-                      });
-                    });
+                    loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js');
                   });
                 });
               });
             });
+
+            /* Preserve dependency order for KYC, admin and financial modules. */
+            var featureScripts=[
+              ['hewad-kyc-four-step','hewad-kyc-four-step.js'],
+              ['hewad-kyc-integration-refresh-20261123-4','hewad-kyc-integration.js'],
+              ['hewad-admin-gift-control-3','hewad-admin-control-panel.js'],
+              ['hewad-admin-management','hewad-admin-management.js'],
+              ['hewad-staking-production','hewad-staking-production.js'],
+              ['hewad-position-management','hewad-position-management.js'],
+              ['hewad-mining-production','hewad-mining-production.js'],
+              ['hewad-send-hewad','hewad-send-hewad.js'],
+              ['hewad-gift-telegram-24h-claims-2','hewad-gift-telegram.js'],
+              ['hewad-gift-admin-claims-4','hewad-gift-admin.js'],
+              ['hewad-dashboard-card-visibility','hewad-dashboard-card-visibility.js'],
+              ['hewad-withdraw-production','hewad-withdraw-production.js'],
+              ['hewad-runtime-reliability','hewad-runtime-reliability.js'],
+              ['hewad-kyc-action-router','hewad-kyc-action-router.js']
+            ];
+            function loadFeatureAt(index){
+              if(index>=featureScripts.length){frame.style.visibility='visible';return;}
+              var entry=featureScripts[index];
+              loadScript(entry[0],entry[1],function(){loadFeatureAt(index+1);});
+            }
+            loadFeatureAt(0);
           });
         });
-      });
       });
     }catch(error){console.error('HEWAD COIN live features could not initialize:',error);}
   });
