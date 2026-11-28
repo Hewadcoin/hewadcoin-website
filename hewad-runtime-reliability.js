@@ -4,7 +4,8 @@ var doc=document,queued=false;
 var tileSelector='[data-action="Deposit" i],[data-action="Withdraw" i],[data-action="Mining" i],[data-action*="gift" i],.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"]';
 function approved(){
  var status=String(window.HEWAD_KYC_STATUS||'').trim().toLowerCase().replace(/[ -]+/g,'_');
- return ['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(status);
+ /* Admin-only preview access removes visual locks for dashboard testing; member accounts remain KYC-gated. */
+ return window.HEWAD_USER_ROLE==='admin' || ['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(status);
 }
 function isFeatureTile(tile){
  var action=String(tile.getAttribute('data-action')||'').trim().toLowerCase();
