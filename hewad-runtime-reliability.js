@@ -4,11 +4,14 @@ var doc=document, queued=false;
 function giftTiles(){
  var root=doc.getElementById('dashboard');
  if(!root)return;
- var nodes=root.querySelectorAll('[data-action*="gift" i],.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"]');
+ var nodes=root.querySelectorAll('[data-action="Deposit" i],[data-action="Withdraw" i],[data-action="Mining" i],[data-action*="gift" i],.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"]');
  nodes.forEach(function(tile){
   if(!tile||tile.closest('#adminPanel,#hwcAdminGift'))return;
   var label=(tile.innerText||tile.textContent||'').replace(/\s+/g,' ').trim();
-  if(!/(^|\s)(daily\s+)?gift(\s|$)/i.test(label))return;
+  var action=String(tile.getAttribute('data-action')||'').toLowerCase();
+  if(!(['deposit','withdraw','mining'].includes(action)||/(^|\s)(daily\s+)?gift(\s|$)/i.test(label)))return;
+  var status=String(window.HEWAD_KYC_STATUS||'').trim().toLowerCase().replace(/[ -]+/g,'_');
+  if(!['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(status))return;
   ['locked','is-locked','feature-locked','kyc-locked','is-disabled'].forEach(function(c){tile.classList.remove(c);});
   tile.removeAttribute('aria-disabled');
   tile.removeAttribute('data-locked');
@@ -65,6 +68,7 @@ style.id='hwc-runtime-reliability-style';
 style.textContent='.hwc-gift-no-lock::before,.hwc-gift-no-lock::after{content:none!important;display:none!important}';
 (doc.head||doc.documentElement).appendChild(style);
 window.addEventListener('hewad-admin-authorized',schedule);
+window.addEventListener('hewad-kyc-status-updated',schedule);
 if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',function(){schedule();observeDashboard();},{once:true});
 else{schedule();observeDashboard();}
 })();
