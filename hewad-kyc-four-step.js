@@ -273,6 +273,15 @@
     const cardCopy=target.closest&&target.closest('#copyCardNumber');
     const cardNumber=target.closest&&target.closest('#memberCardNumber');
     if((nav||walletAction||cardCopy||cardNumber||(action&&locked(action.dataset.action)))&&!isApproved()){
+      const requestedAction=action&&String(action.dataset.action||'');
+      if(requestedAction){
+        try{window.sessionStorage.setItem('hwc_pending_kyc_action',JSON.stringify({action:requestedAction,createdAt:Date.now()}));}
+        catch(storageError){console.warn('Could not retain the requested KYC destination:',storageError);}
+      }else if(walletAction){
+        const walletMap={walletUsdtDeposit:'Deposit',walletUsdtWithdraw:'Withdraw',walletSendHewad:'Send Hewad'};
+        const walletName=walletMap[walletAction.id];
+        if(walletName){try{window.sessionStorage.setItem('hwc_pending_kyc_action',JSON.stringify({action:walletName,createdAt:Date.now()}));}catch(storageError){}}
+      }
       event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation();openKyc();
     }
   },true);
