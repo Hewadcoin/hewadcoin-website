@@ -22,9 +22,8 @@ function unlockTiles(){
  /* Remove lock presentation for every member; the central click router still enforces KYC. */
  root.querySelectorAll(tileSelector).forEach(function(tile){
   if(!tile||tile.closest('#adminPanel,#hwcAdminGift')||!isFeatureTile(tile))return;
-  /* Detach legacy per-tile capture listeners that re-apply stale localStorage KYC locks.
-     The central KYC router is delegated from the document and remains in force. */
-  if(tile.dataset.hwcKycLegacyDetached!=='1'){var clean=tile.cloneNode(true);clean.dataset.hwcKycLegacyDetached='1';tile.replaceWith(clean);tile=clean;}
+  /* Preserve feature-tile event listeners. The document-level KYC router
+     handles access control without replacing live dashboard buttons. */
   ['locked','is-locked','feature-locked','kyc-locked','is-disabled','disabled'].forEach(function(c){tile.classList.remove(c);});
   tile.removeAttribute('aria-disabled');
   tile.removeAttribute('data-locked');
