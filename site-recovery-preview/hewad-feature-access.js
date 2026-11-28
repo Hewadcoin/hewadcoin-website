@@ -6,7 +6,7 @@
  if(window.__HWC_FEATURE_ACCESS_RECOVERY__)return;
  window.__HWC_FEATURE_ACCESS_RECOVERY__=true;
  var doc=document,queued=false;
- var selector='[data-action="Withdraw" i],[data-action="Gift" i],[data-action="Mining" i]';
+ var selector='[data-action="Withdraw" i],[data-action*="gift" i],[data-action="Mining" i]';
  function approved(){
   var status=String(window.HEWAD_KYC_STATUS||'').trim().toLowerCase().replace(/[ -]+/g,'_');
   var badge=String((doc.getElementById('cardKycStatus')||{}).textContent||'').trim().toLowerCase();
