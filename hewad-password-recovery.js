@@ -172,7 +172,7 @@
       link.dataset.hwcRecoveryBound = '1';
     }
   }
+  /* Login markup is present before optional scripts are loaded. Add the
+     recovery link once; do not rescan the entire document on every mutation. */
   addForgotLink();
-  const observer = new MutationObserver(addForgotLink);
-  observer.observe(document.body, { childList: true, subtree: true });
 })();
