@@ -47,9 +47,10 @@
         var dashShell=doc.querySelector('#dashboard .dash-shell');
         if(dashShell)dashShell.appendChild(modulePage);
       }
-      function requireApprovedKyc(){
-        var status=String(doc.defaultView.HEWAD_KYC_STATUS||'not_verified').toLowerCase();
-        if(status==='approved')return false;
+      function requireApprovedKyc(withdrawOnly){
+        var status=String(doc.defaultView.HEWAD_KYC_STATUS||'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_');
+        var approved=withdrawOnly?['approved','verified','active','kyc_verified'].includes(status):status==='approved';
+        if(approved)return false;
         var openKyc=doc.defaultView.openHwcKyc;
         if(typeof openKyc==='function')Promise.resolve(openKyc()).catch(function(err){console.error('KYC gate failed:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('KYC verification could not be opened. Please try again.');});
         else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Please complete KYC verification to use this feature.');
@@ -60,7 +61,7 @@
         var withdrawTile=e.target&&e.target.closest?e.target.closest('[data-action="Withdraw" i],[data-hwc-withdraw-open]'):null;
         if(withdrawTile){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-          if(requireApprovedKyc())return;
+          if(requireApprovedKyc(true))return;
           var openWithdraw=doc.defaultView.openHwcWithdrawPage;
           if(typeof openWithdraw==='function')Promise.resolve(openWithdraw()).catch(function(err){console.error('Withdraw failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw could not open. Please refresh and try again.');});
           else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw is still loading. Please try again in a moment.');
