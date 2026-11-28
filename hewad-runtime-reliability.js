@@ -51,7 +51,7 @@ function addWithdrawAdminOptions(){
   grid.appendChild(b);
  }
  add('settings','⚙','Withdraw Management','USDT BEP20 fee, minimum and rolling 24-hour maximum controls');
- add('requests','⬇','Withdraw Requests','Review member details, accept or reject requests and record payout TX Hash');
+ add('requests','⬇','Withdraw Request','Review member details, accept or reject requests and record payout TX Hash');
 }
 function run(){queued=false;unlockTiles();addWithdrawAdminOptions();}
 function schedule(){if(queued)return;queued=true;if(window.requestAnimationFrame)window.requestAnimationFrame(run);else window.setTimeout(run,0);}
