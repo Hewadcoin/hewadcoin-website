@@ -1,14 +1,15 @@
 (function(){
 'use strict';
-var doc=document, queued=false;
+var doc=document;
+
 function giftTiles(){
  var root=doc.getElementById('dashboard');
  if(!root)return;
  var nodes=root.querySelectorAll('[data-action*="gift" i],.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"]');
  nodes.forEach(function(tile){
   if(!tile||tile.closest('#adminPanel,#hwcAdminGift'))return;
-  var label=(tile.innerText||tile.textContent||'').replace(/\s+/g,' ').trim();
-  if(!/(^|\s)(daily\s+)?gift(\s|$)/i.test(label))return;
+  var label=(tile.innerText||tile.textContent||'').replace(/\\s+/g,' ').trim();
+  if(!/(^|\\s)(daily\\s+)?gift(\\s|$)/i.test(label))return;
   ['locked','is-locked','feature-locked','kyc-locked','is-disabled'].forEach(function(c){tile.classList.remove(c);});
   tile.removeAttribute('aria-disabled');
   tile.removeAttribute('data-locked');
@@ -17,12 +18,13 @@ function giftTiles(){
   tile.querySelectorAll('.lock-icon,.locked-icon,.feature-lock,.lock-badge,.locked-badge,[data-lock],[data-locked],[aria-label*="lock" i],[title*="lock" i],[data-icon="lock"],[data-lucide="lock"],svg.lucide-lock').forEach(function(n){n.remove();});
   var walker=doc.createTreeWalker(tile,NodeFilter.SHOW_TEXT),textNodes=[];
   while(walker.nextNode())textNodes.push(walker.currentNode);
-  textNodes.forEach(function(n){if(/[🔒🔐🔓]/.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(/[🔒🔐🔓]/g,'').replace(/\s{2,}/g,' ');});
+  textNodes.forEach(function(n){if(/[🔒🔐🔓]/.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(/[🔒🔐🔓]/g,'').replace(/\\s{2,}/g,' ');});
   ['::before','::after'].forEach(function(pseudo){
-   try{var value=window.getComputedStyle(tile,pseudo).content||'';if(/[🔒🔐🔓]|lock/i.test(value)){tile.classList.add('hwc-gift-no-lock');}}catch(e){}
+   try{var value=window.getComputedStyle(tile,pseudo).content||'';if(/[🔒🔐🔓]|lock/i.test(value))tile.classList.add('hwc-gift-no-lock');}catch(e){}
   });
  });
 }
+
 function addWithdrawAdminOptions(){
  if(window.HEWAD_USER_ROLE!=='admin')return;
  var home=doc.getElementById('adminHome'),grid=home&&home.querySelector('.hwc-admin-grid');
@@ -36,16 +38,15 @@ function addWithdrawAdminOptions(){
  add('settings','⚙','Withdraw Management','USDT BEP20 fee, minimum and rolling 24-hour maximum controls');
  add('requests','⬇','Withdraw Requests','Review member details, accept or reject requests and record payout TX Hash');
 }
-function run(){queued=false;giftTiles();addWithdrawAdminOptions();}
-function schedule(){if(queued)return;queued=true;if(window.requestAnimationFrame)window.requestAnimationFrame(run);else window.setTimeout(run,0);}
-var style=doc.createElement('style');
-style.id='hwc-runtime-reliability-style';
-style.textContent='.hwc-gift-no-lock::before,.hwc-gift-no-lock::after{content:none!important;display:none!important}';
-doc.head.appendChild(style);
-window.addEventListener('hewad-admin-authorized',schedule);
-if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
-if(window.MutationObserver){
- var observer=new MutationObserver(schedule);
- observer.observe(doc.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','aria-disabled','disabled']});
+
+function runOnce(){
+ giftTiles();
+ addWithdrawAdminOptions();
 }
+
+/* Run once for the static dashboard. Re-run only when the authenticated
+   admin role is confirmed; do not observe the whole document. */
+if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',runOnce,{once:true});
+else runOnce();
+window.addEventListener('hewad-admin-authorized',addWithdrawAdminOptions);
 })();
