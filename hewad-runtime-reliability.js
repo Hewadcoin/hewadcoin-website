@@ -9,7 +9,7 @@ function approved(){
 function isFeatureTile(tile){
  var action=String(tile.getAttribute('data-action')||'').trim().toLowerCase();
  var label=(tile.innerText||tile.textContent||'').replace(/\s+/g,' ').trim();
- return ['deposit','withdraw','mining'].includes(action) ||
+ return ['deposit','withdraw','mining','gift'].includes(action) ||
   /^(?:usdt\s+)?deposit(?:\s+usdt)?$/i.test(label) ||
   /^withdraw(?:al)?$/i.test(label) ||
   /^mining$/i.test(label) ||
