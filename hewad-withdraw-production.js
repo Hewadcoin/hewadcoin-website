@@ -48,7 +48,8 @@ async function renderWithdraw(prefill){
  var err=rs.find(function(x){return x&&x.error;});if(err){console.error('HEWAD Withdraw: database response error',err.error);showUserPage('Withdraw','<div class="wd-card wd-note">Withdrawal information could not be loaded: '+esc(err.error.message||'Unknown database error')+'. Please try again later.</div>');return;}
  var p=rs[0].data||{},w=rs[1].data||{},policy=rs[2].data||{};
  var balance=Math.max(0,Number(w.balance_usd||0)-Number(w.reserved_usd||0)-Number(w.staked_usd||0)),feePercent=policy.no_fee?0:Number(policy.fee_percent||0);
- var gate=p.account_status!=='active'||p.kyc_status!=='approved';
+ var rawKyc=String(p.kyc_status||'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_'),kycApproved=['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(rawKyc),accountActive=String(p.account_status||'').trim().toLowerCase()==='active';
+ var gate=!accountActive||!kycApproved;
  var html='<div class="wd-hero"><div class="wd-kicker">HEWAD COIN · SECURE PAYOUT</div><h3>USDT Withdrawal</h3><p class="wd-muted">Withdraw USDT through BNB Smart Chain (BEP20). Verify the selected network and address carefully.</p></div>'+
  '<div class="wd-balance"><span>AVAILABLE USDT BALANCE</span><b>$'+fmt(balance,8)+'</b></div>'+
  (gate?'<div class="wd-card wd-note">Withdraw is available only to active accounts with approved KYC. Account: '+esc(p.account_status||'unknown')+' · KYC: '+esc(p.kyc_status||'not verified')+'.</div>':'')+
@@ -83,16 +84,18 @@ async function renderWithdraw(prefill){
  });
 }
 
-var panel=$('adminPanel'),home=$('adminHome'),adminView=null;
+var adminView=null;
+function getAdminPanel(){return $('adminPanel')||document.querySelector('#adminPanel,[data-admin-panel]');}
+function getAdminHome(){return $('adminHome')||(getAdminPanel()&&getAdminPanel().querySelector('#adminHome,[data-admin-home]'));}
 function isAdmin(){return window.HEWAD_USER_ROLE==='admin';}
-function ensureAdminView(){if(!panel)return null;if(!adminView){adminView=$('hwcWithdrawAdminView');if(!adminView){adminView=document.createElement('section');adminView.id='hwcWithdrawAdminView';adminView.className='admin-view hwc-admin-page';adminView.style.display='none';panel.appendChild(adminView);}}return adminView;}
+function ensureAdminView(){var panel=getAdminPanel();if(!panel)return null;if(!adminView||!document.contains(adminView)){adminView=$('hwcWithdrawAdminView');if(!adminView){adminView=document.createElement('section');adminView.id='hwcWithdrawAdminView';adminView.className='admin-view hwc-admin-page';adminView.style.display='none';panel.appendChild(adminView);}}return adminView;}
 function addAdminMenu(){
- if(!isAdmin()||!home)return;var grid=home.querySelector('.hwc-admin-grid');if(!grid)return;
+ var home=getAdminHome();if(!isAdmin()||!home)return;var grid=home.querySelector('.hwc-admin-grid');if(!grid)return;
  if(!grid.querySelector('[data-hwc-withdraw-admin="settings"]')){var s=document.createElement('button');s.type='button';s.className='hwc-admin-option';s.dataset.hwcWithdrawAdmin='settings';s.innerHTML='<span class="ico">⚙</span><span><strong>Withdraw Management</strong><small>USDT withdrawal fee, minimum and rolling 24-hour maximum controls</small></span><span class="arrow">›</span>';grid.appendChild(s);}
  var r=grid.querySelector('[data-hwc-withdraw-admin="requests"]');if(!r){r=document.createElement('button');r.type='button';r.className='hwc-admin-option';r.dataset.hwcWithdrawAdmin='requests';r.innerHTML='<span class="ico">⬇</span><span><strong>Withdraw Request</strong><small>Review members, accept or reject requests and record payout TX Hash</small></span><span class="arrow">›</span>';}grid.appendChild(r);
 }
-function showAdmin(html){var v=ensureAdminView();if(!v)return;if(home){home.hidden=true;home.style.display='none';}panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});v.hidden=false;v.style.display='block';v.innerHTML='<div class="hwc-withdraw">'+html+'</div>';window.scrollTo(0,0);}
-function adminBack(){if(adminView){adminView.hidden=true;adminView.style.display='none';}panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});if(home){home.hidden=false;home.style.display='block';}}
+function showAdmin(html){var panel=getAdminPanel(),home=getAdminHome(),v=ensureAdminView();if(!panel||!v){say('Control Center is still loading. Please reopen it.');return;}if(home){home.hidden=true;home.style.display='none';}panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});v.hidden=false;v.style.display='block';v.innerHTML='<div class="hwc-withdraw">'+html+'</div>';window.scrollTo(0,0);}
+function adminBack(){var panel=getAdminPanel(),home=getAdminHome();if(adminView){adminView.hidden=true;adminView.style.display='none';}if(panel)panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});if(home){home.hidden=false;home.style.display='block';}}
 function backHtml(){return '<button type="button" class="hwc-admin-back" data-wd-back>‹ Control Center</button>';}
 function switchHtml(id,label,checked){return '<div class="wd-switch-row"><span>'+esc(label)+'</span><label class="wd-switch"><input type="checkbox" id="'+id+'" '+(checked?'checked':'')+'><i></i></label></div>';}
 async function loadSettings(){
@@ -179,7 +182,7 @@ document.addEventListener('click',function(e){
  el=e.target.closest('[data-wd-complete]');if(el){e.preventDefault();e.stopImmediatePropagation();completeRequest(el.dataset.wdComplete);return;}
  el=e.target.closest('[data-wd-copy]');if(el){e.preventDefault();e.stopImmediatePropagation();var t=el.dataset.wdCopy;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){say('Wallet address copied.');}).catch(function(){say('Copy failed. Please copy manually.');});else say('Copy is unavailable in this browser.');return;}
 },true);
-if(home&&window.MutationObserver)new MutationObserver(addAdminMenu).observe(home,{childList:true,subtree:true});
+if(window.MutationObserver){var adminMenuObserver=new MutationObserver(addAdminMenu);adminMenuObserver.observe(document.documentElement,{childList:true,subtree:true});window.addEventListener('hewad-admin-authorized',addAdminMenu);window.addEventListener('load',addAdminMenu);}
 if(window.MutationObserver&&$('dashboard'))new MutationObserver(findWithdrawTile).observe($('dashboard'),{childList:true,subtree:true});
 findWithdrawTile();addAdminMenu();
 })();
