@@ -16,7 +16,7 @@
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261128-site-recovery-preview-1';
+  var release='20261128-kyc-access-recovery-2';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='../hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -47,14 +47,29 @@
         var dashShell=doc.querySelector('#dashboard .dash-shell');
         if(dashShell)dashShell.appendChild(modulePage);
       }
+      function kycStatusIsApproved(){
+        var win=doc.defaultView;
+        var status=String(win.HEWAD_KYC_STATUS||'').trim().toLowerCase().replace(/[ -]+/g,'_');
+        var badge=String((doc.getElementById('cardKycStatus')||{}).textContent||'').trim().toLowerCase();
+        return ['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(status) ||
+          /^(kyc verified|active|approved|verified)$/.test(badge);
+      }
       function requireApprovedKyc(){
-        var status=String(doc.defaultView.HEWAD_KYC_STATUS||'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_');
-        if(['approved','verified','active','kyc_verified'].includes(status))return false;
+        if(kycStatusIsApproved())return false;
         var openKyc=doc.defaultView.openHwcKyc;
         if(typeof openKyc==='function')Promise.resolve(openKyc()).catch(function(err){console.error('KYC gate failed:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('KYC verification could not be opened. Please try again.');});
         else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Please complete KYC verification to use this feature.');
         return true;
       }
+      /* One early gate covers all four financial/reward modules. Approved users
+         continue to the existing module handlers; everyone else is sent to KYC. */
+      doc.addEventListener('click',function(e){
+        var tile=e.target&&e.target.closest?e.target.closest('[data-action="Deposit" i],[data-action="Withdraw" i],[data-action*="gift" i],[data-action="Mining" i]'):null;
+        if(!tile||tile.closest('#adminPanel,#hwcAdminGift'))return;
+        if(kycStatusIsApproved())return;
+        e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+        requireApprovedKyc();
+      },true);
       /* Route Withdraw before optional feature handlers so the secure form cannot be swallowed. */
       doc.addEventListener('click',function(e){
         var withdrawTile=e.target&&e.target.closest?e.target.closest('[data-action="Withdraw" i],[data-hwc-withdraw-open]'):null;
@@ -144,7 +159,8 @@
                           ['hewad-gift-admin-claims-4','hewad-gift-admin.js'],
                           ['hewad-dashboard-card-visibility','hewad-dashboard-card-visibility.js'],
                           ['hewad-withdraw-production','hewad-withdraw-production.js'],
-                          ['hewad-runtime-reliability','hewad-runtime-reliability.js']
+                          ['hewad-runtime-reliability','hewad-runtime-reliability.js'],
+                          ['hewad-feature-access-recovery','site-recovery-preview/hewad-feature-access.js']
                         ];
                         function loadFeatureAt(index){
                           if(index>=featureScripts.length){frame.style.visibility='visible';return;}
