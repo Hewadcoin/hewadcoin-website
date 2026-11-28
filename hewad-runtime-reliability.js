@@ -14,14 +14,21 @@ function isFeatureTile(tile){
   /^(?:usdt\s+)?deposit(?:\s+usdt)?$/i.test(label) ||
   /^withdraw(?:al)?$/i.test(label) ||
   /^mining$/i.test(label) ||
-  /^(?:daily\s+)?gift$/i.test(label);
+  /\bgift\b/i.test(label);
 }
 function unlockTiles(){
  queued=false;
  var root=doc.getElementById('dashboard');
- if(!root||!approved())return;
+ if(!root)return;
  root.querySelectorAll(tileSelector).forEach(function(tile){
   if(!tile||tile.closest('#adminPanel,#hwcAdminGift')||!isFeatureTile(tile))return;
+  /* Hide only the decorative corner lock. Keep KYC and disabled-state enforcement intact. */
+  tile.classList.add('hwc-feature-hide-lock');
+  tile.querySelectorAll('.lock-icon,.locked-icon,.feature-lock,.lock-badge,.locked-badge,[data-lock],[data-locked],[aria-label*="lock" i],[title*="lock" i],[data-icon="lock"],[data-lucide="lock"],svg.lucide-lock').forEach(function(n){n.remove();});
+  var walker=doc.createTreeWalker(tile,NodeFilter.SHOW_TEXT),lockTextNodes=[];
+  while(walker.nextNode())lockTextNodes.push(walker.currentNode);
+  lockTextNodes.forEach(function(n){n.nodeValue=n.nodeValue.replace(/[🔒🔐]/g,'').replace(/\\s{2,}/g,' ');});
+  if(!approved())return;
   ['locked','is-locked','feature-locked','kyc-locked','is-disabled','disabled'].forEach(function(c){tile.classList.remove(c);});
   tile.removeAttribute('aria-disabled');
   tile.removeAttribute('data-locked');
@@ -73,7 +80,7 @@ function observeDashboard(){
 }
 var style=doc.createElement('style');
 style.id='hwc-runtime-reliability-style';
-style.textContent='.hwc-feature-no-lock::before,.hwc-feature-no-lock::after{content:none!important;display:none!important}.hwc-feature-unlocked{pointer-events:auto!important;filter:none!important;opacity:1!important}';
+style.textContent='.hwc-feature-no-lock::before,.hwc-feature-no-lock::after,.hwc-feature-hide-lock::before,.hwc-feature-hide-lock::after{content:none!important;display:none!important}.hwc-feature-unlocked{pointer-events:auto!important;filter:none!important;opacity:1!important}';
 (doc.head||doc.documentElement).appendChild(style);
 window.addEventListener('hewad-admin-authorized',schedule);
 window.addEventListener('hewad-kyc-status-updated',schedule);
