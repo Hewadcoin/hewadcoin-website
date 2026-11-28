@@ -24,7 +24,7 @@
       if(typeof win.openHwcModule==='function')return win.openHwcModule(action);
       var candidates=Array.from(doc.querySelectorAll('[data-action]'));
       var tile=candidates.find(function(el){return String(el.getAttribute('data-action')||'').trim().toLowerCase()===name;});
-      if(!tile&&name==='gift')tile=Array.from(doc.querySelectorAll('.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"]')).find(function(el){return /^(?:daily\\s+)?gift$/i.test(String(el.innerText||el.textContent||'').replace(/\\s+/g,' ').trim())&&!el.closest('#adminPanel,#hwcAdminGift');});
+      if(!tile&&name==='gift')tile=Array.from(doc.querySelectorAll('.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"]')).find(function(el){return /^(?:daily\s+)?gift$/i.test(String(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim())&&!el.closest('#adminPanel,#hwcAdminGift');});
       if(tile){tile.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:win}));return;}
       if(typeof win.showNotice==='function')win.showNotice('KYC is verified. Please select the requested feature again if it did not open.');
     }catch(error){console.error('Could not reopen the requested HEWAD feature:',error);if(typeof win.showNotice==='function')win.showNotice('KYC is verified, but the requested feature could not open. Please select it again.');}
