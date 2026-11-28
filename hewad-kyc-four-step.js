@@ -14,8 +14,8 @@
   const state = {type:'',step:1,values:{},files:{},previewUrls:{},submitting:false,editing:false};
   function clearKycFiles(){Object.values(state.previewUrls).forEach(url=>URL.revokeObjectURL(url));state.files={};state.previewUrls={};}
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const status = () => String(window.HEWAD_KYC_STATUS || 'not_verified');
-  const isApproved = () => status() === 'approved';
+  const status = () => String(window.HEWAD_KYC_STATUS || '').trim().toLowerCase().replace(/[ -]+/g,'_');
+  const isApproved = () => ['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(status()) || /^(kyc verified|active|approved|verified)$/i.test(String((document.getElementById('cardKycStatus')||{}).textContent||'').trim());
 
   const style = document.createElement('style');
   style.id = 'hwc-kyc-four-step-styles';
