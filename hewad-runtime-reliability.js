@@ -4,7 +4,9 @@ var doc=document,queued=false;
 var tileSelector='[data-action="Deposit" i],[data-action="Withdraw" i],[data-action="Mining" i],[data-action*="gift" i],.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"]';
 function approved(){
  var status=String(window.HEWAD_KYC_STATUS||'').trim().toLowerCase().replace(/[ -]+/g,'_');
- return ['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(status);
+ var badge=String((doc.getElementById('cardKycStatus')||{}).textContent||'').trim().toLowerCase();
+ var profile=String((doc.getElementById('profileKycStatus')||{}).textContent||'').trim().toLowerCase();
+ return ['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(status)||/^(kyc verified|active|approved|verified)$/.test(badge)||/^(approved|verified|active|kyc_verified)$/.test(profile);
 }
 function isFeatureTile(tile){
  var action=String(tile.getAttribute('data-action')||'').trim().toLowerCase();
