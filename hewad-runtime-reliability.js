@@ -14,7 +14,7 @@ function isFeatureTile(tile){
   /^(?:usdt\s+)?deposit(?:\s+usdt)?$/i.test(label) ||
   /^withdraw(?:al)?$/i.test(label) ||
   /^mining$/i.test(label) ||
-  /^(?:daily\s+)?gift$/i.test(label);
+  /\bgift\b/i.test(label);
 }
 function unlockTiles(){
  queued=false;
