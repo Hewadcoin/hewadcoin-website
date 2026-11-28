@@ -47,11 +47,20 @@
         var dashShell=doc.querySelector('#dashboard .dash-shell');
         if(dashShell)dashShell.appendChild(modulePage);
       }
+      function requireApprovedKyc(){
+        var status=String(doc.defaultView.HEWAD_KYC_STATUS||'not_verified').toLowerCase();
+        if(status==='approved')return false;
+        var openKyc=doc.defaultView.openHwcKyc;
+        if(typeof openKyc==='function')Promise.resolve(openKyc()).catch(function(err){console.error('KYC gate failed:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('KYC verification could not be opened. Please try again.');});
+        else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Please complete KYC verification to use this feature.');
+        return true;
+      }
       /* Route Withdraw before optional feature handlers so the secure form cannot be swallowed. */
       doc.addEventListener('click',function(e){
         var withdrawTile=e.target&&e.target.closest?e.target.closest('[data-action="Withdraw" i],[data-hwc-withdraw-open]'):null;
         if(withdrawTile){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+          if(requireApprovedKyc())return;
           var openWithdraw=doc.defaultView.openHwcWithdrawPage;
           if(typeof openWithdraw==='function')Promise.resolve(openWithdraw()).catch(function(err){console.error('Withdraw failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw could not open. Please refresh and try again.');});
           else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw is still loading. Please try again in a moment.');
@@ -64,6 +73,7 @@
         var tile=e.target.closest('[data-action="Staking" i]');
         if(tile){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+          if(requireApprovedKyc())return;
           var open=doc.defaultView.openHwcStakingPage;
           if(typeof open==='function')Promise.resolve(open()).catch(function(err){console.error('Staking failed to open:',err);});
           else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Staking is still loading. Please try again.');
@@ -78,6 +88,7 @@
         }
         if(!gift)return;
         e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+        if(requireApprovedKyc())return;
         var openGift=doc.defaultView.openHwcGiftPage;
         if(typeof openGift==='function')Promise.resolve(openGift()).catch(function(err){console.error('Gift failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Gift could not open. Please refresh and try again.');});
         else {
