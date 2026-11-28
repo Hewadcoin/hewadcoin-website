@@ -15,7 +15,12 @@
   function clearKycFiles(){Object.values(state.previewUrls).forEach(url=>URL.revokeObjectURL(url));state.files={};state.previewUrls={};}
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const status = () => String(window.HEWAD_KYC_STATUS || 'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_');
-  const isApproved = () => ['approved','verified','active','kyc_verified'].includes(status());
+  const isApproved = () => {
+    const value=status();
+    const badge=String((document.getElementById('cardKycStatus')||{}).textContent||'').trim().toLowerCase();
+    return ['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(value) ||
+      /^(kyc verified|active|approved|verified)$/.test(badge);
+  };
 
   const style = document.createElement('style');
   style.id = 'hwc-kyc-four-step-styles';
@@ -273,6 +278,15 @@
     const cardCopy=target.closest&&target.closest('#copyCardNumber');
     const cardNumber=target.closest&&target.closest('#memberCardNumber');
     if((nav||walletAction||cardCopy||cardNumber||(action&&locked(action.dataset.action)))&&!isApproved()){
+      const requestedAction=action&&String(action.dataset.action||'');
+      if(requestedAction){
+        try{window.sessionStorage.setItem('hwc_pending_kyc_action',JSON.stringify({action:requestedAction,createdAt:Date.now()}));}
+        catch(storageError){console.warn('Could not retain the requested KYC destination:',storageError);}
+      }else if(walletAction){
+        const walletMap={walletUsdtDeposit:'Deposit',walletUsdtWithdraw:'Withdraw',walletSendHewad:'Send Hewad'};
+        const walletName=walletMap[walletAction.id];
+        if(walletName){try{window.sessionStorage.setItem('hwc_pending_kyc_action',JSON.stringify({action:walletName,createdAt:Date.now()}));}catch(storageError){}}
+      }
       event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation();openKyc();
     }
   },true);
