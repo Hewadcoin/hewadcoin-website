@@ -16,7 +16,7 @@
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261128-kyc-access-recovery-3';
+  var release='20261128-kyc-access-recovery-2';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='../hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -117,7 +117,7 @@
       function loadScript(id,src,next){
         if(doc.getElementById(id)){if(next)next();return;}
         var script=doc.createElement('script'),finished=false;
-        var overrides={'hewad-withdraw-production.js':'site-recovery-preview/hewad-withdraw-production.js'};if(overrides[src])src=overrides[src];script.id=id;script.src=src+'?v='+release;
+        var overrides={'hewad-withdraw-production.js':'site-recovery-preview/hewad-withdraw-production.js','hewad-kyc-four-step.js':'site-recovery-preview/hewad-kyc-four-step.js','hewad-enhancements.js':'site-recovery-preview/hewad-enhancements.js'};if(overrides[src])src=overrides[src];script.id=id;script.src=src+'?v='+release;
         function finish(){if(finished)return;finished=true;if(next)next();}
         script.onload=finish;
         script.onerror=function(){console.error('Could not load '+src);finish();};
