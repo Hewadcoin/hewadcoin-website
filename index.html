@@ -76,8 +76,16 @@
       /* Deposit and Mining use the same central KYC gate as Gift and Withdraw. */
       doc.addEventListener('click',function(e){
         var simpleFeatureTile=e.target&&e.target.closest?e.target.closest('[data-action="Deposit" i],[data-action="Mining" i]'):null;
+        if(!simpleFeatureTile){
+          var simpleCandidate=e.target&&e.target.closest?e.target.closest('.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"],[onclick]'):null;
+          var simpleAdmin=simpleCandidate&&simpleCandidate.closest('#adminPanel,#hwcAdminGift');
+          var simpleLabel=simpleCandidate?(simpleCandidate.innerText||simpleCandidate.textContent||'').replace(/\s+/g,' ').trim():'';
+          if(simpleCandidate&&!simpleAdmin&&/^(?:usdt\s+)?deposit(?:\s+usdt)?$/i.test(simpleLabel))simpleFeatureTile=simpleCandidate;
+          else if(simpleCandidate&&!simpleAdmin&&/^mining$/i.test(simpleLabel))simpleFeatureTile=simpleCandidate;
+        }
         if(!simpleFeatureTile)return;
         var actionName=String(simpleFeatureTile.getAttribute('data-action')||'');
+        if(!actionName){var normalizedLabel=(simpleFeatureTile.innerText||simpleFeatureTile.textContent||'').replace(/\s+/g,' ').trim();actionName=/^mining$/i.test(normalizedLabel)?'Mining':'Deposit';}
         if(requireApprovedKyc(actionName)){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
         }
