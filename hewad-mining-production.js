@@ -93,13 +93,15 @@ function activatePage(){
  var dash=$('dashboard'),page=$(rootId);
  if(!dash||!page)throw new Error('Mining page mount point is unavailable.');
  dash.querySelectorAll('.dash-subpage').forEach(function(x){x.classList.remove('active');});
+ dash.querySelectorAll('[data-hwc-mining-card-hidden],[data-hwc-staking-card-hidden],[data-hwc-withdraw-hidden]').forEach(function(el){el.hidden=false;el.removeAttribute('data-hwc-mining-card-hidden');el.removeAttribute('data-hwc-staking-card-hidden');el.removeAttribute('data-hwc-withdraw-hidden');});
+ page.setAttribute('data-hwc-active-module','mining');
  hiddenCards=Array.prototype.slice.call(dash.querySelectorAll('#memberCard,#member-card,[id*="memberCard"],[id*="member-card"],[class*="member-card"],[class*="gold-member-card"]'));
  hiddenCards.forEach(function(el){if(!el.hidden){el.setAttribute('data-hwc-mining-card-hidden','1');el.hidden=true;}});
  page.hidden=false;page.classList.add('active');
 }
 function closePage(){
  if(timer){clearInterval(timer);timer=null;}
- var page=$(rootId);if(page){page.classList.remove('active');page.hidden=true;}
+ var page=$(rootId);if(page){page.classList.remove('active');page.hidden=true;if(page.getAttribute('data-hwc-active-module')==='mining')page.removeAttribute('data-hwc-active-module');}
  var home=$('dashboardMain');if(home)home.classList.add('active');
  hiddenCards.forEach(function(el){if(el.getAttribute('data-hwc-mining-card-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-mining-card-hidden');}});
  window.scrollTo(0,0);
@@ -116,8 +118,11 @@ async function syncWalletFromServer(){
  syncWalletBalance(q.data&&q.data.balance_hwc!=null?q.data.balance_hwc:0);
 }
 async function refresh(){
+ var root=$(rootId);
+ if(!root||root.getAttribute('data-hwc-active-module')!=='mining'){if(timer){clearInterval(timer);timer=null;}return;}
  var u=await user(),r=await db.rpc('hwc_mining_status');if(r.error)throw r.error;
- var s=r.data||{},root=$(rootId);if(!root)return;
+ root=$(rootId);if(!root||root.getAttribute('data-hwc-active-module')!=='mining')return;
+ var s=r.data||{};
  syncWalletBalance(s.balance_hdc);
  root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button>'+view(s);
  $('hm-back').addEventListener('click',closePage);
@@ -141,10 +146,13 @@ async function open(){
   root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card">Loading Mining…</div>';
   $('hm-back').addEventListener('click',closePage);
   await refresh();
-  timer=setInterval(function(){refresh().catch(function(e){console.error('Mining refresh:',e);});},60000);
+  if(root.getAttribute('data-hwc-active-module')!=='mining')return;
+  timer=setInterval(function(){var active=$(rootId);if(!active||active.getAttribute('data-hwc-active-module')!=='mining'){clearInterval(timer);timer=null;return;}refresh().catch(function(e){console.error('Mining refresh:',e);});},60000);
  }catch(e){
-  root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card"><h3>Mining unavailable</h3><p class="hm-note">'+esc(e.message||'Please sign in and complete account verification.')+'</p></div>';
-  var back=$('hm-back');if(back)back.addEventListener('click',closePage);
+  if(root.getAttribute('data-hwc-active-module')==='mining'){
+   root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card"><h3>Mining unavailable</h3><p class="hm-note">'+esc(e.message||'Please sign in and complete account verification.')+'</p></div>';
+   var back=$('hm-back');if(back)back.addEventListener('click',closePage);
+  }
  }
 }
 doc.querySelectorAll('[data-nav="wallet"]').forEach(function(btn){btn.addEventListener('click',function(){syncWalletFromServer().catch(function(e){console.warn('Wallet balance refresh:',e);});});});

@@ -171,6 +171,7 @@ if(typeof originalLoad==='function'){
   if(p.error)console.warn('KYC profile:',p.error.message);
   const profile=p.data||{},wallet=w.data||{},rawStatus=String(profile.kyc_status||'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_'),status=['approved','verified','active','kyc_verified'].includes(rawStatus)?'approved':rawStatus;
   window.HEWAD_KYC_STATUS=status;
+  window.dispatchEvent(new CustomEvent('hewad-kyc-status-updated',{detail:{status:status}}));
   window.HEWAD_USER_ROLE=(r.data||[]).some(x=>x.role==='admin')?'admin':'member';
   const put=(id,v)=>{const el=$(id);if(el)el.textContent=v==null?'':String(v);};
   put('memberName',[profile.first_name,profile.last_name].filter(Boolean).join(' ')||user.email||'MEMBER');

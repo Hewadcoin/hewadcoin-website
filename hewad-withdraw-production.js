@@ -22,11 +22,13 @@ function showUserPage(title,html){
  /* Always create the shared subpage mount point if the host page did not create it. */
  if(!page){page=document.createElement('section');page.id='modulePage';page.className='dash-subpage';page.setAttribute('aria-live','polite');var shell=dash.querySelector('.dash-shell')||dash; shell.appendChild(page);}
  dash.querySelectorAll('.dash-subpage').forEach(function(x){x.classList.remove('active');});
+ dash.querySelectorAll('[data-hwc-mining-card-hidden],[data-hwc-staking-card-hidden],[data-hwc-withdraw-hidden]').forEach(function(el){el.hidden=false;el.removeAttribute('data-hwc-mining-card-hidden');el.removeAttribute('data-hwc-staking-card-hidden');el.removeAttribute('data-hwc-withdraw-hidden');});
+ page.setAttribute('data-hwc-active-module','withdraw');
  var cards=Array.prototype.slice.call(dash.querySelectorAll('#memberCard,#member-card,[id*="memberCard"],[id*="member-card"],[class*="member-card"],[class*="gold-member-card"]'));
  cards.forEach(function(el){if(!el.hidden){el.setAttribute('data-hwc-withdraw-hidden','1');el.hidden=true;}});
  if(card)card.hidden=true;page.hidden=false;page.classList.add('active');
  page.innerHTML='<button class="dash-back-home" id="hwcWithdrawBack" type="button">← Dashboard</button><h2>'+esc(title)+'</h2><div class="hwc-module-content"><div class="hwc-withdraw">'+html+'</div></div>';
- $('hwcWithdrawBack').onclick=function(){page.classList.remove('active');page.hidden=true;if($('dashboardMain'))$('dashboardMain').classList.add('active');cards.forEach(function(el){if(el.getAttribute('data-hwc-withdraw-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-withdraw-hidden');}});if(card)card.hidden=false;window.scrollTo(0,0);};
+ $('hwcWithdrawBack').onclick=function(){page.classList.remove('active');page.hidden=true;if(page.getAttribute('data-hwc-active-module')==='withdraw')page.removeAttribute('data-hwc-active-module');if($('dashboardMain'))$('dashboardMain').classList.add('active');cards.forEach(function(el){if(el.getAttribute('data-hwc-withdraw-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-withdraw-hidden');}});if(card)card.hidden=false;window.scrollTo(0,0);};
  window.scrollTo(0,0);return true;
 }
 function newKey(){if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16);});}

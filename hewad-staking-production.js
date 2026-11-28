@@ -69,11 +69,13 @@ function showUserPage(title,html){
  var dash=$('dashboard'),page=$('modulePage'),card=$('memberCard');
  if(!dash||!page){say('Staking page is not available.');return;}
  dash.querySelectorAll('.dash-subpage').forEach(function(x){x.classList.remove('active');});
+ dash.querySelectorAll('[data-hwc-mining-card-hidden],[data-hwc-staking-card-hidden],[data-hwc-withdraw-hidden]').forEach(function(el){el.hidden=false;el.removeAttribute('data-hwc-mining-card-hidden');el.removeAttribute('data-hwc-staking-card-hidden');el.removeAttribute('data-hwc-withdraw-hidden');});
+ page.setAttribute('data-hwc-active-module','staking');
  var memberCards=Array.prototype.slice.call(dash.querySelectorAll('#memberCard,#member-card,[id*="memberCard"],[id*="member-card"],[class*="member-card"],[class*="gold-member-card"]'));
  memberCards.forEach(function(el){if(!el.hidden){el.setAttribute('data-hwc-staking-card-hidden','1');el.hidden=true;}});
  if(card)card.hidden=true;page.hidden=false;page.classList.add('active');
  page.innerHTML='<button class="dash-back-home" id="hwcStakeBack" type="button">← Dashboard</button><h2>'+esc(title)+'</h2><div class="hwc-module-content"><div class="hwc-staking-live">'+html+'</div></div>';
- $('hwcStakeBack').onclick=function(){page.classList.remove('active');page.hidden=true;if($('dashboardMain'))$('dashboardMain').classList.add('active');memberCards.forEach(function(el){if(el.getAttribute('data-hwc-staking-card-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-staking-card-hidden');}});if(card)card.hidden=false;window.scrollTo(0,0);};
+ $('hwcStakeBack').onclick=function(){page.classList.remove('active');page.hidden=true;if(page.getAttribute('data-hwc-active-module')==='staking')page.removeAttribute('data-hwc-active-module');if($('dashboardMain'))$('dashboardMain').classList.add('active');memberCards.forEach(function(el){if(el.getAttribute('data-hwc-staking-card-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-staking-card-hidden');}});if(card)card.hidden=false;window.scrollTo(0,0);};
  window.scrollTo(0,0);
 }
 async function renderStaking(){
