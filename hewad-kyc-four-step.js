@@ -44,6 +44,7 @@
   }
   async function openKyc() {
     if (!hwcCurrentUser) { if(typeof showNotice==='function')showNotice('Please log in to continue.'); return; }
+    panel('<div class="hwc-kyc-body" dir="rtl" role="status"><h4>د KYC حالت کتل کېږي…</h4><p class="hwc-kyc-help">مهرباني وکړئ لږ انتظار وکړئ. پاڼه بنده نه ده.</p><div aria-hidden="true" style="height:5px;border-radius:8px;background:#303744;overflow:hidden"><span style="display:block;width:38%;height:100%;background:#d8b75c;border-radius:8px"></span></div></div>');
     try {
       const result=await hwcSupabase.from('kyc_applications').select('status,rejection_reason').eq('user_id',hwcCurrentUser.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
       if(result.error)throw result.error;
@@ -54,7 +55,7 @@
       if(current==='approved'||current==='pending'){renderStatus(current,latest&&latest.rejection_reason);return;}
       if(current==='rejected'){renderStatus('rejected',latest&&latest.rejection_reason);return;}
       state.type='';state.step=1;state.values={};clearKycFiles();state.editing=false;renderChoice();
-    } catch(error) { if(typeof showNotice==='function')showNotice(error.message||'Could not load KYC status.'); }
+    } catch(error) { console.error('HEWAD KYC status could not be loaded:',error); panel('<div class="hwc-kyc-body" dir="rtl"><h4>د KYC معلومات نه ښکاري</h4><p class="hwc-kyc-help">د سرور له خوا ځواب ترلاسه نه شو. مهرباني وکړئ بیا هڅه وکړئ.</p><p class="hwc-kyc-help" style="overflow-wrap:anywhere">'+esc(error&&error.message||'Connection error')+'</p><button type="button" class="hwc-kyc-yellow" data-kyc-retry style="width:100%;padding:13px;border:0;border-radius:10px;font-weight:900">بیا هڅه وکړئ</button><button type="button" class="hwc-kyc-back" data-kyc-home style="width:100%;margin-top:8px;padding:12px;border-radius:10px">اصلي صفحې ته</button></div>'); }
   }
   function renderChoice() {
     panel('<div class="hwc-kyc-body" dir="rtl"><h4>د هویت سند انتخاب کړئ</h4><p class="hwc-kyc-help">د کارت اضافه کولو لپاره د خپل سند ډول وټاکئ.</p><button type="button" class="hwc-kyc-choice" data-kyc-doc="tazkira"><span class="hwc-kyc-choice-icon">▣</span><span class="hwc-kyc-choice-copy"><b>برېښنايي تذکره</b><small>د تذکرې له لارې د هویت تصدیق</small></span><span class="hwc-kyc-choice-count">۴ مرحلې ›</span></button><button type="button" class="hwc-kyc-choice" data-kyc-doc="passport"><span class="hwc-kyc-choice-icon">▤</span><span class="hwc-kyc-choice-copy"><b>پاسپورټ</b><small>د پاسپورټ له لارې د هویت تصدیق</small></span><span class="hwc-kyc-choice-count">۴ مرحلې ›</span></button><p class="hwc-kyc-help">ستاسو شخصي معلومات او اسناد په خوندي ډول ساتل کېږي.</p></div>');
@@ -192,6 +193,7 @@
     }finally{state.submitting=false;}
   }
   overlay.addEventListener('click',function(event){
+    const retry=event.target.closest('[data-kyc-retry]');if(retry){openKyc();return;}
     const home=event.target.closest('[data-kyc-home]');if(home){closeKyc(true);return;}
     const restart=event.target.closest('[data-kyc-restart]');if(restart){state.type='';state.step=1;state.values={};clearKycFiles();state.editing=false;renderChoice();return;}
     const choice=event.target.closest('[data-kyc-doc]');if(choice){state.type=choice.dataset.kycDoc;state.step=1;state.values={};clearKycFiles();state.editing=false;renderStep();return;}
