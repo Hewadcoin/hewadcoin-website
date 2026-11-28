@@ -16,7 +16,7 @@
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261128-navigation-freeze-fix-1';
+  var release='20261128-kyc-action-resume-1';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -47,9 +47,15 @@
         var dashShell=doc.querySelector('#dashboard .dash-shell');
         if(dashShell)dashShell.appendChild(modulePage);
       }
-      function requireApprovedKyc(){
+      function rememberKycAction(action){
+        if(!action)return;
+        try{doc.defaultView.sessionStorage.setItem('hwc_pending_kyc_action',JSON.stringify({action:String(action),createdAt:Date.now()}));}
+        catch(error){console.warn('Could not retain the requested KYC destination:',error);}
+      }
+      function requireApprovedKyc(action){
         var status=String(doc.defaultView.HEWAD_KYC_STATUS||'not_verified').toLowerCase();
         if(status==='approved')return false;
+        rememberKycAction(action);
         var openKyc=doc.defaultView.openHwcKyc;
         if(typeof openKyc==='function')Promise.resolve(openKyc()).catch(function(err){console.error('KYC gate failed:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('KYC verification could not be opened. Please try again.');});
         else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Please complete KYC verification to use this feature.');
@@ -60,11 +66,28 @@
         var withdrawTile=e.target&&e.target.closest?e.target.closest('[data-action="Withdraw" i],[data-hwc-withdraw-open]'):null;
         if(withdrawTile){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-          if(requireApprovedKyc())return;
+          if(requireApprovedKyc('Withdraw'))return;
           var openWithdraw=doc.defaultView.openHwcWithdrawPage;
           if(typeof openWithdraw==='function')Promise.resolve(openWithdraw()).catch(function(err){console.error('Withdraw failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw could not open. Please refresh and try again.');});
           else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw is still loading. Please try again in a moment.');
           return;
+        }
+      },true);
+      /* Deposit and Mining use the same central KYC gate as Gift and Withdraw. */
+      doc.addEventListener('click',function(e){
+        var simpleFeatureTile=e.target&&e.target.closest?e.target.closest('[data-action="Deposit" i],[data-action="Mining" i]'):null;
+        if(!simpleFeatureTile){
+          var simpleCandidate=e.target&&e.target.closest?e.target.closest('.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"],[onclick]'):null;
+          var simpleAdmin=simpleCandidate&&simpleCandidate.closest('#adminPanel,#hwcAdminGift');
+          var simpleLabel=simpleCandidate?(simpleCandidate.innerText||simpleCandidate.textContent||'').replace(/\s+/g,' ').trim():'';
+          if(simpleCandidate&&!simpleAdmin&&/^(?:usdt\s+)?deposit(?:\s+usdt)?$/i.test(simpleLabel))simpleFeatureTile=simpleCandidate;
+          else if(simpleCandidate&&!simpleAdmin&&/^mining$/i.test(simpleLabel))simpleFeatureTile=simpleCandidate;
+        }
+        if(!simpleFeatureTile)return;
+        var actionName=String(simpleFeatureTile.getAttribute('data-action')||'');
+        if(!actionName){var normalizedLabel=(simpleFeatureTile.innerText||simpleFeatureTile.textContent||'').replace(/\s+/g,' ').trim();actionName=/^mining$/i.test(normalizedLabel)?'Mining':'Deposit';}
+        if(requireApprovedKyc(actionName)){
+          e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
         }
       },true);
       /* Register before the other enhancement scripts: some of them install
@@ -73,7 +96,7 @@
         var tile=e.target.closest('[data-action="Staking" i]');
         if(tile){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-          if(requireApprovedKyc())return;
+          if(requireApprovedKyc('Staking'))return;
           var open=doc.defaultView.openHwcStakingPage;
           if(typeof open==='function')Promise.resolve(open()).catch(function(err){console.error('Staking failed to open:',err);});
           else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Staking is still loading. Please try again.');
@@ -88,7 +111,7 @@
         }
         if(!gift)return;
         e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-        if(requireApprovedKyc())return;
+        if(requireApprovedKyc('Gift'))return;
         var openGift=doc.defaultView.openHwcGiftPage;
         if(typeof openGift==='function')Promise.resolve(openGift()).catch(function(err){console.error('Gift failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Gift could not open. Please refresh and try again.');});
         else {
@@ -144,7 +167,8 @@
                           ['hewad-gift-admin-claims-4','hewad-gift-admin.js'],
                           ['hewad-dashboard-card-visibility','hewad-dashboard-card-visibility.js'],
                           ['hewad-withdraw-production','hewad-withdraw-production.js'],
-                          ['hewad-runtime-reliability','hewad-runtime-reliability.js']
+                          ['hewad-runtime-reliability','hewad-runtime-reliability.js'],
+                          ['hewad-kyc-action-router','hewad-kyc-action-router.js']
                         ];
                         function loadFeatureAt(index){
                           if(index>=featureScripts.length){frame.style.visibility='visible';return;}
