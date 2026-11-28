@@ -77,13 +77,8 @@
 
   apply(mode);
   mountHeaderButton();
-  var observer = new MutationObserver(function () {
-    mountHeaderButton();
-    var row = document.getElementById('themeToggle');
-    if (row) {
-      var label = document.getElementById('themeLabel');
-      if (label) label.textContent = mode === 'light' ? 'Light Mode' : 'Dark Mode';
-    }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+  /* The dashboard header and profile controls already exist when this
+     script is loaded. Avoid a document-wide observer: page transitions and
+     module rendering can otherwise trigger repeated full-page work. */
+
 })();
