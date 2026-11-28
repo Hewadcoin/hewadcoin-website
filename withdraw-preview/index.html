@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08090c">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="description" content="Official HEWAD COIN member platform">
+<title>HEWAD COIN</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090c}#hewad-app{display:block;width:100%;height:100%;border:0;background:#08090c}</style>
+</head>
+<body>
+<iframe id="hewad-app" title="HEWAD COIN" src="../hewad_coin_homepage_fullscreen.html?hwc_release=20261128-withdraw-preview"></iframe>
+<script>
+(function(){
+  var frame=document.getElementById('hewad-app');
+  var release='20261128-withdraw-preview-1';
+  var params=window.location.search.slice(1);
+  var hash=window.location.hash||'';
+  frame.src='../hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
+  frame.addEventListener('load',function(){
+    try{
+      var doc=frame.contentDocument;
+      if(!doc||!doc.body)return;
+      /* Do not make the main app wait for optional enhancement scripts. */
+      frame.style.visibility='visible';
+      /* Keep Pashto and Dari right-to-left after the language selector updates. */
+      var languageSelect=doc.getElementById('languageSelect');
+      if(languageSelect&&!languageSelect.dataset.hwcDirectionFix){
+        var syncLanguageDirection=function(){
+          doc.documentElement.dir=(languageSelect.value==='ps'||languageSelect.value==='fa')?'rtl':'ltr';
+        };
+        languageSelect.addEventListener('change',syncLanguageDirection);
+        syncLanguageDirection();
+        languageSelect.dataset.hwcDirectionFix='1';
+      }
+      /* The staking renderer targets a dedicated dashboard subpage. The
+         original dashboard markup omitted that mount point, so create it
+         before the staking module is loaded. */
+      if(!doc.getElementById('modulePage')){
+        var modulePage=doc.createElement('section');
+        modulePage.id='modulePage';
+        modulePage.className='dash-subpage';
+        modulePage.setAttribute('aria-live','polite');
+        var dashShell=doc.querySelector('#dashboard .dash-shell');
+        if(dashShell)dashShell.appendChild(modulePage);
+      }
+      function requireApprovedKyc(withdrawOnly){
+        var status=String(doc.defaultView.HEWAD_KYC_STATUS||'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_');
+        var approved=withdrawOnly?['approved','verified','active','kyc_verified'].includes(status):status==='approved';
+        if(approved)return false;
+        var openKyc=doc.defaultView.openHwcKyc;
+        if(typeof openKyc==='function')Promise.resolve(openKyc()).catch(function(err){console.error('KYC gate failed:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('KYC verification could not be opened. Please try again.');});
+        else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Please complete KYC verification to use this feature.');
+        return true;
+      }
+      /* Route Withdraw before optional feature handlers so the secure form cannot be swallowed. */
+      doc.addEventListener('click',function(e){
+        var withdrawTile=e.target&&e.target.closest?e.target.closest('[data-action="Withdraw" i],[data-hwc-withdraw-open]'):null;
+        if(withdrawTile){
+          e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+          if(requireApprovedKyc(true))return;
+          var openWithdraw=doc.defaultView.openHwcWithdrawPage;
+          if(typeof openWithdraw==='function')Promise.resolve(openWithdraw()).catch(function(err){console.error('Withdraw failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw could not open. Please refresh and try again.');});
+          else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw is still loading. Please try again in a moment.');
+          return;
+        }
+      },true);
+      /* Register before the other enhancement scripts: some of them install
+         document-level capture handlers and otherwise swallow the Staking click. */
+      doc.addEventListener('click',function(e){
+        var tile=e.target.closest('[data-action="Staking" i]');
+        if(tile){
+          e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+          if(requireApprovedKyc())return;
+          var open=doc.defaultView.openHwcStakingPage;
+          if(typeof open==='function')Promise.resolve(open()).catch(function(err){console.error('Staking failed to open:',err);});
+          else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Staking is still loading. Please try again.');
+          return;
+        }
+        var gift=e.target.closest('[data-action*="gift" i]');
+        if(!gift){
+          var candidate=e.target.closest('.dash-tile,.menu-item,.dashboard-item,.dash-card,.menu-card,button,a,[role="button"],[onclick]');
+          var insideAdmin=candidate&&candidate.closest('#adminPanel,#hwcAdminGift');
+          var label=candidate?(candidate.innerText||candidate.textContent||'').replace(/\s+/g,' ').trim():'';
+          if(candidate&&!insideAdmin&&/^(?:gift|daily gift)$/i.test(label))gift=candidate;
+        }
+        if(!gift)return;
+        e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+        if(requireApprovedKyc())return;
+        var openGift=doc.defaultView.openHwcGiftPage;
+        if(typeof openGift==='function')Promise.resolve(openGift()).catch(function(err){console.error('Gift failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Gift could not open. Please refresh and try again.');});
+        else {
+          var giftScript=doc.createElement('script');
+          giftScript.src='hewad-gift-telegram.js?v=20261127-gift-management-classic-7';
+          giftScript.onload=function(){var fn=doc.defaultView.openHwcGiftPage;if(typeof fn==='function')Promise.resolve(fn()).catch(function(err){console.error('Gift failed to open:',err);});else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Gift could not initialize.');};
+          giftScript.onerror=function(){if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Gift module failed to load. Please refresh.');};
+          doc.body.appendChild(giftScript);
+        }
+      },true);
+      function loadScript(id,src,next){
+        if(doc.getElementById(id)){if(next)next();return;}
+        var script=doc.createElement('script'),finished=false;
+        script.id=id;script.src=src+'?v='+release;
+        function finish(){if(finished)return;finished=true;if(next)next();}
+        script.onload=finish;
+        script.onerror=function(){console.error('Could not load '+src);finish();};
+        /* A stalled optional asset must not block every later feature forever. */
+        window.setTimeout(finish,12000);
+        doc.body.appendChild(script);
+      }
+      /* Load enhancements in dependency order, but keep the main app visible. */
+      loadScript('hewad-convert-live','hewad-convert-live.js',function(){
+        loadScript('hewad-live-enhancements','hewad-enhancements.js',function(){
+        loadScript('hewad-ui-fixes','hewad-ui-fixes.js',function(){
+          loadScript('hewad-phone-metadata','https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.20/bundle/libphonenumber-max.js',function(){
+            try{
+              var lib=doc.defaultView.libphonenumber;
+              if(lib&&lib.getCountries&&lib.getCountryCallingCode){
+                var all={};
+                lib.getCountries().forEach(function(iso){
+                  var code='+'+lib.getCountryCallingCode(iso);
+                  if(!all[code])all[code]=[Array.from(iso).map(function(ch){return String.fromCodePoint(ch.charCodeAt(0)+127397);}).join(''),iso];
+                });
+                doc.defaultView.__HWC_PHONE_COUNTRIES=all;
+              }
+            }catch(e){console.warn('Phone country metadata setup:',e);}
+            loadScript('hewad-signup-polish','preview/hewad-signup-polish.js',function(){
+              loadScript('hewad-signup-final','hewad-signup-final.js',function(){
+                loadScript('hewad-password-recovery','hewad-password-recovery.js',function(){
+                  loadScript('hewad-compact-menus','preview/hewad-compact-menus.js',function(){
+                    loadScript('hewad-phone-dropdowns','preview/hewad-phone-dropdowns.js',function(){
+                      loadScript('hewad-kyc-four-step','hewad-kyc-four-step.js',function(){
+                        var featureScripts=[
+                          ['hewad-kyc-integration-refresh-20261123-4','hewad-kyc-integration.js'],
+                          ['hewad-admin-gift-control-3','hewad-admin-control-panel.js'],
+                          ['hewad-admin-management','hewad-admin-management.js'],
+                          ['hewad-staking-production','hewad-staking-production.js'],
+                          ['hewad-position-management','hewad-position-management.js'],
+                          ['hewad-mining-production','hewad-mining-production.js'],
+                          ['hewad-send-hewad','hewad-send-hewad.js'],
+                          ['hewad-gift-telegram-24h-claims-2','hewad-gift-telegram.js'],
+                          ['hewad-gift-admin-claims-4','hewad-gift-admin.js'],
+                          ['hewad-dashboard-card-visibility','hewad-dashboard-card-visibility.js'],
+                          ['hewad-withdraw-production','withdraw-preview/hewad-withdraw-production.js'],
+                          ['hewad-runtime-reliability','hewad-runtime-reliability.js']
+                        ];
+                        function loadFeatureAt(index){
+                          if(index>=featureScripts.length){frame.style.visibility='visible';return;}
+                          var entry=featureScripts[index];
+                          loadScript(entry[0],entry[1],function(){loadFeatureAt(index+1);});
+                        }
+                        loadFeatureAt(0);
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+      });
+    }catch(error){console.error('HEWAD COIN live features could not initialize:',error);}
+  });
+})();
+</script>
+</body>
+</html>
