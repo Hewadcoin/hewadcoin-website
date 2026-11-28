@@ -146,10 +146,13 @@ async function open(){
   root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card">Loading Mining…</div>';
   $('hm-back').addEventListener('click',closePage);
   await refresh();
+  if(root.getAttribute('data-hwc-active-module')!=='mining')return;
   timer=setInterval(function(){var active=$(rootId);if(!active||active.getAttribute('data-hwc-active-module')!=='mining'){clearInterval(timer);timer=null;return;}refresh().catch(function(e){console.error('Mining refresh:',e);});},60000);
  }catch(e){
-  root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card"><h3>Mining unavailable</h3><p class="hm-note">'+esc(e.message||'Please sign in and complete account verification.')+'</p></div>';
-  var back=$('hm-back');if(back)back.addEventListener('click',closePage);
+  if(root.getAttribute('data-hwc-active-module')==='mining'){
+   root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card"><h3>Mining unavailable</h3><p class="hm-note">'+esc(e.message||'Please sign in and complete account verification.')+'</p></div>';
+   var back=$('hm-back');if(back)back.addEventListener('click',closePage);
+  }
  }
 }
 doc.querySelectorAll('[data-nav="wallet"]').forEach(function(btn){btn.addEventListener('click',function(){syncWalletFromServer().catch(function(e){console.warn('Wallet balance refresh:',e);});});});
