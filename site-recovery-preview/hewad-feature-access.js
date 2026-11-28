@@ -6,7 +6,7 @@
  if(window.__HWC_FEATURE_ACCESS_RECOVERY__)return;
  window.__HWC_FEATURE_ACCESS_RECOVERY__=true;
  var doc=document,queued=false;
- var selector='[data-action="Withdraw" i],[data-action*="gift" i],[data-action="Mining" i]';
+ var selector='[data-action="Deposit" i],[data-action="Withdraw" i],[data-action*="gift" i],[data-action="Mining" i]';
  function approved(){
   var status=String(window.HEWAD_KYC_STATUS||'').trim().toLowerCase().replace(/[ -]+/g,'_');
   var badge=String((doc.getElementById('cardKycStatus')||{}).textContent||'').trim().toLowerCase();
@@ -26,7 +26,7 @@
    tile.querySelectorAll('.lock-icon,.locked-icon,.feature-lock,.lock-badge,.locked-badge,[data-lock],[data-locked],[aria-label*="lock" i],[title*="lock" i],[data-icon="lock"],[data-lucide="lock"],svg.lucide-lock').forEach(function(n){n.remove();});
    var walker=doc.createTreeWalker(tile,NodeFilter.SHOW_TEXT),nodes=[];
    while(walker.nextNode())nodes.push(walker.currentNode);
-   nodes.forEach(function(n){n.nodeValue=n.nodeValue.replace(/[🔒🔐]/g,'').replace(/s{2,}/g,' ');});
+   nodes.forEach(function(n){n.nodeValue=n.nodeValue.replace(/[🔒🔐]/g,'').replace(/\\s{2,}/g,' ');});
   });
  }
  function schedule(){if(queued)return;queued=true;if(window.requestAnimationFrame)window.requestAnimationFrame(update);else window.setTimeout(update,0);}
