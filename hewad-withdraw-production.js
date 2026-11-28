@@ -141,9 +141,15 @@ async function saveAllSettings(){
 async function loadRequests(filter){
  filter=filter||'pending';
  showAdmin(backHtml()+'<div class="wd-hero"><div class="wd-kicker">HEWAD COIN · ADMIN REVIEW</div><h3>Withdraw Requests</h3><p class="wd-muted">Review incoming requests, accepted payouts, rejected requests and the complete withdrawal ledger.</p></div><div id="hwcWithdrawRequestList">Loading withdrawal ledger…</div><div id="hwcWithdrawRequestDetail"></div>');
- var host=$('hwcWithdrawRequestList'),q=await db.from('withdrawal_requests').select('id,user_id,asset,amount,withdrawal_method,destination,status,admin_note,created_at,network,fee_rate,fee_amount,net_amount,tx_hash,reviewed_at,completed_at').order('created_at',{ascending:false}).limit(1000);
- if(q.error){host.innerHTML='<div class="wd-card wd-note">'+esc(q.error.message)+'</div>';return;}
- var rows=q.data||[],ids=[...new Set(rows.map(function(x){return x.user_id;}))],pr=ids.length?await db.from('profiles').select('id,first_name,last_name,account_status,kyc_status').in('id',ids):{data:[]},people={};
+ var host=$('hwcWithdrawRequestList'),rows=[],pageSize=500,offset=0,q;
+ while(true){
+  q=await db.from('withdrawal_requests').select('id,user_id,asset,amount,withdrawal_method,destination,status,admin_note,created_at,network,fee_rate,fee_amount,net_amount,tx_hash,reviewed_at,completed_at').order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+pageSize-1);
+  if(q.error){host.innerHTML='<div class="wd-card wd-note">'+esc(q.error.message)+'</div>';return;}
+  rows=rows.concat(q.data||[]);
+  if(!q.data||q.data.length<pageSize)break;
+  offset+=pageSize;
+ }
+ var ids=[...new Set(rows.map(function(x){return x.user_id;}))],pr=ids.length?await db.from('profiles').select('id,first_name,last_name,account_status,kyc_status').in('id',ids):{data:[]},people={};
  (pr.data||[]).forEach(function(x){people[x.id]=x;});
  var completed=rows.filter(function(x){return x.status==='completed';});
  var totals={USD:0,HDC:0,AFN:0};completed.forEach(function(x){var a=x.asset==='USDT'?'USD':x.asset;if(Object.prototype.hasOwnProperty.call(totals,a))totals[a]+=Number(x.amount||0);});
