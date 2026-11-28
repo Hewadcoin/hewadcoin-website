@@ -40,12 +40,12 @@
     try{
       var result=await client.from('profiles').select('kyc_status').eq('id',user.id).maybeSingle();
       if(result.error)throw result.error;
-      var status=String(result.data&&result.data.kyc_status||'').toLowerCase();
+      var status=String(result.data&&result.data.kyc_status||'').trim().toLowerCase().replace(/[ -]+/g,'_');
       if(status==='rejected'){
         if(!rejectionShown&&typeof win.openHwcKyc==='function'){rejectionShown=true;win.openHwcKyc();}
         return;
       }
-      if(status!=='approved')return;
+      if(!['approved','verified','active','kyc_verified','accepted','completed','complete'].includes(status))return;
       win.HEWAD_KYC_STATUS='approved';
       if(typeof win.loadHwcProfile==='function')await win.loadHwcProfile(user);
       var stillPending=readPending();
