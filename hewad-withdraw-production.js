@@ -83,16 +83,18 @@ async function renderWithdraw(prefill){
  });
 }
 
-var panel=$('adminPanel'),home=$('adminHome'),adminView=null;
+var adminView=null;
+function getAdminPanel(){return $('adminPanel')||document.querySelector('#adminPanel,[data-admin-panel]');}
+function getAdminHome(){return $('adminHome')||(getAdminPanel()&&getAdminPanel().querySelector('#adminHome,[data-admin-home]'));}
 function isAdmin(){return window.HEWAD_USER_ROLE==='admin';}
-function ensureAdminView(){if(!panel)return null;if(!adminView){adminView=$('hwcWithdrawAdminView');if(!adminView){adminView=document.createElement('section');adminView.id='hwcWithdrawAdminView';adminView.className='admin-view hwc-admin-page';adminView.style.display='none';panel.appendChild(adminView);}}return adminView;}
+function ensureAdminView(){var panel=getAdminPanel();if(!panel)return null;if(!adminView||!document.contains(adminView)){adminView=$('hwcWithdrawAdminView');if(!adminView){adminView=document.createElement('section');adminView.id='hwcWithdrawAdminView';adminView.className='admin-view hwc-admin-page';adminView.style.display='none';panel.appendChild(adminView);}}return adminView;}
 function addAdminMenu(){
- if(!isAdmin()||!home)return;var grid=home.querySelector('.hwc-admin-grid');if(!grid)return;
+ var home=getAdminHome();if(!isAdmin()||!home)return;var grid=home.querySelector('.hwc-admin-grid');if(!grid)return;
  if(!grid.querySelector('[data-hwc-withdraw-admin="settings"]')){var s=document.createElement('button');s.type='button';s.className='hwc-admin-option';s.dataset.hwcWithdrawAdmin='settings';s.innerHTML='<span class="ico">⚙</span><span><strong>Withdraw Management</strong><small>USDT withdrawal fee, minimum and rolling 24-hour maximum controls</small></span><span class="arrow">›</span>';grid.appendChild(s);}
- var r=grid.querySelector('[data-hwc-withdraw-admin="requests"]');if(!r){r=document.createElement('button');r.type='button';r.className='hwc-admin-option';r.dataset.hwcWithdrawAdmin='requests';r.innerHTML='<span class="ico">⬇</span><span><strong>Withdraw Request</strong><small>Review members, accept or reject requests and record payout TX Hash</small></span><span class="arrow">›</span>';}grid.appendChild(r);
+ var r=grid.querySelector('[data-hwc-withdraw-admin="requests"]');if(!r){r=document.createElement('button');r.type='button';r.className='hwc-admin-option';r.dataset.hwcWithdrawAdmin='requests';r.innerHTML='<span class="ico">⬇</span><span><strong>Withdraw Request</strong><small>Review members, accept or reject requests and record payout TX Hash</small></span><span class="arrow">›</span>';grid.appendChild(r);}
 }
-function showAdmin(html){var v=ensureAdminView();if(!v)return;if(home){home.hidden=true;home.style.display='none';}panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});v.hidden=false;v.style.display='block';v.innerHTML='<div class="hwc-withdraw">'+html+'</div>';window.scrollTo(0,0);}
-function adminBack(){if(adminView){adminView.hidden=true;adminView.style.display='none';}panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});if(home){home.hidden=false;home.style.display='block';}}
+function showAdmin(html){var panel=getAdminPanel(),home=getAdminHome(),v=ensureAdminView();if(!panel||!v){say('Control Center is still loading. Please reopen it.');return;}if(home){home.hidden=true;home.style.display='none';}panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});v.hidden=false;v.style.display='block';v.innerHTML='<div class="hwc-withdraw">'+html+'</div>';window.scrollTo(0,0);}
+function adminBack(){var panel=getAdminPanel(),home=getAdminHome();if(adminView){adminView.hidden=true;adminView.style.display='none';}if(panel)panel.querySelectorAll('.admin-view').forEach(function(x){x.hidden=true;x.style.display='none';});if(home){home.hidden=false;home.style.display='block';}}
 function backHtml(){return '<button type="button" class="hwc-admin-back" data-wd-back>‹ Control Center</button>';}
 function switchHtml(id,label,checked){return '<div class="wd-switch-row"><span>'+esc(label)+'</span><label class="wd-switch"><input type="checkbox" id="'+id+'" '+(checked?'checked':'')+'><i></i></label></div>';}
 async function loadSettings(){
@@ -179,7 +181,7 @@ document.addEventListener('click',function(e){
  el=e.target.closest('[data-wd-complete]');if(el){e.preventDefault();e.stopImmediatePropagation();completeRequest(el.dataset.wdComplete);return;}
  el=e.target.closest('[data-wd-copy]');if(el){e.preventDefault();e.stopImmediatePropagation();var t=el.dataset.wdCopy;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){say('Wallet address copied.');}).catch(function(){say('Copy failed. Please copy manually.');});else say('Copy is unavailable in this browser.');return;}
 },true);
-if(home&&window.MutationObserver)new MutationObserver(addAdminMenu).observe(home,{childList:true,subtree:true});
+if(window.MutationObserver){var adminMenuObserver=new MutationObserver(addAdminMenu);adminMenuObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','style','class']});window.addEventListener('hewad-admin-authorized',addAdminMenu);window.addEventListener('load',addAdminMenu);}
 if(window.MutationObserver&&$('dashboard'))new MutationObserver(findWithdrawTile).observe($('dashboard'),{childList:true,subtree:true});
 findWithdrawTile();addAdminMenu();
 })();
