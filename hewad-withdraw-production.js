@@ -46,7 +46,8 @@ async function renderWithdraw(prefill){
  var err=rs.find(function(x){return x&&x.error;});if(err){console.error('HEWAD Withdraw: database response error',err.error);showUserPage('Withdraw','<div class="wd-card wd-note">Withdrawal information could not be loaded: '+esc(err.error.message||'Unknown database error')+'. Please try again later.</div>');return;}
  var p=rs[0].data||{},w=rs[1].data||{},policy=rs[2].data||{};
  var balance=Math.max(0,Number(w.balance_usd||0)-Number(w.reserved_usd||0)-Number(w.staked_usd||0)),feePercent=policy.no_fee?0:Number(policy.fee_percent||0);
- var gate=p.account_status!=='active'||p.kyc_status!=='approved';
+ var rawKyc=String(p.kyc_status||'not_verified').trim().toLowerCase().replace(/[ -]+/g,'_'),kycApproved=['approved','verified','active','kyc_verified'].includes(rawKyc),accountActive=String(p.account_status||'').trim().toLowerCase()==='active';
+ var gate=!accountActive||!kycApproved;
  var html='<div class="wd-hero"><div class="wd-kicker">HEWAD COIN · SECURE PAYOUT</div><h3>USDT Withdrawal</h3><p class="wd-muted">Withdraw USDT through BNB Smart Chain (BEP20). Verify the selected network and address carefully.</p></div>'+
  '<div class="wd-balance"><span>AVAILABLE USDT BALANCE</span><b>$'+fmt(balance,8)+'</b></div>'+
  (gate?'<div class="wd-card wd-note">Withdraw is available only to active accounts with approved KYC. Account: '+esc(p.account_status||'unknown')+' · KYC: '+esc(p.kyc_status||'not verified')+'.</div>':'')+
