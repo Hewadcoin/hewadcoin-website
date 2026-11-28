@@ -100,6 +100,7 @@ function activatePage(){
  page.hidden=false;page.classList.add('active');
 }
 function closePage(){
+ window.__HWC_MODULE_NAV_TOKEN=(Number(window.__HWC_MODULE_NAV_TOKEN)||0)+1;
  if(timer){clearInterval(timer);timer=null;}
  var page=$(rootId);if(page){page.classList.remove('active');page.hidden=true;if(page.getAttribute('data-hwc-active-module')==='mining')page.removeAttribute('data-hwc-active-module');}
  var home=$('dashboardMain');if(home)home.classList.add('active');
@@ -139,6 +140,7 @@ async function tap(){
  }catch(e){say(e&&e.message?e.message:'Mining tap failed. Please try again.');try{await refresh();}catch(_){}}finally{busy=false;var b=$('hm-tap');if(b&&Number(($('hm-taps')||{}).textContent?.split('/')[0]||0)<250)b.disabled=false;}
 }
 async function open(){
+ var navToken=window.__HWC_MODULE_NAV_TOKEN=(Number(window.__HWC_MODULE_NAV_TOKEN)||0)+1;
  if(timer){clearInterval(timer);timer=null;}
  var root=$(rootId);if(!root)return;
  try{
@@ -146,8 +148,8 @@ async function open(){
   root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card">Loading Mining…</div>';
   $('hm-back').addEventListener('click',closePage);
   await refresh();
-  if(root.getAttribute('data-hwc-active-module')!=='mining')return;
-  timer=setInterval(function(){var active=$(rootId);if(!active||active.getAttribute('data-hwc-active-module')!=='mining'){clearInterval(timer);timer=null;return;}refresh().catch(function(e){console.error('Mining refresh:',e);});},60000);
+  if(navToken!==window.__HWC_MODULE_NAV_TOKEN||root.getAttribute('data-hwc-active-module')!=='mining')return;
+  timer=setInterval(function(){var active=$(rootId);if(navToken!==window.__HWC_MODULE_NAV_TOKEN||!active||active.getAttribute('data-hwc-active-module')!=='mining'){clearInterval(timer);timer=null;return;}refresh().catch(function(e){console.error('Mining refresh:',e);});},60000);
  }catch(e){
   if(root.getAttribute('data-hwc-active-module')==='mining'){
    root.innerHTML='<button class="dash-back-home" id="hm-back" type="button">← Dashboard</button><div class="hwc-mining hm-card"><h3>Mining unavailable</h3><p class="hm-note">'+esc(e.message||'Please sign in and complete account verification.')+'</p></div>';
