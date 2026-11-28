@@ -16,7 +16,7 @@
 <script>
 (function(){
   var frame=document.getElementById('hewad-app');
-  var release='20261128-admin-auth-event-1';
+  var release='20261128-mining-withdraw-router-fix-2';
   var params=window.location.search.slice(1);
   var hash=window.location.hash||'';
   frame.src='hewad_coin_homepage_fullscreen.html?hwc_release='+release+(params?'&'+params:'')+hash;
@@ -88,6 +88,13 @@
         if(!actionName){var normalizedLabel=(simpleFeatureTile.innerText||simpleFeatureTile.textContent||'').replace(/\s+/g,' ').trim();actionName=/^mining$/i.test(normalizedLabel)?'Mining':'Deposit';}
         if(requireApprovedKyc(actionName)){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+          return;
+        }
+        if(actionName==='Mining'){
+          e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+          var openMining=doc.defaultView.openHwcMiningPage;
+          if(typeof openMining==='function')Promise.resolve(openMining()).catch(function(err){console.error('Mining failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Mining could not open. Please refresh and try again.');});
+          else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Mining is still loading. Please try again in a moment.');
         }
       },true);
       /* Register before the other enhancement scripts: some of them install
