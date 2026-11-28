@@ -47,6 +47,17 @@
         var dashShell=doc.querySelector('#dashboard .dash-shell');
         if(dashShell)dashShell.appendChild(modulePage);
       }
+      /* Route Withdraw before optional feature handlers so the secure form cannot be swallowed. */
+      doc.addEventListener('click',function(e){
+        var withdrawTile=e.target&&e.target.closest?e.target.closest('[data-action="Withdraw" i],[data-hwc-withdraw-open]'):null;
+        if(withdrawTile){
+          e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+          var openWithdraw=doc.defaultView.openHwcWithdrawPage;
+          if(typeof openWithdraw==='function')Promise.resolve(openWithdraw()).catch(function(err){console.error('Withdraw failed to open:',err);if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw could not open. Please refresh and try again.');});
+          else if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Withdraw is still loading. Please try again in a moment.');
+          return;
+        }
+      },true);
       /* Register before the other enhancement scripts: some of them install
          document-level capture handlers and otherwise swallow the Staking click. */
       doc.addEventListener('click',function(e){

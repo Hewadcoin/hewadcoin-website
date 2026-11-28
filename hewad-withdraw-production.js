@@ -17,26 +17,33 @@ css.textContent=' .hwc-withdraw-dashboard-tile{display:flex;align-items:center;g
 document.head.appendChild(css);
 
 function showUserPage(title,html){
- var dash=$('dashboard'),page=$('modulePage'),card=$('memberCard');if(!dash||!page){say('Withdraw page is not available.');return;}
+ var dash=$('dashboard'),page=$('modulePage'),card=$('memberCard');
+ if(!dash){say('Withdraw page could not open because the dashboard is unavailable. Please refresh and sign in again.');return false;}
+ /* Always create the shared subpage mount point if the host page did not create it. */
+ if(!page){page=document.createElement('section');page.id='modulePage';page.className='dash-subpage';page.setAttribute('aria-live','polite');var shell=dash.querySelector('.dash-shell')||dash; shell.appendChild(page);}
  dash.querySelectorAll('.dash-subpage').forEach(function(x){x.classList.remove('active');});
  var cards=Array.prototype.slice.call(dash.querySelectorAll('#memberCard,#member-card,[id*="memberCard"],[id*="member-card"],[class*="member-card"],[class*="gold-member-card"]'));
  cards.forEach(function(el){if(!el.hidden){el.setAttribute('data-hwc-withdraw-hidden','1');el.hidden=true;}});
  if(card)card.hidden=true;page.hidden=false;page.classList.add('active');
  page.innerHTML='<button class="dash-back-home" id="hwcWithdrawBack" type="button">← Dashboard</button><h2>'+esc(title)+'</h2><div class="hwc-module-content"><div class="hwc-withdraw">'+html+'</div></div>';
  $('hwcWithdrawBack').onclick=function(){page.classList.remove('active');page.hidden=true;if($('dashboardMain'))$('dashboardMain').classList.add('active');cards.forEach(function(el){if(el.getAttribute('data-hwc-withdraw-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-withdraw-hidden');}});if(card)card.hidden=false;window.scrollTo(0,0);};
- window.scrollTo(0,0);
+ window.scrollTo(0,0);return true;
 }
 function newKey(){if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16);});}
 async function renderHistory(uid){
- var host=$('hwcWithdrawHistory');if(!host)return;var q=await db.from('withdrawal_requests').select('id,asset,amount,network,status,fee_amount,net_amount,tx_hash,created_at,completed_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(20);
+ var host=$('hwcWithdrawHistory');if(!host)return;var q;
+ try{q=await db.from('withdrawal_requests').select('id,asset,amount,network,status,fee_amount,net_amount,tx_hash,created_at,completed_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(20);}
+ catch(historyError){host.innerHTML='<p class="wd-muted">Withdrawal history could not be loaded. '+esc(historyError&&historyError.message||'Please try again.')+'</p>';return;}
  if(q.error){host.innerHTML='<p class="wd-muted">'+esc(q.error.message)+'</p>';return;}
  var rows=q.data||[];host.innerHTML=rows.length?rows.map(function(x){return '<div class="wd-history"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+fmt(x.amount,4)+' '+esc(x.asset==='USD'?'USDT':x.asset)+'</b><span class="wd-status '+esc(x.status)+'">'+esc(x.status.toUpperCase())+'</span></div><small class="wd-muted">'+esc(x.network||'—')+' · '+dt(x.created_at)+'</small><div class="wd-muted">Fee: '+fmt(x.fee_amount,4)+' · Net: '+fmt(x.net_amount,4)+'</div>'+(x.tx_hash?'<div class="wd-muted">TX Hash: '+esc(x.tx_hash)+'</div>':'')+'</div>';}).join(''):'<p class="wd-muted">No withdrawal requests yet.</p>';
 }
 async function renderWithdraw(prefill){
  var u;try{u=await me();}catch(e){say(e.message||'Please sign in first.');return;}
  showUserPage('Withdraw','<div class="wd-card">Loading secure withdrawal settings…</div>');
- var rs=await Promise.all([db.from('profiles').select('account_status,kyc_status').eq('id',u.id).maybeSingle(),db.from('wallets').select('balance_usd,reserved_usd,staked_usd').eq('user_id',u.id).maybeSingle(),db.rpc('hwc_get_withdrawal_policy',{p_asset:'USD'})]);
- var err=rs.find(function(x){return x.error;});if(err){showUserPage('Withdraw','<div class="wd-card wd-note">'+esc(err.error.message)+'</div>');return;}
+ var rs;
+ try{rs=await Promise.all([db.from('profiles').select('account_status,kyc_status').eq('id',u.id).maybeSingle(),db.from('wallets').select('balance_usd,reserved_usd,staked_usd').eq('user_id',u.id).maybeSingle(),db.rpc('hwc_get_withdrawal_policy',{p_asset:'USD'})]);}
+ catch(loadError){console.error('HEWAD Withdraw: initial data load failed',loadError);showUserPage('Withdraw','<div class="wd-card wd-note">Withdrawal information could not be loaded. Please check your connection and try again. '+esc(loadError&&loadError.message||'')+'</div>');return;}
+ var err=rs.find(function(x){return x&&x.error;});if(err){console.error('HEWAD Withdraw: database response error',err.error);showUserPage('Withdraw','<div class="wd-card wd-note">Withdrawal information could not be loaded: '+esc(err.error.message||'Unknown database error')+'. Please try again later.</div>');return;}
  var p=rs[0].data||{},w=rs[1].data||{},policy=rs[2].data||{};
  var balance=Math.max(0,Number(w.balance_usd||0)-Number(w.reserved_usd||0)-Number(w.staked_usd||0)),feePercent=policy.no_fee?0:Number(policy.fee_percent||0);
  var gate=p.account_status!=='active'||p.kyc_status!=='approved';
@@ -157,8 +164,9 @@ function findWithdrawTile(){
  var grid=dash.querySelector('.dash-grid,.dashboard-grid,.menu-grid,.dash-cards')||dash.querySelector('.dash-shell')||$('dashboardMain');
  if(grid&&!grid.querySelector('[data-hwc-withdraw-open]')){var b=document.createElement('button');b.type='button';b.className='dash-tile hwc-withdraw-dashboard-tile';b.dataset.hwcWithdrawOpen='1';b.innerHTML='<span aria-hidden="true">⬇</span><span>Withdraw</span>';grid.appendChild(b);}
 }
+window.openHwcWithdrawPage=renderWithdraw;
 document.addEventListener('click',function(e){
- var el=e.target.closest('[data-hwc-withdraw-open]');if(el){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();renderWithdraw();return;}
+ var el=e.target&&e.target.closest?e.target.closest('[data-hwc-withdraw-open]'):null;if(el){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();renderWithdraw().catch(function(err){console.error('HEWAD Withdraw failed to render:',err);showUserPage('Withdraw','<div class="wd-card wd-note">Withdraw could not be opened. Please refresh and try again. '+esc(err&&err.message||'')+'</div>');});return;}
  el=e.target.closest('[data-hwc-withdraw-admin]');if(el){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();if(!isAdmin())return say('Withdraw Management permission required.');el.dataset.hwcWithdrawAdmin==='settings'?loadSettings():loadRequests();return;}
  el=e.target.closest('[data-wd-back]');if(el){e.preventDefault();e.stopImmediatePropagation();adminBack();return;}
  el=e.target.closest('[data-wd-save]');if(el){e.preventDefault();e.stopImmediatePropagation();saveSettings(el.dataset.wdSave);return;}
