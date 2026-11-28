@@ -18,7 +18,8 @@ function isFeatureTile(tile){
 function unlockTiles(){
  queued=false;
  var root=doc.getElementById('dashboard');
- if(!root||!approved())return;
+ if(!root)return;
+ /* Remove lock presentation for every member; the central click router still enforces KYC. */
  root.querySelectorAll(tileSelector).forEach(function(tile){
   if(!tile||tile.closest('#adminPanel,#hwcAdminGift')||!isFeatureTile(tile))return;
   ['locked','is-locked','feature-locked','kyc-locked','is-disabled','disabled'].forEach(function(c){tile.classList.remove(c);});
