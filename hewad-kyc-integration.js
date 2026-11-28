@@ -173,6 +173,7 @@ if(typeof originalLoad==='function'){
   window.HEWAD_KYC_STATUS=status;
   window.dispatchEvent(new CustomEvent('hewad-kyc-status-updated',{detail:{status:status}}));
   window.HEWAD_USER_ROLE=(r.data||[]).some(x=>x.role==='admin')?'admin':'member';
+  if(window.HEWAD_USER_ROLE==='admin')window.dispatchEvent(new CustomEvent('hewad-admin-authorized',{detail:{userId:user.id}}));
   const put=(id,v)=>{const el=$(id);if(el)el.textContent=v==null?'':String(v);};
   put('memberName',[profile.first_name,profile.last_name].filter(Boolean).join(' ')||user.email||'MEMBER');
   put('memberCountry',status==='approved'?(profile.kyc_country||profile.country||'—'):'—');
