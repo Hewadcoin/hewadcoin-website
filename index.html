@@ -86,6 +86,23 @@
         if(!simpleFeatureTile)return;
         var actionName=String(simpleFeatureTile.getAttribute('data-action')||'');
         if(!actionName){var normalizedLabel=(simpleFeatureTile.innerText||simpleFeatureTile.textContent||'').replace(/\s+/g,' ').trim();actionName=/^mining$/i.test(normalizedLabel)?'Mining':'Deposit';}
+        /* Handle Mining in this early central router. Previously this handler
+           only enforced KYC and then allowed several later capture-phase handlers
+           to compete for the same click, which could leave the dashboard unresponsive. */
+        if(actionName.toLowerCase()==='mining'){
+          e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+          if(requireApprovedKyc(actionName))return;
+          var openMining=doc.defaultView.openHwcMiningPage;
+          if(typeof openMining==='function'){
+            Promise.resolve(openMining()).catch(function(err){
+              console.error('Mining failed to open:',err);
+              if(typeof doc.defaultView.showNotice==='function')doc.defaultView.showNotice('Mining could not open. Please refresh and try again.');
+            });
+          }else if(typeof doc.defaultView.showNotice==='function'){
+            doc.defaultView.showNotice('Mining is still loading. Please try again in a moment.');
+          }
+          return;
+        }
         if(requireApprovedKyc(actionName)){
           e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
         }
