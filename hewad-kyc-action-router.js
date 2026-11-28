@@ -1,7 +1,7 @@
 /* HEWAD COIN — resume the exact member feature after KYC approval. */
 (function(){
   'use strict';
-  var KEY='hwc_pending_kyc_action', checking=false, resumed=false, timer=null;
+  var KEY='hwc_pending_kyc_action', checking=false, resumed=false, rejectionShown=false, timer=null;
   var win=window, doc=document;
   function readPending(){
     try{
@@ -19,6 +19,7 @@
     try{
       if(name==='withdraw'&&typeof win.openHwcWithdrawPage==='function')return win.openHwcWithdrawPage();
       if(name==='staking'&&typeof win.openHwcStakingPage==='function')return win.openHwcStakingPage();
+      if(name==='mining'&&typeof win.openHwcMiningPage==='function')return win.openHwcMiningPage();
       if((name==='gift'||name==='gift code'||name==='daily gift')&&typeof win.openHwcGiftPage==='function')return win.openHwcGiftPage();
       if(typeof win.openHwcModule==='function')return win.openHwcModule(action);
       var candidates=Array.from(doc.querySelectorAll('[data-action]'));
@@ -32,22 +33,29 @@
     if(checking||resumed)return;
     var pending=readPending();
     if(!pending)return;
-    var user=win.__HWC_USER||win.hwcCurrentUser;
-    var client=win.hwcSupabase;
+    var user=win.__HWC_USER||(typeof hwcCurrentUser!=='undefined'?hwcCurrentUser:win.hwcCurrentUser);
+    var client=typeof hwcSupabase!=='undefined'?hwcSupabase:win.hwcSupabase;
     if(!user||!user.id||!client)return;
     checking=true;
     try{
       var result=await client.from('profiles').select('kyc_status').eq('id',user.id).maybeSingle();
       if(result.error)throw result.error;
       var status=String(result.data&&result.data.kyc_status||'').toLowerCase();
+      if(status==='rejected'){
+        if(!rejectionShown&&typeof win.openHwcKyc==='function'){rejectionShown=true;win.openHwcKyc();}
+        return;
+      }
       if(status!=='approved')return;
       win.HEWAD_KYC_STATUS='approved';
       if(typeof win.loadHwcProfile==='function')await win.loadHwcProfile(user);
       var stillPending=readPending();
       if(!stillPending||stillPending.action!==pending.action)return;
+      var overlay=doc.getElementById('kycScreen');
+      var homeButton=overlay&&overlay.querySelector('[data-kyc-home]');
+      if(homeButton)homeButton.click();
       clearPending();
       resumed=true;
-      win.setTimeout(function(){openRequestedAction(pending.action);},250);
+      win.setTimeout(function(){openRequestedAction(pending.action);},300);
     }catch(error){console.warn('KYC approval check will retry:',error&&error.message||error);}
     finally{checking=false;}
   }
