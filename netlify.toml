@@ -1,0 +1,3 @@
+[build]
+  command = "echo 'HEWAD COIN static site: no build step required'"
+  publish = "."
