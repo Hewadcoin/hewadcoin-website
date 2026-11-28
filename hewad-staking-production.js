@@ -75,11 +75,13 @@ function showUserPage(title,html){
  memberCards.forEach(function(el){if(!el.hidden){el.setAttribute('data-hwc-staking-card-hidden','1');el.hidden=true;}});
  if(card)card.hidden=true;page.hidden=false;page.classList.add('active');
  page.innerHTML='<button class="dash-back-home" id="hwcStakeBack" type="button">← Dashboard</button><h2>'+esc(title)+'</h2><div class="hwc-module-content"><div class="hwc-staking-live">'+html+'</div></div>';
- $('hwcStakeBack').onclick=function(){page.classList.remove('active');page.hidden=true;if(page.getAttribute('data-hwc-active-module')==='staking')page.removeAttribute('data-hwc-active-module');if($('dashboardMain'))$('dashboardMain').classList.add('active');memberCards.forEach(function(el){if(el.getAttribute('data-hwc-staking-card-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-staking-card-hidden');}});if(card)card.hidden=false;window.scrollTo(0,0);};
+ $('hwcStakeBack').onclick=function(){window.__HWC_MODULE_NAV_TOKEN=(Number(window.__HWC_MODULE_NAV_TOKEN)||0)+1;page.classList.remove('active');page.hidden=true;if(page.getAttribute('data-hwc-active-module')==='staking')page.removeAttribute('data-hwc-active-module');if($('dashboardMain'))$('dashboardMain').classList.add('active');memberCards.forEach(function(el){if(el.getAttribute('data-hwc-staking-card-hidden')==='1'){el.hidden=false;el.removeAttribute('data-hwc-staking-card-hidden');}});if(card)card.hidden=false;window.scrollTo(0,0);};
  window.scrollTo(0,0);
 }
 async function renderStaking(){
+ var navToken=window.__HWC_MODULE_NAV_TOKEN=(Number(window.__HWC_MODULE_NAV_TOKEN)||0)+1;
  var u;try{u=await me();}catch(authError){say(authError.message||'Please sign in first.');return;}
+ if(navToken!==window.__HWC_MODULE_NAV_TOKEN)return;
  showUserPage('Digital Staking','<div class="dash-subpage-card">Loading your staking account…</div>');
  var rs=await Promise.all([
   db.from('staking_plans').select('id,name,min_amount,max_amount,duration_days').eq('active',true).eq('asset','HDC').eq('duration_days',360).order('min_amount'),
@@ -88,6 +90,7 @@ async function renderStaking(){
   db.from('staking_daily_results').select('id,position_id,result_type,percent,amount,created_at').eq('user_id',u.id).order('created_at',{ascending:false}).limit(1000),
   db.rpc('hwc_member_staking_overview')
  ]);
+ if(navToken!==window.__HWC_MODULE_NAV_TOKEN)return;
  var err=rs.find(function(x){return x.error;});
  if(err){showUserPage('Digital Staking','<div class="dash-subpage-card hwc-error">'+esc(err.error.message)+'</div>');return;}
  var plans=rs[0].data||[],positions=rs[1].data||[],wallet=rs[2].data||{},history=rs[3].data||[],overview=rs[4].data||{};
