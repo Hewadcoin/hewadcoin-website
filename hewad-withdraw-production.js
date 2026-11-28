@@ -182,7 +182,7 @@ document.addEventListener('click',function(e){
  el=e.target.closest('[data-wd-complete]');if(el){e.preventDefault();e.stopImmediatePropagation();completeRequest(el.dataset.wdComplete);return;}
  el=e.target.closest('[data-wd-copy]');if(el){e.preventDefault();e.stopImmediatePropagation();var t=el.dataset.wdCopy;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){say('Wallet address copied.');}).catch(function(){say('Copy failed. Please copy manually.');});else say('Copy is unavailable in this browser.');return;}
 },true);
-if(window.MutationObserver){var adminMenuObserver=new MutationObserver(addAdminMenu);adminMenuObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','style','class']});window.addEventListener('hewad-admin-authorized',addAdminMenu);window.addEventListener('load',addAdminMenu);}
+if(window.MutationObserver){var adminMenuObserver=new MutationObserver(addAdminMenu);adminMenuObserver.observe(document.documentElement,{childList:true,subtree:true});window.addEventListener('hewad-admin-authorized',addAdminMenu);window.addEventListener('load',addAdminMenu);}
 if(window.MutationObserver&&$('dashboard'))new MutationObserver(findWithdrawTile).observe($('dashboard'),{childList:true,subtree:true});
 findWithdrawTile();addAdminMenu();
 })();
